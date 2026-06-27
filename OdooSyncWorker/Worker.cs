@@ -30,43 +30,50 @@ namespace OdooSyncWorker
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var queueItems = await _queueService.GetNewQueueAsync();
-
-                foreach (var item in queueItems)
+                try
                 {
-                    try
-                    {
-                        var locked = await _queueService.MarkProcessingAsync(item.QueueId);
+                    var queueItems = await _queueService.GetNewQueueAsync();
 
-                        if (!locked)
+                    foreach (var item in queueItems)
+                    {
+                        try
                         {
-                            continue;
+                            var locked = await _queueService.MarkProcessingAsync(item.QueueId);
+
+                            if (!locked)
+                            {
+                                continue;
+                            }
+
+                            object payload = item.ObjectType switch
+                            {
+                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey),
+                                _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
+                            };
+
+                            var responseJson = await _odooClient.SendAsync(
+                                item.ObjectType,
+                                item.ActionType,
+                                payload);
+
+                            await _queueService.MarkSuccessAsync(item.QueueId, payload, responseJson);
+
+                            _logger.LogInformation(
+                                "Queue {QueueId} sent successfully. ObjectType={ObjectType}, ObjectKey={ObjectKey}",
+                                item.QueueId,
+                                item.ObjectType,
+                                item.ObjectKey);
                         }
-
-                        object payload = item.ObjectType switch
+                        catch (Exception ex)
                         {
-                            "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey),
-                            _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
-                        };
-
-                        var responseJson = await _odooClient.SendAsync(
-                            item.ObjectType,
-                            item.ActionType,
-                            payload);
-
-                        await _queueService.MarkSuccessAsync(item.QueueId, payload, responseJson);
-
-                        _logger.LogInformation(
-                            "Queue {QueueId} sent successfully. ObjectType={ObjectType}, ObjectKey={ObjectKey}",
-                            item.QueueId,
-                            item.ObjectType,
-                            item.ObjectKey);
+                            _logger.LogError(ex, "Queue {QueueId} failed", item.QueueId);
+                            await _queueService.MarkErrorAsync(item.QueueId, ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Queue {QueueId} failed", item.QueueId);
-                        await _queueService.MarkErrorAsync(item.QueueId, ex.Message);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Worker loop failed. Will retry in {DelaySeconds} seconds.", delaySeconds);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);

@@ -88,3 +88,4 @@ C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\refi
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\OdooSyncWorker.pdb
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\OdooSyncWorker.genruntimeconfig.cache
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\ref\OdooSyncWorker.dll
+C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\OdooSyncWorker.sourcelink.json
