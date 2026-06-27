@@ -32,6 +32,7 @@ public class SapDiApiProductionService : ISapProductionService
                 Data = new
                 {
                     _options.Server,
+                    _options.SldServer,
                     _options.LicenseServer,
                     _options.CompanyDb,
                     _options.DbServerType,
@@ -114,6 +115,7 @@ public class SapDiApiProductionService : ISapProductionService
             ?? throw new InvalidOperationException("Cannot create SAPbobsCOM.Company.");
 
         company.Server = _options.Server;
+        TrySetComProperty(company, "SLDServer", _options.SldServer);
         company.LicenseServer = _options.LicenseServer;
         company.CompanyDB = _options.CompanyDb;
         company.UserName = _options.UserName;
@@ -254,6 +256,28 @@ public class SapDiApiProductionService : ISapProductionService
         if (addResult != 0)
         {
             throw new InvalidOperationException($"{documentName} failed. {company.GetLastErrorDescription()}");
+        }
+    }
+
+    private static void TrySetComProperty(dynamic target, string propertyName, object? value)
+    {
+        if (value is null || string.IsNullOrWhiteSpace(Convert.ToString(value)))
+        {
+            return;
+        }
+
+        try
+        {
+            target.GetType().InvokeMember(
+                propertyName,
+                System.Reflection.BindingFlags.SetProperty,
+                null,
+                target,
+                new object[] { value });
+        }
+        catch
+        {
+            // Some DI API versions do not expose every optional property.
         }
     }
 }

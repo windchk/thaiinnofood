@@ -63,8 +63,7 @@
               "RelativeToolTip": "Controllers\\ProductionOrdersController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:13:24.318Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:13:24.318Z"
             },
             {
               "$type": "Document",
@@ -76,8 +75,7 @@
               "RelativeToolTip": "Models\\ProductionReceiptLineRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:13:18.109Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:13:18.109Z"
             },
             {
               "$type": "Document",
@@ -89,8 +87,7 @@
               "RelativeToolTip": "Models\\ProductionOrderCompleteRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:13:10.211Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:13:10.211Z"
             },
             {
               "$type": "Document",
@@ -102,8 +99,7 @@
               "RelativeToolTip": "Models\\ProductionIssueLineRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:13:03.296Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:13:03.296Z"
             },
             {
               "$type": "Document",
@@ -115,8 +111,7 @@
               "RelativeToolTip": "Models\\ApiResponse.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:12:59.296Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:12:59.296Z"
             },
             {
               "$type": "Document",
@@ -128,8 +123,7 @@
               "RelativeToolTip": "Services\\ProductionOrderService.cs",
               "ViewState": "AgIAAAkAAAAAAAAAAAAxwDUAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T09:12:42.184Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T09:12:42.184Z"
             }
           ]
         }

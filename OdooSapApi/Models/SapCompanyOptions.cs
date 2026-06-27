@@ -3,6 +3,7 @@ namespace OdooSapApi.Models;
 public class SapCompanyOptions
 {
     public string Server { get; set; } = "";
+    public string SldServer { get; set; } = "";
     public string LicenseServer { get; set; } = "";
     public string CompanyDb { get; set; } = "";
     public string UserName { get; set; } = "";
