@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using OdooSapApi.Models;
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace OdooSapApi.Services;
@@ -399,7 +400,7 @@ public class SapDiApiProductionService : ISapProductionService
 
     private int ResolveSeries(string companyDb, string objectCode, string beginStr, DateTime docDate)
     {
-        var indicator = docDate.ToString("yyyy-MM");
+        var indicator = docDate.ToString("yyyy-MM", CultureInfo.InvariantCulture);
 
         using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
         connection.Open();
