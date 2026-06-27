@@ -17,5 +17,7 @@ public class SapCompanyOptions
     public int ProductionOrderObjectType { get; set; } = 202;
     public int IssueFromProductionObjectType { get; set; } = 60;
     public int ReceiptFromProductionObjectType { get; set; } = 59;
+    public string IssueSeriesBeginStr { get; set; } = "GIT";
+    public string ReceiptSeriesBeginStr { get; set; } = "GRT";
     public int ClosedProductionOrderStatus { get; set; } = 2;
 }

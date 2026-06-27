@@ -158,6 +158,11 @@ public class SapDiApiProductionService : ISapProductionService
         try
         {
             document.DocDate = request.DocDate!.Value;
+            document.Series = ResolveSeries(
+                companyDb,
+                Convert.ToString(_options.IssueFromProductionObjectType),
+                _options.IssueSeriesBeginStr,
+                request.DocDate.Value);
 
             foreach (var line in request.IssueLines)
             {
@@ -199,6 +204,11 @@ public class SapDiApiProductionService : ISapProductionService
         try
         {
             document.DocDate = request.DocDate!.Value;
+            document.Series = ResolveSeries(
+                companyDb,
+                Convert.ToString(_options.ReceiptFromProductionObjectType),
+                _options.ReceiptSeriesBeginStr,
+                request.DocDate.Value);
 
             foreach (var line in request.ReceiptLines)
             {
@@ -382,6 +392,38 @@ public class SapDiApiProductionService : ISapProductionService
         if (result is null || result == DBNull.Value)
         {
             throw new ArgumentException($"Bin location not found. binCode={bin.BinCode}");
+        }
+
+        return Convert.ToInt32(result);
+    }
+
+    private int ResolveSeries(string companyDb, string objectCode, string beginStr, DateTime docDate)
+    {
+        var indicator = docDate.ToString("yyyy-MM");
+
+        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 1 Series
+            FROM dbo.NNM1
+            WHERE ObjectCode = @ObjectCode
+              AND BeginStr = @BeginStr
+              AND Locked = 'N'
+              AND Indicator = @Indicator
+            ORDER BY Series;
+            """;
+        command.Parameters.AddWithValue("@ObjectCode", objectCode);
+        command.Parameters.AddWithValue("@BeginStr", beginStr);
+        command.Parameters.AddWithValue("@Indicator", indicator);
+
+        var result = command.ExecuteScalar();
+
+        if (result is null || result == DBNull.Value)
+        {
+            throw new InvalidOperationException(
+                $"Series not found. ObjectCode={objectCode}, BeginStr={beginStr}, Indicator={indicator}");
         }
 
         return Convert.ToInt32(result);
