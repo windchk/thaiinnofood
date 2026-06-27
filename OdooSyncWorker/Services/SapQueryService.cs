@@ -150,13 +150,15 @@ public class SapQueryService
                 H.Warehouse,
                 L.LineNum,
                 L.ItemCode,
-                L.ItemName,
+                M.ItemName AS ComponentItemName,
                 L.PlannedQty AS LinePlannedQty,
                 L.IssuedQty,
                 L.wareHouse AS LineWarehouse
             FROM dbo.OWOR H
             LEFT JOIN dbo.WOR1 L
                 ON H.DocEntry = L.DocEntry
+            LEFT JOIN dbo.OITM M
+                ON L.ItemCode = M.ItemCode
             WHERE H.DocEntry = @DocEntry
             ORDER BY L.LineNum",
             new { DocEntry = int.Parse(objectKey) })).ToList();
@@ -189,7 +191,7 @@ public class SapQueryService
                 {
                     lineNum = x.LineNum,
                     itemCode = CleanText(x.ItemCode),
-                    itemName = CleanText(x.ItemName),
+                    itemName = CleanText(x.ComponentItemName),
                     plannedQuantity = x.LinePlannedQty,
                     issuedQuantity = x.IssuedQty,
                     warehouse = CleanText(x.LineWarehouse)
