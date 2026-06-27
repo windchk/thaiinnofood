@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "7vjxl32l/5PEJpMZdLYMHRBfavEClxk5KFAzxKyiK1w=",
+  "Source": "OdooSapApi",
+  "BasePath": "_content/OdooSapApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
