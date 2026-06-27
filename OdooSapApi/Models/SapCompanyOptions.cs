@@ -10,6 +10,7 @@ public class SapCompanyOptions
     public string Password { get; set; } = "";
     public string DbUserName { get; set; } = "";
     public string DbPassword { get; set; } = "";
+    public Dictionary<string, string> SiteDatabases { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public int DbServerType { get; set; } = 9;
     public int Language { get; set; } = 8;
     public int ProductionOrderObjectType { get; set; } = 202;

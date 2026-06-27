@@ -15,55 +15,104 @@ public class ProductionOrderService
         _sapProductionService = sapProductionService;
     }
 
-    public async Task<ApiResponse> CompleteAsync(ProductionOrderCompleteRequest request)
+    public async Task<ApiResponse> IssueAsync(ProductionIssueRequest request)
     {
-        ValidateRequest(request);
+        ValidateIssueRequest(request);
 
         _logger.LogInformation(
-            "Production order complete request received. SiteId={SiteId}, DocEntry={DocEntry}, Issue={Issue}, Receipt={Receipt}, Close={Close}",
+            "Issue From Production request received. SiteId={SiteId}, DocEntry={DocEntry}, Lines={LineCount}",
             request.SiteId,
             request.ProductionOrderDocEntry,
-            request.IssueFromProduction,
-            request.ReceiptFromProduction,
-            request.CloseProductionOrder);
+            request.IssueLines.Count);
 
-        var sapResult = await _sapProductionService.CompleteAsync(request);
+        var sapResult = await _sapProductionService.IssueAsync(request);
 
         return new ApiResponse
         {
             Success = true,
-            Message = "SAP production order process completed.",
+            Message = "Issue From Production completed.",
             Data = sapResult
         };
     }
 
-    private static void ValidateRequest(ProductionOrderCompleteRequest request)
+    public async Task<ApiResponse> ReceiptAsync(ProductionReceiptRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.SiteId))
+        ValidateReceiptRequest(request);
+
+        _logger.LogInformation(
+            "Receipt From Production request received. SiteId={SiteId}, DocEntry={DocEntry}, Lines={LineCount}",
+            request.SiteId,
+            request.ProductionOrderDocEntry,
+            request.ReceiptLines.Count);
+
+        var sapResult = await _sapProductionService.ReceiptAsync(request);
+
+        return new ApiResponse
+        {
+            Success = true,
+            Message = "Receipt From Production completed.",
+            Data = sapResult
+        };
+    }
+
+    public async Task<ApiResponse> CloseAsync(ProductionCloseRequest request)
+    {
+        ValidateCloseRequest(request);
+
+        _logger.LogInformation(
+            "Close Production Order request received. SiteId={SiteId}, DocEntry={DocEntry}",
+            request.SiteId,
+            request.ProductionOrderDocEntry);
+
+        await _sapProductionService.CloseAsync(request);
+
+        return new ApiResponse
+        {
+            Success = true,
+            Message = "Production Order closed.",
+            Data = new
+            {
+                request.ProductionOrderDocEntry,
+                closed = true
+            }
+        };
+    }
+
+    private static void ValidateIssueRequest(ProductionIssueRequest request)
+    {
+        ValidateBaseRequest(request.SiteId, request.ProductionOrderDocEntry);
+
+        if (request.IssueLines.Count == 0)
+        {
+            throw new ArgumentException("issueLines is required.");
+        }
+    }
+
+    private static void ValidateReceiptRequest(ProductionReceiptRequest request)
+    {
+        ValidateBaseRequest(request.SiteId, request.ProductionOrderDocEntry);
+
+        if (request.ReceiptLines.Count == 0)
+        {
+            throw new ArgumentException("receiptLines is required.");
+        }
+    }
+
+    private static void ValidateCloseRequest(ProductionCloseRequest request)
+    {
+        ValidateBaseRequest(request.SiteId, request.ProductionOrderDocEntry);
+    }
+
+    private static void ValidateBaseRequest(string siteId, int productionOrderDocEntry)
+    {
+        if (string.IsNullOrWhiteSpace(siteId))
         {
             throw new ArgumentException("siteId is required.");
         }
 
-        if (request.ProductionOrderDocEntry <= 0)
+        if (productionOrderDocEntry <= 0)
         {
             throw new ArgumentException("productionOrderDocEntry must be greater than 0.");
-        }
-
-        if (!request.IssueFromProduction &&
-            !request.ReceiptFromProduction &&
-            !request.CloseProductionOrder)
-        {
-            throw new ArgumentException("At least one action is required.");
-        }
-
-        if (request.IssueFromProduction && request.IssueLines.Count == 0)
-        {
-            throw new ArgumentException("issueLines is required when issueFromProduction is true.");
-        }
-
-        if (request.ReceiptFromProduction && request.ReceiptLines.Count == 0)
-        {
-            throw new ArgumentException("receiptLines is required when receiptFromProduction is true.");
         }
     }
 }

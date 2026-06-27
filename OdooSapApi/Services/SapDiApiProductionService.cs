@@ -17,13 +17,14 @@ public class SapDiApiProductionService : ISapProductionService
         _logger = logger;
     }
 
-    public Task<ApiResponse> CheckConnectionAsync()
+    public Task<ApiResponse> CheckConnectionAsync(string? siteId = null)
     {
         dynamic? company = null;
 
         try
         {
-            company = ConnectCompany();
+            var companyDb = ResolveCompanyDb(siteId);
+            company = ConnectCompany(companyDb);
 
             return Task.FromResult(new ApiResponse
             {
@@ -31,10 +32,11 @@ public class SapDiApiProductionService : ISapProductionService
                 Message = "SAP DI API connection successful.",
                 Data = new
                 {
+                    siteId,
                     _options.Server,
                     _options.SldServer,
                     _options.LicenseServer,
-                    _options.CompanyDb,
+                    companyDb,
                     _options.DbServerType,
                     connected = true
                 }
@@ -59,54 +61,61 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    public Task<SapProductionResult> CompleteAsync(ProductionOrderCompleteRequest request)
+    public Task<SapDocumentResult> IssueAsync(ProductionIssueRequest request)
     {
         dynamic? company = null;
 
         try
         {
-            company = ConnectCompany();
+            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
 
-            var result = new SapProductionResult();
-
-            if (request.IssueFromProduction)
+            return Task.FromResult(new SapDocumentResult
             {
-                result.IssueDocumentEntry = CreateIssueFromProduction(company, request);
-            }
-
-            if (request.ReceiptFromProduction)
-            {
-                result.ReceiptDocumentEntry = CreateReceiptFromProduction(company, request);
-            }
-
-            if (request.CloseProductionOrder)
-            {
-                CloseProductionOrder(company, request.ProductionOrderDocEntry);
-                result.ProductionOrderClosed = true;
-            }
-
-            return Task.FromResult(result);
+                DocumentEntry = CreateIssueFromProduction(company, request)
+            });
         }
         finally
         {
-            if (company is not null)
-            {
-                try
-                {
-                    if (company.Connected)
-                    {
-                        company.Disconnect();
-                    }
-                }
-                finally
-                {
-                    Marshal.FinalReleaseComObject(company);
-                }
-            }
+            ReleaseCompany(company);
         }
     }
 
-    private dynamic ConnectCompany()
+    public Task<SapDocumentResult> ReceiptAsync(ProductionReceiptRequest request)
+    {
+        dynamic? company = null;
+
+        try
+        {
+            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
+
+            return Task.FromResult(new SapDocumentResult
+            {
+                DocumentEntry = CreateReceiptFromProduction(company, request)
+            });
+        }
+        finally
+        {
+            ReleaseCompany(company);
+        }
+    }
+
+    public Task CloseAsync(ProductionCloseRequest request)
+    {
+        dynamic? company = null;
+
+        try
+        {
+            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
+            CloseProductionOrder(company, request.ProductionOrderDocEntry);
+            return Task.CompletedTask;
+        }
+        finally
+        {
+            ReleaseCompany(company);
+        }
+    }
+
+    private dynamic ConnectCompany(string companyDb)
     {
         var companyType = Type.GetTypeFromProgID("SAPbobsCOM.Company")
             ?? throw new InvalidOperationException("SAP DI API is not installed. ProgID SAPbobsCOM.Company was not found.");
@@ -121,7 +130,7 @@ public class SapDiApiProductionService : ISapProductionService
         }
 
         company.LicenseServer = _options.LicenseServer;
-        company.CompanyDB = _options.CompanyDb;
+        company.CompanyDB = companyDb;
         company.UserName = _options.UserName;
         company.Password = _options.Password;
         company.DbUserName = _options.DbUserName;
@@ -139,11 +148,29 @@ public class SapDiApiProductionService : ISapProductionService
             throw new InvalidOperationException($"SAP DI API connect failed. Code={connectResult}, Message={errorMessage}");
         }
 
-        _logger.LogInformation("Connected to SAP CompanyDB={CompanyDb}", _options.CompanyDb);
+        _logger.LogInformation("Connected to SAP CompanyDB={CompanyDb}", companyDb);
         return company;
     }
 
-    private string CreateIssueFromProduction(dynamic company, ProductionOrderCompleteRequest request)
+    private string ResolveCompanyDb(string? siteId)
+    {
+        if (string.IsNullOrWhiteSpace(siteId))
+        {
+            return _options.CompanyDb;
+        }
+
+        var match = _options.SiteDatabases
+            .FirstOrDefault(x => string.Equals(x.Key, siteId, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(match.Value))
+        {
+            return match.Value;
+        }
+
+        throw new ArgumentException($"Unknown siteId '{siteId}'.");
+    }
+
+    private string CreateIssueFromProduction(dynamic company, ProductionIssueRequest request)
     {
         dynamic document = company.GetBusinessObject(_options.IssueFromProductionObjectType);
 
@@ -183,7 +210,7 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    private string CreateReceiptFromProduction(dynamic company, ProductionOrderCompleteRequest request)
+    private string CreateReceiptFromProduction(dynamic company, ProductionReceiptRequest request)
     {
         dynamic document = company.GetBusinessObject(_options.ReceiptFromProductionObjectType);
 
@@ -260,6 +287,26 @@ public class SapDiApiProductionService : ISapProductionService
         if (addResult != 0)
         {
             throw new InvalidOperationException($"{documentName} failed. {company.GetLastErrorDescription()}");
+        }
+    }
+
+    private static void ReleaseCompany(dynamic? company)
+    {
+        if (company is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (company.Connected)
+            {
+                company.Disconnect();
+            }
+        }
+        finally
+        {
+            Marshal.FinalReleaseComObject(company);
         }
     }
 

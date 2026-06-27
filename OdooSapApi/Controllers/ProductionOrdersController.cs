@@ -5,7 +5,7 @@ using OdooSapApi.Services;
 namespace OdooSapApi.Controllers;
 
 [ApiController]
-[Route("api/sap/production-orders")]
+[Route("api/sap/production")]
 public class ProductionOrdersController : ControllerBase
 {
     private readonly ProductionOrderService _productionOrderService;
@@ -15,12 +15,29 @@ public class ProductionOrdersController : ControllerBase
         _productionOrderService = productionOrderService;
     }
 
-    [HttpPost("complete")]
-    public async Task<ActionResult<ApiResponse>> Complete([FromBody] ProductionOrderCompleteRequest request)
+    [HttpPost("issue")]
+    public async Task<ActionResult<ApiResponse>> Issue([FromBody] ProductionIssueRequest request)
+    {
+        return await ExecuteAsync(() => _productionOrderService.IssueAsync(request));
+    }
+
+    [HttpPost("receipt")]
+    public async Task<ActionResult<ApiResponse>> Receipt([FromBody] ProductionReceiptRequest request)
+    {
+        return await ExecuteAsync(() => _productionOrderService.ReceiptAsync(request));
+    }
+
+    [HttpPost("close")]
+    public async Task<ActionResult<ApiResponse>> Close([FromBody] ProductionCloseRequest request)
+    {
+        return await ExecuteAsync(() => _productionOrderService.CloseAsync(request));
+    }
+
+    private async Task<ActionResult<ApiResponse>> ExecuteAsync(Func<Task<ApiResponse>> action)
     {
         try
         {
-            var response = await _productionOrderService.CompleteAsync(request);
+            var response = await action();
             return Ok(response);
         }
         catch (ArgumentException ex)
