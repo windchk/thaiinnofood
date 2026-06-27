@@ -6,6 +6,7 @@ public class SapCompanyOptions
     public string SldServer { get; set; } = "";
     public string LicenseServer { get; set; } = "";
     public string CompanyDb { get; set; } = "";
+    public string LogDatabaseName { get; set; } = "TEMP_API";
     public string UserName { get; set; } = "";
     public string Password { get; set; } = "";
     public string DbUserName { get; set; } = "";

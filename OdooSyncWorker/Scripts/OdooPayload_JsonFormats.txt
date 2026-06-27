@@ -209,7 +209,27 @@ data format:
       "itemName": "Component item name",
       "plannedQuantity": 10.000000,
       "issuedQuantity": 5.000000,
-      "warehouse": "WH-RM"
+      "warehouse": "WH-RM",
+      "batches": [
+        {
+          "batchNumber": "BATCH-001",
+          "quantity": 4.000000,
+          "bins": [
+            {
+              "binAbsEntry": 1001,
+              "binCode": "BIN-A01",
+              "quantity": 4.000000
+            }
+          ]
+        }
+      ],
+      "bins": [
+        {
+          "binAbsEntry": 1001,
+          "binCode": "BIN-A01",
+          "quantity": 4.000000
+        }
+      ]
     }
   ]
 }
@@ -243,7 +263,27 @@ Full request body example:
         "itemName": "Component item name",
         "plannedQuantity": 10.000000,
         "issuedQuantity": 5.000000,
-        "warehouse": "WH-RM"
+        "warehouse": "WH-RM",
+        "batches": [
+          {
+            "batchNumber": "BATCH-001",
+            "quantity": 4.000000,
+            "bins": [
+              {
+                "binAbsEntry": 1001,
+                "binCode": "BIN-A01",
+                "quantity": 4.000000
+              }
+            ]
+          }
+        ],
+        "bins": [
+          {
+            "binAbsEntry": 1001,
+            "binCode": "BIN-A01",
+            "quantity": 4.000000
+          }
+        ]
       }
     ]
   }
@@ -254,6 +294,24 @@ Header = OWOR
 Lines  = WOR1
 Item names = OITM.ItemName
 Resource names = ORSC.ResName
+Batch availability = OBTQ + OBTN
+Batch bin availability = OBBQ + OBTN + OBIN
+Bin availability without batch = OIBQ + OBIN
+
+ProductionOrder line batch/bin:
+batches:
+  Available batches for the component item in that line warehouse.
+  Use this when Odoo sends Issue From Production back with batch-managed items.
+
+batches[].bins:
+  Available bin quantities for that batch.
+  Use this when the item is both batch-managed and bin-managed.
+
+bins:
+  Available bin quantities for item/warehouse when the item is not batch-managed.
+  Use this when the item is bin-managed but not batch-managed.
+
+If item has no batch and no bin, both batches and bins are empty arrays.
 
 ProductionOrder componentType:
 Item     = WOR1.ItemType = 4

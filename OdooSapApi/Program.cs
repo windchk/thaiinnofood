@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.Configure<SapCompanyOptions>(builder.Configuration.GetSection("SapCompany"));
+builder.Services.AddSingleton<SapCompanyResolver>();
+builder.Services.AddSingleton<SapApiLogService>();
 builder.Services.AddSingleton<ProductionOrderService>();
 builder.Services.AddSingleton<ISapProductionService, SapDiApiProductionService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

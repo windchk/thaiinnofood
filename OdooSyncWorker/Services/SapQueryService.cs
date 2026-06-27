@@ -178,6 +178,7 @@ public class SapQueryService
         }
 
         var first = rows.First();
+        var batchBins = await GetProductionLineBatchBinsAsync(conn, rows);
 
         return new
         {
@@ -204,9 +205,134 @@ public class SapQueryService
                     itemName = CleanText(x.ComponentItemName),
                     plannedQuantity = x.LinePlannedQty,
                     issuedQuantity = x.IssuedQty,
-                    warehouse = CleanText(x.LineWarehouse)
+                    warehouse = CleanText(x.LineWarehouse),
+                    batches = batchBins.GetBatches(CleanText(x.ItemCode), CleanText(x.LineWarehouse)),
+                    bins = batchBins.GetBins(CleanText(x.ItemCode), CleanText(x.LineWarehouse))
                 }).ToList()
         };
+    }
+
+    private static async Task<ProductionLineBatchBinLookup> GetProductionLineBatchBinsAsync(
+        SqlConnection conn,
+        IEnumerable<dynamic> rows)
+    {
+        var itemWarehousePairs = rows
+            .Where(x => x.LineNum is not null)
+            .Where(x => Convert.ToString(x.ItemType) == "4")
+            .Select(x => new
+            {
+                ItemCode = CleanText(x.ItemCode),
+                Warehouse = CleanText(x.LineWarehouse)
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x.ItemCode)
+                && !string.IsNullOrWhiteSpace(x.Warehouse))
+            .Distinct()
+            .ToList();
+
+        if (itemWarehousePairs.Count == 0)
+        {
+            return new ProductionLineBatchBinLookup([], []);
+        }
+
+        var itemCodes = itemWarehousePairs.Select(x => x.ItemCode).Distinct().ToArray();
+        var warehouses = itemWarehousePairs.Select(x => x.Warehouse).Distinct().ToArray();
+
+        var batchRows = (await conn.QueryAsync<BatchAvailabilityRow>(@"
+            SELECT
+                Q.ItemCode,
+                Q.WhsCode AS Warehouse,
+                B.DistNumber AS BatchNumber,
+                CAST(Q.Quantity AS DECIMAL(19,6)) AS Quantity
+            FROM dbo.OBTQ Q
+            INNER JOIN dbo.OBTN B
+                ON B.ItemCode = Q.ItemCode
+               AND B.SysNumber = Q.SysNumber
+            WHERE Q.Quantity > 0
+              AND Q.ItemCode IN @ItemCodes
+              AND Q.WhsCode IN @Warehouses",
+            new { ItemCodes = itemCodes, Warehouses = warehouses })).ToList();
+
+        var batchBinRows = (await conn.QueryAsync<BatchBinAvailabilityRow>(@"
+            SELECT
+                Q.ItemCode,
+                BIN.WhsCode AS Warehouse,
+                B.DistNumber AS BatchNumber,
+                BIN.AbsEntry AS BinAbsEntry,
+                BIN.BinCode,
+                CAST(Q.OnHandQty AS DECIMAL(19,6)) AS Quantity
+            FROM dbo.OBBQ Q
+            INNER JOIN dbo.OBTN B
+                ON B.AbsEntry = Q.SnBMDAbs
+            INNER JOIN dbo.OBIN BIN
+                ON BIN.AbsEntry = Q.BinAbs
+            WHERE Q.OnHandQty > 0
+              AND Q.ItemCode IN @ItemCodes
+              AND BIN.WhsCode IN @Warehouses",
+            new { ItemCodes = itemCodes, Warehouses = warehouses })).ToList();
+
+        var binRows = (await conn.QueryAsync<BinAvailabilityRow>(@"
+            SELECT
+                Q.ItemCode,
+                BIN.WhsCode AS Warehouse,
+                BIN.AbsEntry AS BinAbsEntry,
+                BIN.BinCode,
+                CAST(Q.OnHandQty AS DECIMAL(19,6)) AS Quantity
+            FROM dbo.OIBQ Q
+            INNER JOIN dbo.OBIN BIN
+                ON BIN.AbsEntry = Q.BinAbs
+            WHERE Q.OnHandQty > 0
+              AND Q.ItemCode IN @ItemCodes
+              AND BIN.WhsCode IN @Warehouses
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM dbo.OBBQ BQ
+                  WHERE BQ.ItemCode = Q.ItemCode
+                    AND BQ.BinAbs = Q.BinAbs
+                    AND BQ.OnHandQty > 0
+              )",
+            new { ItemCodes = itemCodes, Warehouses = warehouses })).ToList();
+
+        var batches = batchRows
+            .GroupBy(x => new { x.ItemCode, x.Warehouse, x.BatchNumber })
+            .Select(batch =>
+            {
+                var binMatches = batchBinRows
+                    .Where(bin => SameKey(bin.ItemCode, batch.Key.ItemCode)
+                        && SameKey(bin.Warehouse, batch.Key.Warehouse)
+                        && SameKey(bin.BatchNumber, batch.Key.BatchNumber))
+                    .Select(bin => new
+                    {
+                        binAbsEntry = bin.BinAbsEntry,
+                        binCode = CleanText(bin.BinCode),
+                        quantity = bin.Quantity
+                    })
+                    .ToList();
+
+                return new BatchAvailability(
+                    CleanText(batch.Key.ItemCode),
+                    CleanText(batch.Key.Warehouse),
+                    CleanText(batch.Key.BatchNumber),
+                    batch.Sum(x => x.Quantity),
+                    binMatches);
+            })
+            .ToList();
+
+        var bins = binRows
+            .Select(bin => new BinAvailability(
+                CleanText(bin.ItemCode),
+                CleanText(bin.Warehouse),
+                bin.BinAbsEntry,
+                CleanText(bin.BinCode),
+                bin.Quantity))
+            .ToList();
+
+        return new ProductionLineBatchBinLookup(batches, bins);
+    }
+
+    private static bool SameKey(string? left, string? right)
+    {
+        return string.Equals(CleanText(left), CleanText(right), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string CleanText(object? value)
@@ -271,5 +397,79 @@ public class SapQueryService
         return string.IsNullOrWhiteSpace(siteId)
             ? "TEST"
             : siteId.Trim().ToUpperInvariant();
+    }
+
+    private sealed record ProductionLineBatchBinLookup(
+        List<BatchAvailability> Batches,
+        List<BinAvailability> Bins)
+    {
+        public object[] GetBatches(string itemCode, string warehouse)
+        {
+            return Batches
+                .Where(x => SameKey(x.ItemCode, itemCode)
+                    && SameKey(x.Warehouse, warehouse))
+                .Select(x => new
+                {
+                    batchNumber = x.BatchNumber,
+                    quantity = x.Quantity,
+                    bins = x.Bins
+                })
+                .ToArray<object>();
+        }
+
+        public object[] GetBins(string itemCode, string warehouse)
+        {
+            return Bins
+                .Where(x => SameKey(x.ItemCode, itemCode)
+                    && SameKey(x.Warehouse, warehouse))
+                .Select(x => new
+                {
+                    binAbsEntry = x.BinAbsEntry,
+                    binCode = x.BinCode,
+                    quantity = x.Quantity
+                })
+                .ToArray<object>();
+        }
+    }
+
+    private sealed record BatchAvailability(
+        string ItemCode,
+        string Warehouse,
+        string BatchNumber,
+        decimal Quantity,
+        object Bins);
+
+    private sealed record BinAvailability(
+        string ItemCode,
+        string Warehouse,
+        int BinAbsEntry,
+        string BinCode,
+        decimal Quantity);
+
+    private sealed class BatchAvailabilityRow
+    {
+        public string ItemCode { get; set; } = "";
+        public string Warehouse { get; set; } = "";
+        public string BatchNumber { get; set; } = "";
+        public decimal Quantity { get; set; }
+    }
+
+    private sealed class BatchBinAvailabilityRow
+    {
+        public string ItemCode { get; set; } = "";
+        public string Warehouse { get; set; } = "";
+        public string BatchNumber { get; set; } = "";
+        public int BinAbsEntry { get; set; }
+        public string BinCode { get; set; } = "";
+        public decimal Quantity { get; set; }
+    }
+
+    private sealed class BinAvailabilityRow
+    {
+        public string ItemCode { get; set; } = "";
+        public string Warehouse { get; set; } = "";
+        public int BinAbsEntry { get; set; }
+        public string BinCode { get; set; } = "";
+        public decimal Quantity { get; set; }
     }
 }

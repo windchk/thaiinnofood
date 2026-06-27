@@ -1,0 +1,420 @@
+ตัวอย่าง JSON Body สำหรับ OdooSapApi
+====================================
+
+ข้อสำคัญ
+--------
+- ชื่อ field ด้านล่างเป็นตัวพิมพ์เล็ก/ใหญ่ที่ API ใช้จริง ให้ส่งตามนี้
+- ชื่อ field ที่เป็นข้อมูลเดียวกับ ProductionOrder payload ฝั่ง OdooSyncWorker ใช้ชื่อเดียวกัน เช่น docEntry, docNum, lineNum, itemCode, warehouse
+- ตอนส่ง request จริง ให้ส่งเฉพาะ JSON body ไม่ต้องใส่บรรทัดคำอธิบาย
+- siteId ใช้เลือกฐานข้อมูล SAP จาก appsettings.json:
+  PRD  = TIF_GOLIVE
+  TEST = TEST_INTERFACE
+
+
+ข้อมูลที่ Odoo ไม่ต้องส่งมา
+---------------------------
+- sapDatabaseName: API จะหาให้เองจาก siteId
+- docNum: request ไม่ต้องส่ง เพราะ API ใช้ docEntry หา Production Order และส่ง docNum กลับใน response ถ้าอ่านจาก SAP ได้
+- processType: API กำหนดเองตอนเขียน log
+- baseType: API ใส่เองจาก config ProductionOrderObjectType = 202
+- baseEntry: API ใช้ docEntry ไปใส่ document.Lines.BaseEntry เอง
+- sapDocumentEntry, sapDocumentNumber: API อ่านจาก SAP หลังทำรายการสำเร็จ
+- status, errorMessage, requestJson, responseJson, processDate, processBy: API เขียนลง TEMP_API.dbo.INT_SapApiLog ให้อัตโนมัติ
+- ข้อมูล connection SAP: อ่านจาก appsettings.json
+
+
+รูปแบบ batch/bin ที่รองรับ
+=========================
+
+API รองรับทุกกรณีนี้:
+1. ไม่มี batch และไม่มี bin
+2. มี batch แต่ไม่มี bin
+3. ไม่มี batch แต่มี bin
+4. มี batch และมี bin
+5. 1 item มีหลาย batch
+6. 1 batch มีหลาย bin
+7. 1 item ไม่มี batch แต่กระจายหลาย bin
+
+field สำหรับ batch/bin:
+- batchNumber: format เดิม รองรับ 1 batch ต่อ 1 line
+- batches: format ใหม่ ใช้เมื่อ 1 item มีหลาย batch หรือ batch มี bin
+- bins: ใช้เมื่อ item ไม่มี batch แต่มี bin
+- binAbsEntry: AbsEntry ของ bin location ใน SAP
+- binCode: รหัส bin location ถ้าไม่รู้ binAbsEntry; API จะ lookup OBIN.AbsEntry จาก database ตาม siteId
+
+กฎการส่ง batch/bin:
+- ถ้าส่ง batches แล้ว ห้ามส่ง batchNumber พร้อมกัน
+- ถ้าส่ง batches แล้ว และต้องใช้ bin ให้ใส่ bins ไว้ใต้ batches[].bins
+- ถ้าไม่มี batch แต่มี bin ให้ใส่ bins ไว้ใต้ line
+- ผลรวม batches[].quantity ต้องเท่ากับ quantity ของ line
+- ผลรวม bins[].quantity ต้องเท่ากับ quantity ที่เกี่ยวข้อง
+
+
+1. Issue From Production
+------------------------
+POST /api/sap/production/issue
+
+ข้อมูลที่ต้องส่ง
+- siteId: PRD หรือ TEST
+- docEntry: ค่าเดียวกับ ProductionOrder.data.docEntry จาก payload ที่ worker ส่งให้ Odoo
+- docDate: วันที่เอกสาร/วันที่ posting ที่จะใส่เข้า SAP DocDate
+- issueLines: ต้องมีอย่างน้อย 1 รายการ
+- issueLines[].lineNum: ค่าเดียวกับ ProductionOrder.data.lines[].lineNum ใช้เป็น SAP BaseLine
+- issueLines[].itemCode: ค่าเดียวกับ ProductionOrder.data.lines[].itemCode
+- issueLines[].quantity: จำนวนที่ต้องการ issue จาก Odoo
+- issueLines[].warehouse: ค่าเดียวกับ ProductionOrder.data.lines[].warehouse ใช้เป็น warehouse ที่ตัดของ
+
+Issue: ไม่มี batch และไม่มี bin
+-------------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "issueLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "PKG06033",
+      "quantity": 10,
+      "warehouse": "WH-PD"
+    }
+  ]
+}
+
+Issue: มี batch แต่ไม่มี bin
+----------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "issueLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "PKG06033",
+      "quantity": 10,
+      "warehouse": "WH-PD",
+      "batches": [
+        {
+          "batchNumber": "BATCH-001",
+          "quantity": 4
+        },
+        {
+          "batchNumber": "BATCH-002",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
+
+Issue: ไม่มี batch แต่มี bin
+----------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "issueLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "PKG06033",
+      "quantity": 10,
+      "warehouse": "WH-PD",
+      "bins": [
+        {
+          "binAbsEntry": 1001,
+          "binCode": "",
+          "quantity": 4
+        },
+        {
+          "binAbsEntry": 1002,
+          "binCode": "",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
+
+Issue: มี batch และมี bin
+-------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "issueLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "PKG06033",
+      "quantity": 10,
+      "warehouse": "WH-PD",
+      "batches": [
+        {
+          "batchNumber": "BATCH-001",
+          "quantity": 4,
+          "bins": [
+            {
+              "binAbsEntry": 1001,
+              "binCode": "",
+              "quantity": 4
+            }
+          ]
+        },
+        {
+          "batchNumber": "BATCH-002",
+          "quantity": 6,
+          "bins": [
+            {
+              "binAbsEntry": 1002,
+              "binCode": "",
+              "quantity": 2
+            },
+            {
+              "binAbsEntry": 1003,
+              "binCode": "",
+              "quantity": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Issue: format เดิม 1 batch ต่อ 1 line
+-------------------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "issueLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "PKG06033",
+      "quantity": 10,
+      "warehouse": "WH-PD",
+      "batchNumber": "BATCH-001"
+    }
+  ]
+}
+
+Issue mapping เข้า SAP DI API
+-----------------------------
+- docDate -> document.DocDate
+- docEntry -> document.Lines.BaseEntry
+- issueLines[].lineNum -> document.Lines.BaseLine
+- issueLines[].itemCode -> document.Lines.ItemCode
+- issueLines[].quantity -> document.Lines.Quantity
+- issueLines[].warehouse -> document.Lines.WarehouseCode
+- issueLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
+- issueLines[].batches[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
+- issueLines[].batches[].quantity -> document.Lines.BatchNumbers.Quantity
+- issueLines[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
+- issueLines[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- issueLines[].batches[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
+- issueLines[].batches[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- API ใส่ document.Lines.BaseType = 202 เอง
+
+
+2. Receipt From Production
+--------------------------
+POST /api/sap/production/receipt
+
+ข้อมูลที่ต้องส่ง
+- siteId: PRD หรือ TEST
+- docEntry: ค่าเดียวกับ ProductionOrder.data.docEntry จาก payload ที่ worker ส่งให้ Odoo
+- docDate: วันที่เอกสาร/วันที่ posting ที่จะใส่เข้า SAP DocDate
+- receiptLines: ต้องมีอย่างน้อย 1 รายการ
+- receiptLines[].itemCode: ปกติใช้ค่าเดียวกับ ProductionOrder.data.productItemCode
+- receiptLines[].quantity: จำนวนที่ต้องการ receipt จาก Odoo
+- receiptLines[].warehouse: ปกติใช้ค่าเดียวกับ ProductionOrder.data.warehouse เป็น warehouse ที่รับของเข้า
+- receiptLines[].lineNum: optional ถ้าต้องอ้าง line ของ Production Order
+
+Receipt: ไม่มี batch และไม่มี bin
+---------------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "receiptLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "FG05079",
+      "quantity": 10,
+      "warehouse": "WH-FG"
+    }
+  ]
+}
+
+Receipt: มี batch แต่ไม่มี bin
+------------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "receiptLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "FG05079",
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 4
+        },
+        {
+          "batchNumber": "FG-BATCH-002",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
+
+Receipt: ไม่มี batch แต่มี bin
+------------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "receiptLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "FG05079",
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "bins": [
+        {
+          "binAbsEntry": 2001,
+          "binCode": "",
+          "quantity": 10
+        }
+      ]
+    }
+  ]
+}
+
+Receipt: มี batch และมี bin
+---------------------------
+{
+  "siteId": "PRD",
+  "docEntry": 49123,
+  "docDate": "2026-06-27",
+  "receiptLines": [
+    {
+      "lineNum": 0,
+      "itemCode": "FG05079",
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 4,
+          "bins": [
+            {
+              "binAbsEntry": 2001,
+              "binCode": "",
+              "quantity": 4
+            }
+          ]
+        },
+        {
+          "batchNumber": "FG-BATCH-002",
+          "quantity": 6,
+          "bins": [
+            {
+              "binAbsEntry": 2002,
+              "binCode": "",
+              "quantity": 6
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Receipt mapping เข้า SAP DI API
+-------------------------------
+- docDate -> document.DocDate
+- docEntry -> document.Lines.BaseEntry
+- receiptLines[].lineNum -> document.Lines.BaseLine เฉพาะกรณีที่ส่งมา
+- receiptLines[].itemCode -> document.Lines.ItemCode
+- receiptLines[].quantity -> document.Lines.Quantity
+- receiptLines[].warehouse -> document.Lines.WarehouseCode
+- receiptLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
+- receiptLines[].batches[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
+- receiptLines[].batches[].quantity -> document.Lines.BatchNumbers.Quantity
+- receiptLines[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
+- receiptLines[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- receiptLines[].batches[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
+- receiptLines[].batches[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- API ใส่ document.Lines.BaseType = 202 เอง
+
+
+3. Close Production Order
+-------------------------
+POST /api/sap/production/close
+
+JSON body
+---------
+{
+  "siteId": "PRD",
+  "docEntry": 49123
+}
+
+API ใส่ค่าเอง
+-------------
+- Production Order object type = ProductionOrderObjectType จาก config, default 202
+- ClosedProductionOrderStatus = 2
+
+
+ตัวอย่าง response กรณีสำเร็จ
+============================
+
+Issue From Production
+---------------------
+{
+  "success": true,
+  "message": "Issue From Production completed.",
+  "data": {
+    "siteId": "PRD",
+    "sapDatabaseName": "TIF_GOLIVE",
+    "documentEntry": "12345",
+    "documentNumber": "60000123"
+  }
+}
+
+Receipt From Production
+-----------------------
+{
+  "success": true,
+  "message": "Receipt From Production completed.",
+  "data": {
+    "siteId": "PRD",
+    "sapDatabaseName": "TIF_GOLIVE",
+    "documentEntry": "12346",
+    "documentNumber": "59000123"
+  }
+}
+
+Close Production Order
+----------------------
+{
+  "success": true,
+  "message": "Production Order closed.",
+  "data": {
+    "siteId": "PRD",
+    "sapDatabaseName": "TIF_GOLIVE",
+    "docEntry": 49123,
+    "docNum": "2601088",
+    "closed": true
+  }
+}
+
+ตัวอย่าง response กรณี error
+============================
+{
+  "success": false,
+  "message": "docDate is required.",
+  "data": null
+}

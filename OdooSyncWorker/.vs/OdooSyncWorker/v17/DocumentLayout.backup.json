@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\scripts\\windowsservice_deploy_guide.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:scripts\\windowsservice_deploy_guide.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\scripts\\odoopayload_jsonformats.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:scripts\\odoopayload_jsonformats.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\scripts\\windowsservice_deploy_guide.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:scripts\\windowsservice_deploy_guide.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\scripts\\odooqueue_triggers_test_prd.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
@@ -58,11 +58,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "WindowsService_Deploy_Guide.txt",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Scripts\\WindowsService_Deploy_Guide.txt",
               "RelativeDocumentMoniker": "Scripts\\WindowsService_Deploy_Guide.txt",
@@ -75,13 +75,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "OdooPayload_JsonFormats.txt",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Scripts\\OdooPayload_JsonFormats.txt",
               "RelativeDocumentMoniker": "Scripts\\OdooPayload_JsonFormats.txt",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Scripts\\OdooPayload_JsonFormats.txt",
               "RelativeToolTip": "Scripts\\OdooPayload_JsonFormats.txt",
-              "ViewState": "AgIAALcAAAAAAAAAAAAAAMoAAAAXAAAAAAAAAA==",
+              "ViewState": "AgIAAK4AAAAAAAAAAAAAAM8AAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
               "WhenOpened": "2026-06-27T08:21:34.121Z",
               "EditorCaption": ""
@@ -96,8 +96,7 @@
               "RelativeToolTip": "Services\\OdooClient.cs",
               "ViewState": "AgIAAAsAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T08:12:24.945Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T08:12:24.945Z"
             },
             {
               "$type": "Document",
@@ -109,8 +108,7 @@
               "RelativeToolTip": "Services\\SapQueryService.cs",
               "ViewState": "AgIAANQAAAAAAAAAAAAswAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T08:11:59.186Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T08:11:59.186Z"
             },
             {
               "$type": "Document",
@@ -122,8 +120,7 @@
               "RelativeToolTip": "Scripts\\OdooQueue_Triggers_TEST_PRD.txt",
               "ViewState": "AgIAAKsAAAAAAAAAAAAAANQAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2026-06-27T07:56:57.801Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T07:56:57.801Z"
             },
             {
               "$type": "Document",
@@ -135,8 +132,7 @@
               "RelativeToolTip": "Scripts\\INT_OdooQueue_Setup.txt",
               "ViewState": "AgIAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2026-06-27T07:53:41.684Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T07:53:41.684Z"
             },
             {
               "$type": "Document",
@@ -148,8 +144,7 @@
               "RelativeToolTip": "Services\\QueueService.cs",
               "ViewState": "AgIAADYAAAAAAAAAAAAYwA4AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T07:20:57.267Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T07:20:57.267Z"
             },
             {
               "$type": "Document",
@@ -161,8 +156,7 @@
               "RelativeToolTip": "appsettings.Development.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-27T04:12:56.07Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T04:12:56.07Z"
             },
             {
               "$type": "Document",
@@ -174,8 +168,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-27T03:56:57.391Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T03:56:57.391Z"
             },
             {
               "$type": "Document",
@@ -211,8 +204,7 @@
               "RelativeToolTip": "Worker.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T04:08:09.345Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-27T04:08:09.345Z"
             }
           ]
         }

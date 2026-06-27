@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using OdooSapApi.Models;
 using System.Runtime.InteropServices;
@@ -8,13 +9,16 @@ public class SapDiApiProductionService : ISapProductionService
 {
     private readonly SapCompanyOptions _options;
     private readonly ILogger<SapDiApiProductionService> _logger;
+    private readonly SapCompanyResolver _companyResolver;
 
     public SapDiApiProductionService(
         IOptions<SapCompanyOptions> options,
-        ILogger<SapDiApiProductionService> logger)
+        ILogger<SapDiApiProductionService> logger,
+        SapCompanyResolver companyResolver)
     {
         _options = options.Value;
         _logger = logger;
+        _companyResolver = companyResolver;
     }
 
     public Task<ApiResponse> CheckConnectionAsync(string? siteId = null)
@@ -23,7 +27,7 @@ public class SapDiApiProductionService : ISapProductionService
 
         try
         {
-            var companyDb = ResolveCompanyDb(siteId);
+            var companyDb = _companyResolver.ResolveCompanyDb(siteId);
             company = ConnectCompany(companyDb);
 
             return Task.FromResult(new ApiResponse
@@ -67,12 +71,10 @@ public class SapDiApiProductionService : ISapProductionService
 
         try
         {
-            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
+            var companyDb = _companyResolver.ResolveCompanyDb(request.SiteId);
+            company = ConnectCompany(companyDb);
 
-            return Task.FromResult(new SapDocumentResult
-            {
-                DocumentEntry = CreateIssueFromProduction(company, request)
-            });
+            return Task.FromResult(CreateIssueFromProduction(company, companyDb, request));
         }
         finally
         {
@@ -86,12 +88,10 @@ public class SapDiApiProductionService : ISapProductionService
 
         try
         {
-            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
+            var companyDb = _companyResolver.ResolveCompanyDb(request.SiteId);
+            company = ConnectCompany(companyDb);
 
-            return Task.FromResult(new SapDocumentResult
-            {
-                DocumentEntry = CreateReceiptFromProduction(company, request)
-            });
+            return Task.FromResult(CreateReceiptFromProduction(company, companyDb, request));
         }
         finally
         {
@@ -99,15 +99,14 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    public Task CloseAsync(ProductionCloseRequest request)
+    public Task<SapProductionCloseResult> CloseAsync(ProductionCloseRequest request)
     {
         dynamic? company = null;
 
         try
         {
-            company = ConnectCompany(ResolveCompanyDb(request.SiteId));
-            CloseProductionOrder(company, request.ProductionOrderDocEntry);
-            return Task.CompletedTask;
+            company = ConnectCompany(_companyResolver.ResolveCompanyDb(request.SiteId));
+            return Task.FromResult(CloseProductionOrder(company, request.DocEntry));
         }
         finally
         {
@@ -152,57 +151,40 @@ public class SapDiApiProductionService : ISapProductionService
         return company;
     }
 
-    private string ResolveCompanyDb(string? siteId)
-    {
-        if (string.IsNullOrWhiteSpace(siteId))
-        {
-            return _options.CompanyDb;
-        }
-
-        var match = _options.SiteDatabases
-            .FirstOrDefault(x => string.Equals(x.Key, siteId, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(match.Value))
-        {
-            return match.Value;
-        }
-
-        throw new ArgumentException($"Unknown siteId '{siteId}'.");
-    }
-
-    private string CreateIssueFromProduction(dynamic company, ProductionIssueRequest request)
+    private SapDocumentResult CreateIssueFromProduction(dynamic company, string companyDb, ProductionIssueRequest request)
     {
         dynamic document = company.GetBusinessObject(_options.IssueFromProductionObjectType);
 
         try
         {
-            document.DocDate = DateTime.Today;
+            document.DocDate = request.DocDate!.Value;
 
             foreach (var line in request.IssueLines)
             {
                 document.Lines.BaseType = _options.ProductionOrderObjectType;
-                document.Lines.BaseEntry = request.ProductionOrderDocEntry;
-                document.Lines.BaseLine = line.BaseLine;
+                document.Lines.BaseEntry = request.DocEntry;
+                document.Lines.BaseLine = line.LineNum;
                 document.Lines.ItemCode = line.ItemCode;
                 document.Lines.Quantity = Convert.ToDouble(line.Quantity);
 
-                if (!string.IsNullOrWhiteSpace(line.WarehouseCode))
+                if (!string.IsNullOrWhiteSpace(line.Warehouse))
                 {
-                    document.Lines.WarehouseCode = line.WarehouseCode;
+                    document.Lines.WarehouseCode = line.Warehouse;
                 }
 
-                if (!string.IsNullOrWhiteSpace(line.BatchNumber))
-                {
-                    document.Lines.BatchNumbers.BatchNumber = line.BatchNumber;
-                    document.Lines.BatchNumbers.Quantity = Convert.ToDouble(line.Quantity);
-                    document.Lines.BatchNumbers.Add();
-                }
+                ApplyBatchesAndBins(companyDb, document.Lines, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
 
                 document.Lines.Add();
             }
 
             AddDocument(company, document, "Issue From Production");
-            return Convert.ToString(company.GetNewObjectKey()) ?? "";
+            var documentEntry = Convert.ToString(company.GetNewObjectKey()) ?? "";
+
+            return new SapDocumentResult
+            {
+                DocumentEntry = documentEntry,
+                DocumentNumber = GetDocumentNumber(company, _options.IssueFromProductionObjectType, documentEntry)
+            };
         }
         finally
         {
@@ -210,43 +192,44 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    private string CreateReceiptFromProduction(dynamic company, ProductionReceiptRequest request)
+    private SapDocumentResult CreateReceiptFromProduction(dynamic company, string companyDb, ProductionReceiptRequest request)
     {
         dynamic document = company.GetBusinessObject(_options.ReceiptFromProductionObjectType);
 
         try
         {
-            document.DocDate = DateTime.Today;
+            document.DocDate = request.DocDate!.Value;
 
             foreach (var line in request.ReceiptLines)
             {
                 document.Lines.BaseType = _options.ProductionOrderObjectType;
-                document.Lines.BaseEntry = request.ProductionOrderDocEntry;
+                document.Lines.BaseEntry = request.DocEntry;
                 document.Lines.ItemCode = line.ItemCode;
                 document.Lines.Quantity = Convert.ToDouble(line.Quantity);
 
-                if (line.BaseLine.HasValue)
+                if (line.LineNum.HasValue)
                 {
-                    document.Lines.BaseLine = line.BaseLine.Value;
+                    document.Lines.BaseLine = line.LineNum.Value;
                 }
 
-                if (!string.IsNullOrWhiteSpace(line.WarehouseCode))
+                if (!string.IsNullOrWhiteSpace(line.Warehouse))
                 {
-                    document.Lines.WarehouseCode = line.WarehouseCode;
+                    document.Lines.WarehouseCode = line.Warehouse;
                 }
 
-                if (!string.IsNullOrWhiteSpace(line.BatchNumber))
-                {
-                    document.Lines.BatchNumbers.BatchNumber = line.BatchNumber;
-                    document.Lines.BatchNumbers.Quantity = Convert.ToDouble(line.Quantity);
-                    document.Lines.BatchNumbers.Add();
-                }
+                ApplyBatchesAndBins(companyDb, document.Lines, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
 
                 document.Lines.Add();
             }
 
             AddDocument(company, document, "Receipt From Production");
-            return Convert.ToString(company.GetNewObjectKey()) ?? "";
+            var documentEntry = Convert.ToString(company.GetNewObjectKey()) ?? "";
+
+            return new SapDocumentResult
+            {
+                DocumentEntry = documentEntry,
+                DocumentNumber = GetDocumentNumber(company, _options.ReceiptFromProductionObjectType, documentEntry)
+            };
         }
         finally
         {
@@ -254,16 +237,19 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    private void CloseProductionOrder(dynamic company, int productionOrderDocEntry)
+    private SapProductionCloseResult CloseProductionOrder(dynamic company, int DocEntry)
     {
         dynamic productionOrder = company.GetBusinessObject(_options.ProductionOrderObjectType);
 
         try
         {
-            if (!productionOrder.GetByKey(productionOrderDocEntry))
+            if (!productionOrder.GetByKey(DocEntry))
             {
-                throw new InvalidOperationException($"Production Order not found. DocEntry={productionOrderDocEntry}");
+                throw new InvalidOperationException($"Production Order not found. DocEntry={DocEntry}");
             }
+
+            var productionOrderDocNum = GetComPropertyAsString(productionOrder, "DocumentNumber")
+                ?? GetComPropertyAsString(productionOrder, "DocNum");
 
             productionOrder.ProductionOrderStatus = _options.ClosedProductionOrderStatus;
 
@@ -273,6 +259,13 @@ public class SapDiApiProductionService : ISapProductionService
             {
                 throw new InvalidOperationException($"Close Production Order failed. {company.GetLastErrorDescription()}");
             }
+
+            return new SapProductionCloseResult
+            {
+                DocEntry = DocEntry,
+                DocNum = productionOrderDocNum,
+                Closed = true
+            };
         }
         finally
         {
@@ -287,6 +280,174 @@ public class SapDiApiProductionService : ISapProductionService
         if (addResult != 0)
         {
             throw new InvalidOperationException($"{documentName} failed. {company.GetLastErrorDescription()}");
+        }
+    }
+
+    private void ApplyBatchesAndBins(
+        string companyDb,
+        dynamic documentLine,
+        decimal lineQuantity,
+        string? legacyBatchNumber,
+        List<ProductionBatchRequest> batches,
+        List<ProductionBinAllocationRequest> lineBins)
+    {
+        var effectiveBatches = batches.Count > 0
+            ? batches
+            : BuildLegacyBatchList(legacyBatchNumber, lineQuantity);
+
+        if (effectiveBatches.Count > 0)
+        {
+            for (var batchIndex = 0; batchIndex < effectiveBatches.Count; batchIndex++)
+            {
+                var batch = effectiveBatches[batchIndex];
+
+                documentLine.BatchNumbers.BatchNumber = batch.BatchNumber;
+                documentLine.BatchNumbers.Quantity = Convert.ToDouble(batch.Quantity);
+                documentLine.BatchNumbers.Add();
+
+                foreach (var bin in batch.Bins)
+                {
+                    AddBinAllocation(companyDb, documentLine, bin, batchIndex);
+                }
+            }
+
+            return;
+        }
+
+        foreach (var bin in lineBins)
+        {
+            AddBinAllocation(companyDb, documentLine, bin, null);
+        }
+    }
+
+    private static List<ProductionBatchRequest> BuildLegacyBatchList(string? legacyBatchNumber, decimal lineQuantity)
+    {
+        if (string.IsNullOrWhiteSpace(legacyBatchNumber))
+        {
+            return [];
+        }
+
+        return
+        [
+            new ProductionBatchRequest
+            {
+                BatchNumber = legacyBatchNumber,
+                Quantity = lineQuantity
+            }
+        ];
+    }
+
+    private void AddBinAllocation(
+        string companyDb,
+        dynamic documentLine,
+        ProductionBinAllocationRequest bin,
+        int? batchIndex)
+    {
+        documentLine.BinAllocations.BinAbsEntry = ResolveBinAbsEntry(companyDb, bin);
+        documentLine.BinAllocations.Quantity = Convert.ToDouble(bin.Quantity);
+
+        if (batchIndex.HasValue)
+        {
+            documentLine.BinAllocations.SerialAndBatchNumbersBaseLine = batchIndex.Value;
+        }
+
+        documentLine.BinAllocations.Add();
+    }
+
+    private int ResolveBinAbsEntry(string companyDb, ProductionBinAllocationRequest bin)
+    {
+        if (bin.BinAbsEntry.HasValue)
+        {
+            return bin.BinAbsEntry.Value;
+        }
+
+        if (string.IsNullOrWhiteSpace(bin.BinCode))
+        {
+            throw new ArgumentException("binAbsEntry or binCode is required when bins is sent.");
+        }
+
+        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 1 AbsEntry
+            FROM dbo.OBIN
+            WHERE BinCode = @BinCode;
+            """;
+        command.Parameters.AddWithValue("@BinCode", bin.BinCode);
+
+        var result = command.ExecuteScalar();
+
+        if (result is null || result == DBNull.Value)
+        {
+            throw new ArgumentException($"Bin location not found. binCode={bin.BinCode}");
+        }
+
+        return Convert.ToInt32(result);
+    }
+
+    private string BuildSqlConnectionString(string companyDb)
+    {
+        var builder = new SqlConnectionStringBuilder
+        {
+            DataSource = _options.Server,
+            InitialCatalog = companyDb,
+            UserID = _options.DbUserName,
+            Password = _options.DbPassword,
+            Encrypt = false,
+            TrustServerCertificate = true
+        };
+
+        return builder.ConnectionString;
+    }
+
+    private static string? GetDocumentNumber(dynamic company, int objectType, string documentEntry)
+    {
+        if (!int.TryParse(documentEntry, out var docEntry))
+        {
+            return null;
+        }
+
+        dynamic? document = null;
+
+        try
+        {
+            document = company.GetBusinessObject(objectType);
+
+            if (!document.GetByKey(docEntry))
+            {
+                return null;
+            }
+
+            return GetComPropertyAsString(document, "DocNum")
+                ?? GetComPropertyAsString(document, "DocumentNumber");
+        }
+        finally
+        {
+            if (document is not null)
+            {
+                Marshal.FinalReleaseComObject(document);
+            }
+        }
+    }
+
+    private static string? GetComPropertyAsString(dynamic target, string propertyName)
+    {
+        try
+        {
+            var value = target.GetType().InvokeMember(
+                propertyName,
+                System.Reflection.BindingFlags.GetProperty,
+                null,
+                target,
+                null);
+
+            return Convert.ToString(value);
+        }
+        catch
+        {
+            return null;
         }
     }
 
