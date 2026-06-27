@@ -38,7 +38,11 @@ namespace OdooSyncWorker
                     {
                         try
                         {
-                            var locked = await _queueService.MarkProcessingAsync(item.QueueId);
+                            item.SapDatabaseName = _sapQueryService.GetSapDatabaseName(item.SiteId);
+
+                            var locked = await _queueService.MarkProcessingAsync(
+                                item.QueueId,
+                                item.SapDatabaseName);
 
                             if (!locked)
                             {
@@ -47,7 +51,7 @@ namespace OdooSyncWorker
 
                             object payload = item.ObjectType switch
                             {
-                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey),
+                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId),
                                 _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
                             };
 
@@ -59,8 +63,10 @@ namespace OdooSyncWorker
                             await _queueService.MarkSuccessAsync(item.QueueId, payload, responseJson);
 
                             _logger.LogInformation(
-                                "Queue {QueueId} sent successfully. ObjectType={ObjectType}, ObjectKey={ObjectKey}",
+                                "Queue {QueueId} sent successfully. SiteId={SiteId}, SapDatabaseName={SapDatabaseName}, ObjectType={ObjectType}, ObjectKey={ObjectKey}",
                                 item.QueueId,
+                                item.SiteId,
+                                item.SapDatabaseName,
                                 item.ObjectType,
                                 item.ObjectKey);
                         }

@@ -7,20 +7,20 @@
       "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\models\\odooqueueitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:models\\odooqueueitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosyncworker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}|OdooSyncWorker.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
   "DocumentGroupContainers": [
@@ -40,27 +40,27 @@
               "RelativeDocumentMoniker": "appsettings.Development.json",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\appsettings.Development.json",
               "RelativeToolTip": "appsettings.Development.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAxAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABRAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-06-27T04:12:56.07Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\appsettings.json",
               "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-06-27T03:56:57.391Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "OdooQueueItem.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Models\\OdooQueueItem.cs",
               "RelativeDocumentMoniker": "Models\\OdooQueueItem.cs",
@@ -68,11 +68,12 @@
               "RelativeToolTip": "Models\\OdooQueueItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T04:08:21.621Z"
+              "WhenOpened": "2026-06-27T04:08:21.621Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -80,19 +81,21 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T04:08:15.895Z"
+              "WhenOpened": "2026-06-27T04:08:15.895Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Worker.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Worker.cs",
               "RelativeDocumentMoniker": "Worker.cs",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Worker.cs",
               "RelativeToolTip": "Worker.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-27T04:08:09.345Z"
+              "WhenOpened": "2026-06-27T04:08:09.345Z",
+              "EditorCaption": ""
             }
           ]
         }

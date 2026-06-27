@@ -14,12 +14,14 @@ public class QueueService
 
     private readonly string _tempApiConn;
     private readonly int _maxRetry;
+    private readonly string _defaultSiteId;
 
     public QueueService(IConfiguration configuration)
     {
         _tempApiConn = configuration.GetConnectionString("TempApiDb")
             ?? throw new Exception("Missing TempApiDb connection string");
         _maxRetry = int.Parse(configuration["Worker:MaxRetry"] ?? "3");
+        _defaultSiteId = configuration["Worker:DefaultSiteId"] ?? "TEST";
     }
 
     public async Task<IEnumerable<Models.OdooQueueItem>> GetNewQueueAsync()
@@ -27,32 +29,70 @@ public class QueueService
         using var conn = new SqlConnection(_tempApiConn);
 
         return await conn.QueryAsync<Models.OdooQueueItem>(@"
-            SELECT TOP 10
-                QueueId,
-                ObjectType,
-                ObjectKey,
-                ActionType,
-                Status,
-                RetryCount
-            FROM dbo.INT_OdooQueue
-            WHERE Status = 'N'
-              AND RetryCount < @MaxRetry
-            ORDER BY QueueId",
-            new { MaxRetry = _maxRetry });
+            IF COL_LENGTH('dbo.INT_OdooQueue', 'SiteId') IS NOT NULL
+            BEGIN
+                SELECT TOP 10
+                    QueueId,
+                    ObjectType,
+                    ObjectKey,
+                    ActionType,
+                    ISNULL(NULLIF(SiteId, ''), @DefaultSiteId) AS SiteId,
+                    CASE
+                        WHEN COL_LENGTH('dbo.INT_OdooQueue', 'SapDatabaseName') IS NOT NULL
+                            THEN ISNULL(SapDatabaseName, '')
+                        ELSE ''
+                    END AS SapDatabaseName,
+                    Status,
+                    RetryCount
+                FROM dbo.INT_OdooQueue
+                WHERE Status = 'N'
+                  AND RetryCount < @MaxRetry
+                ORDER BY QueueId
+            END
+            ELSE
+            BEGIN
+                SELECT TOP 10
+                    QueueId,
+                    ObjectType,
+                    ObjectKey,
+                    ActionType,
+                    @DefaultSiteId AS SiteId,
+                    '' AS SapDatabaseName,
+                    Status,
+                    RetryCount
+                FROM dbo.INT_OdooQueue
+                WHERE Status = 'N'
+                  AND RetryCount < @MaxRetry
+                ORDER BY QueueId
+            END",
+            new { MaxRetry = _maxRetry, DefaultSiteId = _defaultSiteId });
     }
 
-    public async Task<bool> MarkProcessingAsync(int queueId)
+    public async Task<bool> MarkProcessingAsync(int queueId, string sapDatabaseName)
     {
         using var conn = new SqlConnection(_tempApiConn);
 
         var rows = await conn.ExecuteAsync(@"
-            UPDATE dbo.INT_OdooQueue
-            SET Status = 'P',
-                ProcessDate = GETDATE(),
-                ProcessBy = HOST_NAME()
-            WHERE QueueId = @QueueId
-              AND Status = 'N'",
-            new { QueueId = queueId });
+            IF COL_LENGTH('dbo.INT_OdooQueue', 'SapDatabaseName') IS NOT NULL
+            BEGIN
+                UPDATE dbo.INT_OdooQueue
+                SET Status = 'P',
+                    ProcessDate = GETDATE(),
+                    ProcessBy = HOST_NAME(),
+                    SapDatabaseName = @SapDatabaseName
+                WHERE QueueId = @QueueId
+                  AND Status = 'N'
+            END
+            ELSE
+            BEGIN
+                UPDATE dbo.INT_OdooQueue
+                SET Status = 'P',
+                    ProcessDate = GETDATE(),
+                    ProcessBy = HOST_NAME()
+                WHERE QueueId = @QueueId
+                  AND Status = 'N'
+            END",
+            new { QueueId = queueId, SapDatabaseName = sapDatabaseName });
 
         return rows > 0;
     }
