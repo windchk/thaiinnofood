@@ -152,7 +152,7 @@ public class SapQueryService
                 L.ItemType,
                 L.ItemCode,
                 COALESCE(
-                    NULLIF(L.LineText, ''),
+                    NULLIF(CAST(L.LineText AS NVARCHAR(MAX)), N''),
                     M.ItemName,
                     R.ResName,
                     L.ItemCode

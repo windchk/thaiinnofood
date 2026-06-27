@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OdooSyncWorker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64e1ba589bbfd27f17833d05d5645ecf9137669d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d5d121c02dca7a09d197e149c82fdd5cb391917d")]
 [assembly: System.Reflection.AssemblyProductAttribute("OdooSyncWorker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OdooSyncWorker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
