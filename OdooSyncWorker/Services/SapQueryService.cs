@@ -149,8 +149,14 @@ public class SapQueryService
                 H.DueDate,
                 H.Warehouse,
                 L.LineNum,
+                L.ItemType,
                 L.ItemCode,
-                M.ItemName AS ComponentItemName,
+                COALESCE(
+                    NULLIF(L.LineText, ''),
+                    M.ItemName,
+                    R.ResName,
+                    L.ItemCode
+                ) AS ComponentItemName,
                 L.PlannedQty AS LinePlannedQty,
                 L.IssuedQty,
                 L.wareHouse AS LineWarehouse
@@ -159,6 +165,9 @@ public class SapQueryService
                 ON H.DocEntry = L.DocEntry
             LEFT JOIN dbo.OITM M
                 ON L.ItemCode = M.ItemCode
+            LEFT JOIN dbo.ORSC R
+                ON L.ItemCode = R.ResCode
+                OR L.ItemCode = R.VisResCode
             WHERE H.DocEntry = @DocEntry
             ORDER BY L.LineNum",
             new { DocEntry = int.Parse(objectKey) })).ToList();
@@ -190,6 +199,7 @@ public class SapQueryService
                 .Select(x => new
                 {
                     lineNum = x.LineNum,
+                    componentType = GetProductionOrderComponentType(x.ItemType),
                     itemCode = CleanText(x.ItemCode),
                     itemName = CleanText(x.ComponentItemName),
                     plannedQuantity = x.LinePlannedQty,
@@ -220,6 +230,16 @@ public class SapQueryService
             "R" => "Released",
             "L" => "Closed",
             "C" => "Canceled",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetProductionOrderComponentType(object? itemType)
+    {
+        return Convert.ToString(itemType) switch
+        {
+            "4" => "Item",
+            "290" => "Resource",
             _ => "Unknown"
         };
     }

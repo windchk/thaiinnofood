@@ -204,6 +204,7 @@ data format:
   "lines": [
     {
       "lineNum": 0,
+      "componentType": "Item",
       "itemCode": "RM00001",
       "itemName": "Component item name",
       "plannedQuantity": 10.000000,
@@ -237,6 +238,7 @@ Full request body example:
     "lines": [
       {
         "lineNum": 0,
+        "componentType": "Item",
         "itemCode": "RM00001",
         "itemName": "Component item name",
         "plannedQuantity": 10.000000,
@@ -250,6 +252,12 @@ Full request body example:
 Source tables:
 Header = OWOR
 Lines  = WOR1
+Item names = OITM.ItemName
+Resource names = ORSC.ResName
+
+ProductionOrder componentType:
+Item     = WOR1.ItemType = 4
+Resource = WOR1.ItemType = 290
 
 ProductionOrder status:
 P = Planned
