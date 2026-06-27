@@ -1,11 +1,17 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace OdooSyncWorker.Services;
 
 public class QueueService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly string _tempApiConn;
     private readonly int _maxRetry;
 
@@ -66,7 +72,7 @@ public class QueueService
             new
             {
                 QueueId = queueId,
-                RequestJson = JsonSerializer.Serialize(requestPayload),
+                RequestJson = JsonSerializer.Serialize(requestPayload, JsonOptions),
                 ResponseJson = responseJson
             });
     }

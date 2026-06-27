@@ -1,9 +1,16 @@
 using System.Net.Http.Json;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace OdooSyncWorker.Services;
 
 public class OdooClient
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
     private readonly string _apiKey;
@@ -34,7 +41,7 @@ public class OdooClient
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _baseUrl.TrimEnd('/') + endpoint)
         {
-            Content = JsonContent.Create(body)
+            Content = JsonContent.Create(body, options: JsonOptions)
         };
 
         if (!string.IsNullOrWhiteSpace(_apiKey))
