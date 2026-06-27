@@ -1,0 +1,264 @@
+Odoo payload JSON formats
+=========================
+
+Important
+---------
+JSON field names are case-sensitive.
+Use the exact lowercase/camelCase field names shown in this file.
+
+Do not change:
+objectType
+siteId
+sapDatabaseName
+docEntry
+docNum
+cardCode
+itemCode
+statusCode
+statusName
+
+
+Common wrapper
+--------------
+Every request sent by OdooSyncWorker uses this wrapper:
+
+{
+  "objectType": "SalesOrder | ItemMaster | ProductionOrder",
+  "action": "ADD | UPDATE | CANCEL | CLOSE",
+  "siteId": "TEST | PRD",
+  "sapDatabaseName": "TEST_INTERFACE | TIF_GOLIVE",
+  "data": {
+  }
+}
+
+Endpoint by objectType:
+SalesOrder      -> /api/sap/sales-orders
+ItemMaster      -> /api/sap/items
+ProductionOrder -> /api/sap/production-orders
+
+
+SalesOrder
+----------
+
+objectType:
+SalesOrder
+
+ObjectKey:
+ORDR.DocEntry
+
+data format:
+
+{
+  "docEntry": 78949,
+  "docNum": 26061570,
+  "cardCode": "T0004",
+  "cardName": "Customer name",
+  "docDate": "2026-06-22T00:00:00",
+  "docDueDate": "2026-06-23T00:00:00",
+  "taxDate": "2026-06-22T00:00:00",
+  "docTotal": 35.096000,
+  "canceled": "N",
+  "lines": [
+    {
+      "lineNum": 0,
+      "itemCode": "FG05037",
+      "description": "Item description",
+      "quantity": 1.000000,
+      "price": 32.800000,
+      "lineTotal": 32.800000,
+      "whsCode": "WH-FG",
+      "vatGroup": "S07"
+    }
+  ]
+}
+
+Full request body example:
+
+{
+  "objectType": "SalesOrder",
+  "action": "UPDATE",
+  "siteId": "TEST",
+  "sapDatabaseName": "TEST_INTERFACE",
+  "data": {
+    "docEntry": 78949,
+    "docNum": 26061570,
+    "cardCode": "T0004",
+    "cardName": "Customer name",
+    "docDate": "2026-06-22T00:00:00",
+    "docDueDate": "2026-06-23T00:00:00",
+    "taxDate": "2026-06-22T00:00:00",
+    "docTotal": 35.096000,
+    "canceled": "N",
+    "lines": [
+      {
+        "lineNum": 0,
+        "itemCode": "FG05037",
+        "description": "Item description",
+        "quantity": 1.000000,
+        "price": 32.800000,
+        "lineTotal": 32.800000,
+        "whsCode": "WH-FG",
+        "vatGroup": "S07"
+      }
+    ]
+  }
+}
+
+Source tables:
+Header = ORDR
+Lines  = RDR1
+
+ActionType:
+ADD    = new ORDR row
+UPDATE = existing ORDR row changed
+CANCEL = ORDR.CANCELED changes to 'Y'
+CLOSE  = ORDR.DocStatus changes to 'C'
+
+
+ItemMaster
+----------
+
+objectType:
+ItemMaster
+
+ObjectKey:
+OITM.ItemCode
+
+data format:
+
+{
+  "itemCode": "FG05037",
+  "itemName": "Item name",
+  "foreignName": "Foreign item name",
+  "itemGroupCode": 100,
+  "inventoryUom": "PCS",
+  "purchaseUom": "PCS",
+  "salesUom": "PCS",
+  "manageBatch": "N",
+  "manageSerial": "N",
+  "active": "Yes",
+  "createDate": "2026-06-22T00:00:00",
+  "updateDate": "2026-06-27T00:00:00"
+}
+
+Full request body example:
+
+{
+  "objectType": "ItemMaster",
+  "action": "UPDATE",
+  "siteId": "PRD",
+  "sapDatabaseName": "TIF_GOLIVE",
+  "data": {
+    "itemCode": "FG05037",
+    "itemName": "Item name",
+    "foreignName": "Foreign item name",
+    "itemGroupCode": 100,
+    "inventoryUom": "PCS",
+    "purchaseUom": "PCS",
+    "salesUom": "PCS",
+    "manageBatch": "N",
+    "manageSerial": "N",
+    "active": "Yes",
+    "createDate": "2026-06-22T00:00:00",
+    "updateDate": "2026-06-27T00:00:00"
+  }
+}
+
+Source table:
+OITM
+
+Active rule:
+active = "Yes" when OITM.ValidFor = 'Y' and OITM.FrozenFor <> 'Y'
+active = "No" otherwise
+
+ActionType:
+ADD    = new OITM row
+UPDATE = existing OITM row changed
+
+
+ProductionOrder
+---------------
+
+objectType:
+ProductionOrder
+
+ObjectKey:
+OWOR.DocEntry
+
+data format:
+
+{
+  "docEntry": 49123,
+  "docNum": 100001,
+  "productItemCode": "FG05037",
+  "productName": "Product name",
+  "plannedQuantity": 100.000000,
+  "completedQuantity": 80.000000,
+  "rejectedQuantity": 0.000000,
+  "statusCode": "R",
+  "statusName": "Released",
+  "type": "S",
+  "postDate": "2026-06-22T00:00:00",
+  "dueDate": "2026-06-23T00:00:00",
+  "warehouse": "WH-FG",
+  "lines": [
+    {
+      "lineNum": 0,
+      "itemCode": "RM00001",
+      "itemName": "Component item name",
+      "plannedQuantity": 10.000000,
+      "issuedQuantity": 5.000000,
+      "warehouse": "WH-RM"
+    }
+  ]
+}
+
+Full request body example:
+
+{
+  "objectType": "ProductionOrder",
+  "action": "UPDATE",
+  "siteId": "TEST",
+  "sapDatabaseName": "TEST_INTERFACE",
+  "data": {
+    "docEntry": 49123,
+    "docNum": 100001,
+    "productItemCode": "FG05037",
+    "productName": "Product name",
+    "plannedQuantity": 100.000000,
+    "completedQuantity": 80.000000,
+    "rejectedQuantity": 0.000000,
+    "statusCode": "R",
+    "statusName": "Released",
+    "type": "S",
+    "postDate": "2026-06-22T00:00:00",
+    "dueDate": "2026-06-23T00:00:00",
+    "warehouse": "WH-FG",
+    "lines": [
+      {
+        "lineNum": 0,
+        "itemCode": "RM00001",
+        "itemName": "Component item name",
+        "plannedQuantity": 10.000000,
+        "issuedQuantity": 5.000000,
+        "warehouse": "WH-RM"
+      }
+    ]
+  }
+}
+
+Source tables:
+Header = OWOR
+Lines  = WOR1
+
+ProductionOrder status:
+P = Planned
+R = Released
+L = Closed
+C = Canceled
+
+ActionType:
+ADD    = new OWOR row
+UPDATE = existing OWOR row changed
+CANCEL = OWOR.Status changes to 'C'
+CLOSE  = OWOR.Status changes to 'L'

@@ -1,0 +1,136 @@
+INT_OdooQueue setup script
+==========================
+
+Purpose
+-------
+TEMP_API.dbo.INT_OdooQueue is the queue table used by SQL triggers and
+OdooSyncWorker.
+
+Flow:
+1. SAP table trigger inserts a queue row.
+2. OdooSyncWorker reads rows with Status = 'N'.
+3. Worker marks the row as Processing, sends payload to Odoo/webhook, then
+   updates Status, RequestJson, ResponseJson, and error details.
+
+Status values:
+N = New / waiting
+P = Processing
+S = Success
+E = Error
+
+ObjectType values:
+SalesOrder
+ItemMaster
+ProductionOrder
+
+ObjectKey meaning:
+SalesOrder      = ORDR.DocEntry
+ProductionOrder = OWOR.DocEntry
+ItemMaster      = OITM.ItemCode
+
+SiteId mapping:
+TEST = TEST_INTERFACE
+PRD  = TIF_GOLIVE
+
+
+Full setup SQL
+--------------
+
+IF DB_ID(N'TEMP_API') IS NULL
+BEGIN
+    CREATE DATABASE TEMP_API;
+END;
+GO
+
+USE [TEMP_API];
+GO
+
+IF OBJECT_ID(N'dbo.INT_OdooQueue', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.INT_OdooQueue
+    (
+        QueueId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+
+        ObjectType NVARCHAR(50) NOT NULL,
+        ObjectKey NVARCHAR(50) NOT NULL,
+        ActionType NVARCHAR(20) NOT NULL,
+
+        Status CHAR(1) NOT NULL
+            CONSTRAINT DF_INT_OdooQueue_Status DEFAULT 'N',
+
+        RetryCount INT NOT NULL
+            CONSTRAINT DF_INT_OdooQueue_RetryCount DEFAULT 0,
+
+        CreateDate DATETIME NOT NULL
+            CONSTRAINT DF_INT_OdooQueue_CreateDate DEFAULT GETDATE(),
+
+        ProcessDate DATETIME NULL,
+
+        RequestJson NVARCHAR(MAX) NULL,
+        ResponseJson NVARCHAR(MAX) NULL,
+        ErrorMessage NVARCHAR(MAX) NULL,
+
+        LastErrorDate DATETIME NULL,
+        ProcessBy NVARCHAR(100) NULL,
+
+        SiteId NVARCHAR(10) NULL,
+        SapDatabaseName NVARCHAR(50) NULL
+    );
+END;
+GO
+
+IF COL_LENGTH('dbo.INT_OdooQueue', 'LastErrorDate') IS NULL
+BEGIN
+    ALTER TABLE dbo.INT_OdooQueue
+    ADD LastErrorDate DATETIME NULL;
+END;
+GO
+
+IF COL_LENGTH('dbo.INT_OdooQueue', 'ProcessBy') IS NULL
+BEGIN
+    ALTER TABLE dbo.INT_OdooQueue
+    ADD ProcessBy NVARCHAR(100) NULL;
+END;
+GO
+
+IF COL_LENGTH('dbo.INT_OdooQueue', 'SiteId') IS NULL
+BEGIN
+    ALTER TABLE dbo.INT_OdooQueue
+    ADD SiteId NVARCHAR(10) NULL;
+END;
+GO
+
+IF COL_LENGTH('dbo.INT_OdooQueue', 'SapDatabaseName') IS NULL
+BEGIN
+    ALTER TABLE dbo.INT_OdooQueue
+    ADD SapDatabaseName NVARCHAR(50) NULL;
+END;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.INT_OdooQueue')
+      AND name = N'IX_INT_OdooQueue_Status'
+)
+BEGIN
+    CREATE INDEX IX_INT_OdooQueue_Status
+    ON dbo.INT_OdooQueue(Status, CreateDate);
+END;
+GO
+
+
+Useful check queries
+--------------------
+
+SELECT TOP 100 *
+FROM TEMP_API.dbo.INT_OdooQueue
+ORDER BY QueueId DESC;
+
+SELECT
+    Status,
+    COUNT(*) AS TotalRows
+FROM TEMP_API.dbo.INT_OdooQueue
+GROUP BY Status
+ORDER BY Status;

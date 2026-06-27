@@ -97,21 +97,44 @@ public class QueueService
         return rows > 0;
     }
 
-    public async Task MarkSuccessAsync(int queueId, object requestPayload, string responseJson)
+    public async Task MarkSuccessAsync(
+        int queueId,
+        string siteId,
+        string sapDatabaseName,
+        object requestPayload,
+        string responseJson)
     {
         using var conn = new SqlConnection(_tempApiConn);
 
         await conn.ExecuteAsync(@"
-            UPDATE dbo.INT_OdooQueue
-            SET Status = 'S',
-                ProcessDate = GETDATE(),
-                RequestJson = @RequestJson,
-                ResponseJson = @ResponseJson,
-                ErrorMessage = NULL
-            WHERE QueueId = @QueueId",
+            IF COL_LENGTH('dbo.INT_OdooQueue', 'SiteId') IS NOT NULL
+               AND COL_LENGTH('dbo.INT_OdooQueue', 'SapDatabaseName') IS NOT NULL
+            BEGIN
+                UPDATE dbo.INT_OdooQueue
+                SET Status = 'S',
+                    ProcessDate = GETDATE(),
+                    SiteId = @SiteId,
+                    SapDatabaseName = @SapDatabaseName,
+                    RequestJson = @RequestJson,
+                    ResponseJson = @ResponseJson,
+                    ErrorMessage = NULL
+                WHERE QueueId = @QueueId
+            END
+            ELSE
+            BEGIN
+                UPDATE dbo.INT_OdooQueue
+                SET Status = 'S',
+                    ProcessDate = GETDATE(),
+                    RequestJson = @RequestJson,
+                    ResponseJson = @ResponseJson,
+                    ErrorMessage = NULL
+                WHERE QueueId = @QueueId
+            END",
             new
             {
                 QueueId = queueId,
+                SiteId = siteId,
+                SapDatabaseName = sapDatabaseName,
                 RequestJson = JsonSerializer.Serialize(requestPayload, JsonOptions),
                 ResponseJson = responseJson
             });

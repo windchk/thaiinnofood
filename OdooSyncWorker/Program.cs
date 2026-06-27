@@ -3,6 +3,11 @@ using OdooSyncWorker.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = "OdooSyncWorker";
+});
+
 builder.Services.AddSingleton<QueueService>();
 builder.Services.AddSingleton<SapQueryService>();
 builder.Services.AddSingleton<HttpClient>();

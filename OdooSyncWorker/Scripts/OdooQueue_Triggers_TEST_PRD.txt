@@ -1,0 +1,296 @@
+Odoo queue trigger setup for TEST and PRD
+=========================================
+
+Purpose
+-------
+These triggers insert rows into TEMP_API.dbo.INT_OdooQueue when SAP data changes.
+
+Supported SAP objects:
+1. SalesOrder       = dbo.ORDR, key = DocEntry
+2. ItemMaster       = dbo.OITM, key = ItemCode
+3. ProductionOrder  = dbo.OWOR, key = DocEntry
+
+ActionType rules:
+SalesOrder:
+    ADD    = new ORDR row
+    UPDATE = existing ORDR row changed
+    CANCEL = ORDR.CANCELED changes to 'Y'
+    CLOSE  = ORDR.DocStatus changes to 'C'
+
+ItemMaster:
+    ADD    = new OITM row
+    UPDATE = existing OITM row changed
+    Active is sent in payload as Yes/No.
+    Active = Yes when OITM.ValidFor = 'Y' and OITM.FrozenFor <> 'Y'.
+    Active = No otherwise.
+
+ProductionOrder:
+    ADD    = new OWOR row
+    UPDATE = existing OWOR row changed
+    CANCEL = OWOR.Status changes to 'C'
+    CLOSE  = OWOR.Status changes to 'L'
+
+Important difference between TEST and PRD
+-----------------------------------------
+TEST uses:
+    USE [TEST_INTERFACE];
+    SiteId = 'TEST'
+
+PRD uses:
+    USE [TIF_GOLIVE];
+    SiteId = 'PRD'
+
+Everything else is the same.
+
+The Worker later maps:
+    TEST -> TEST_INTERFACE
+    PRD  -> TIF_GOLIVE
+
+
+TEST trigger script
+-------------------
+
+USE [TEST_INTERFACE];
+GO
+
+CREATE OR ALTER TRIGGER dbo.TRG_ORDR_ToOdooQueue
+ON dbo.ORDR
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO TEMP_API.dbo.INT_OdooQueue
+    (
+        ObjectType,
+        ObjectKey,
+        ActionType,
+        SiteId,
+        Status,
+        RetryCount,
+        CreateDate
+    )
+    SELECT
+        'SalesOrder',
+        CAST(I.DocEntry AS NVARCHAR(50)),
+        A.ActionType,
+        'TEST',
+        'N',
+        0,
+        GETDATE()
+    FROM inserted I
+    LEFT JOIN deleted D
+        ON I.DocEntry = D.DocEntry
+    CROSS APPLY
+    (
+        SELECT
+            CASE
+                WHEN D.DocEntry IS NULL THEN 'ADD'
+                WHEN I.CANCELED = 'Y'
+                     AND ISNULL(D.CANCELED, 'N') <> 'Y' THEN 'CANCEL'
+                WHEN I.DocStatus = 'C'
+                     AND ISNULL(D.DocStatus, 'O') <> 'C' THEN 'CLOSE'
+                ELSE 'UPDATE'
+            END AS ActionType
+    ) A
+    WHERE NOT EXISTS (
+          SELECT 1
+          FROM TEMP_API.dbo.INT_OdooQueue Q
+          WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'SalesOrder'
+            AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
+            AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
+            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+            AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
+      );
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.TRG_OITM_ToOdooQueue
+ON dbo.OITM
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO TEMP_API.dbo.INT_OdooQueue
+    (
+        ObjectType,
+        ObjectKey,
+        ActionType,
+        SiteId,
+        Status,
+        RetryCount,
+        CreateDate
+    )
+    SELECT
+        'ItemMaster',
+        CAST(I.ItemCode AS NVARCHAR(50)),
+        A.ActionType,
+        'TEST',
+        'N',
+        0,
+        GETDATE()
+    FROM inserted I
+    LEFT JOIN deleted D
+        ON I.ItemCode COLLATE DATABASE_DEFAULT = D.ItemCode COLLATE DATABASE_DEFAULT
+    CROSS APPLY
+    (
+        SELECT
+            CASE
+                WHEN D.ItemCode IS NULL THEN 'ADD'
+                ELSE 'UPDATE'
+            END AS ActionType
+    ) A
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM TEMP_API.dbo.INT_OdooQueue Q
+        WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ItemMaster'
+          AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.ItemCode AS NVARCHAR(50)) COLLATE DATABASE_DEFAULT
+          AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
+          AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+          AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
+    );
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.TRG_OWOR_ToOdooQueue
+ON dbo.OWOR
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO TEMP_API.dbo.INT_OdooQueue
+    (
+        ObjectType,
+        ObjectKey,
+        ActionType,
+        SiteId,
+        Status,
+        RetryCount,
+        CreateDate
+    )
+    SELECT
+        'ProductionOrder',
+        CAST(I.DocEntry AS NVARCHAR(50)),
+        A.ActionType,
+        'TEST',
+        'N',
+        0,
+        GETDATE()
+    FROM inserted I
+    LEFT JOIN deleted D
+        ON I.DocEntry = D.DocEntry
+    CROSS APPLY
+    (
+        SELECT
+            CASE
+                WHEN D.DocEntry IS NULL THEN 'ADD'
+                WHEN I.Status = 'C'
+                     AND ISNULL(D.Status, '') <> 'C' THEN 'CANCEL'
+                WHEN I.Status = 'L'
+                     AND ISNULL(D.Status, '') <> 'L' THEN 'CLOSE'
+                ELSE 'UPDATE'
+            END AS ActionType
+    ) A
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM TEMP_API.dbo.INT_OdooQueue Q
+        WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ProductionOrder'
+          AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
+          AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
+          AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+          AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
+    );
+END;
+GO
+
+
+How to convert TEST script to PRD
+---------------------------------
+Change only these values:
+
+1. Database:
+    USE [TEST_INTERFACE];
+   to:
+    USE [TIF_GOLIVE];
+
+2. SiteId in every trigger:
+    'TEST'
+   to:
+    'PRD'
+
+3. SiteId check in NOT EXISTS:
+    AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+   to:
+    AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'
+
+
+Disable triggers
+----------------
+
+TEST:
+
+USE [TEST_INTERFACE];
+GO
+
+DISABLE TRIGGER dbo.TRG_ORDR_ToOdooQueue ON dbo.ORDR;
+DISABLE TRIGGER dbo.TRG_OITM_ToOdooQueue ON dbo.OITM;
+DISABLE TRIGGER dbo.TRG_OWOR_ToOdooQueue ON dbo.OWOR;
+GO
+
+PRD:
+
+USE [TIF_GOLIVE];
+GO
+
+DISABLE TRIGGER dbo.TRG_ORDR_ToOdooQueue ON dbo.ORDR;
+DISABLE TRIGGER dbo.TRG_OITM_ToOdooQueue ON dbo.OITM;
+DISABLE TRIGGER dbo.TRG_OWOR_ToOdooQueue ON dbo.OWOR;
+GO
+
+
+Enable triggers
+---------------
+
+TEST:
+
+USE [TEST_INTERFACE];
+GO
+
+ENABLE TRIGGER dbo.TRG_ORDR_ToOdooQueue ON dbo.ORDR;
+ENABLE TRIGGER dbo.TRG_OITM_ToOdooQueue ON dbo.OITM;
+ENABLE TRIGGER dbo.TRG_OWOR_ToOdooQueue ON dbo.OWOR;
+GO
+
+PRD:
+
+USE [TIF_GOLIVE];
+GO
+
+ENABLE TRIGGER dbo.TRG_ORDR_ToOdooQueue ON dbo.ORDR;
+ENABLE TRIGGER dbo.TRG_OITM_ToOdooQueue ON dbo.OITM;
+ENABLE TRIGGER dbo.TRG_OWOR_ToOdooQueue ON dbo.OWOR;
+GO
+
+
+Check trigger status
+--------------------
+
+Run this inside TEST_INTERFACE or TIF_GOLIVE.
+
+SELECT
+    DB_NAME() AS DatabaseName,
+    name AS TriggerName,
+    is_disabled,
+    CASE
+        WHEN is_disabled = 0 THEN N'เปิดอยู่'
+        WHEN is_disabled = 1 THEN N'ปิดอยู่'
+    END AS TriggerStatus
+FROM sys.triggers
+WHERE name IN
+(
+    'TRG_ORDR_ToOdooQueue',
+    'TRG_OITM_ToOdooQueue',
+    'TRG_OWOR_ToOdooQueue'
+);

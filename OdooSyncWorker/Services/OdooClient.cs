@@ -22,7 +22,12 @@ public class OdooClient
         _apiKey = configuration["Odoo:ApiKey"] ?? "";
     }
 
-    public async Task<string> SendAsync(string objectType, string actionType, object payload)
+    public async Task<string> SendAsync(
+        string objectType,
+        string actionType,
+        string siteId,
+        string sapDatabaseName,
+        object payload)
     {
         var endpoint = objectType switch
         {
@@ -36,6 +41,8 @@ public class OdooClient
         {
             objectType,
             action = actionType,
+            siteId,
+            sapDatabaseName,
             data = payload
         };
 

@@ -1,0 +1,233 @@
+คู่มือติดตั้ง OdooSyncWorker เป็น Windows Service
+===================================================
+
+เป้าหมาย
+--------
+นำ OdooSyncWorker ไปติดตั้งบน SAP Server และให้รันอัตโนมัติเป็น Windows Service
+
+ชื่อ Service:
+OdooSyncWorker
+
+โฟลเดอร์แนะนำบน SAP Server:
+C:\Services\OdooSyncWorker
+
+
+1. เตรียม SAP Server
+--------------------
+
+Login เข้า SAP Server ด้วย user ที่เป็น Administrator
+
+เช็กว่ามี .NET 8 Runtime แล้วหรือยัง:
+
+dotnet --list-runtimes
+
+ถ้าพร้อมใช้งาน ควรเห็นประมาณนี้:
+
+Microsoft.NETCore.App 8.x.x
+
+ถ้าไม่มี .NET 8 ให้ติดตั้ง:
+.NET 8 Runtime หรือ .NET 8 Hosting Bundle
+
+
+2. เอาโปรเจกต์หรือไฟล์ publish ไปไว้บน SAP Server
+--------------------------------------------------
+
+วิธี A: Publish บน SAP Server โดยตรง
+
+Copy โฟลเดอร์โปรเจกต์ไปไว้บน SAP Server เช่น:
+
+C:\Source\OdooSyncWorker
+
+จากนั้นเปิด PowerShell แบบ Run as Administrator แล้วรัน:
+
+cd C:\Source\OdooSyncWorker
+dotnet restore
+dotnet publish .\OdooSyncWorker.csproj -c Release -o C:\Services\OdooSyncWorker
+
+
+วิธี B: Publish จากเครื่องอื่น แล้วค่อย copy output ไป SAP Server
+
+รันบนเครื่องที่ใช้ build:
+
+dotnet publish .\OdooSyncWorker.csproj -c Release -o C:\Temp\OdooSyncWorkerPublish
+
+จากนั้น copy ไฟล์ทั้งหมดใน:
+
+C:\Temp\OdooSyncWorkerPublish
+
+ไปไว้ที่ SAP Server:
+
+C:\Services\OdooSyncWorker
+
+
+3. เช็ก config บน SAP Server
+----------------------------
+
+เปิดไฟล์นี้:
+
+C:\Services\OdooSyncWorker\appsettings.json
+
+เช็กค่าหลัก ๆ เหล่านี้:
+
+"ConnectionStrings": {
+  "TempApiDb": "Server=192.168.10.1;Database=TEMP_API;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;",
+  "SapDb": "Server=192.168.10.1;Database=TEST_INTERFACE;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;"
+},
+"SapDatabases": {
+  "TEST": "TEST_INTERFACE",
+  "PRD": "TIF_GOLIVE"
+},
+"Odoo": {
+  "BaseUrl": "https://odoo-real-url",
+  "ApiKey": "real-api-key"
+},
+"Worker": {
+  "DefaultSiteId": "TEST",
+  "DelaySeconds": 10,
+  "MaxRetry": 3
+}
+
+สำคัญ:
+- Server ต้องเป็น IP หรือชื่อ SQL Server ที่ SAP Server ต่อถึง
+- BaseUrl ถ้าพร้อมต่อ Odoo จริง ให้ใส่ URL จริง
+- ถ้ายังเทส webhook อยู่ ให้ใช้ URL webhook.site ไปก่อน
+
+
+4. ทดสอบรันเองก่อนติดตั้งเป็น Service
+--------------------------------------
+
+เปิด PowerShell แบบ Run as Administrator:
+
+cd C:\Services\OdooSyncWorker
+.\OdooSyncWorker.exe
+
+ถ้าเริ่มทำงานได้ จะเห็น log ประมาณนี้:
+
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Production
+
+ถ้าต่อ SQL ได้และ process queue ได้ ให้หยุดด้วย:
+
+Ctrl + C
+
+
+5. ติดตั้ง Windows Service
+--------------------------
+
+เปิด PowerShell หรือ CMD แบบ Run as Administrator
+
+สร้าง service:
+
+sc.exe create OdooSyncWorker binPath= "C:\Services\OdooSyncWorker\OdooSyncWorker.exe" start= auto DisplayName= "Odoo Sync Worker"
+
+ใส่คำอธิบาย service:
+
+sc.exe description OdooSyncWorker "Sync SAP queue data to Odoo API"
+
+เริ่ม service:
+
+sc.exe start OdooSyncWorker
+
+เช็กสถานะ service:
+
+sc.exe query OdooSyncWorker
+
+ถ้ารันอยู่ควรเห็น:
+
+STATE : 4 RUNNING
+
+
+6. คำสั่งหยุด เริ่มใหม่ และลบ service
+--------------------------------------
+
+หยุด service:
+
+sc.exe stop OdooSyncWorker
+
+เริ่ม service:
+
+sc.exe start OdooSyncWorker
+
+restart service:
+
+sc.exe stop OdooSyncWorker
+sc.exe start OdooSyncWorker
+
+ลบ service:
+
+sc.exe stop OdooSyncWorker
+sc.exe delete OdooSyncWorker
+
+
+7. วิธี update service หลังแก้โค้ด
+----------------------------------
+
+1. Publish version ใหม่:
+
+dotnet publish .\OdooSyncWorker.csproj -c Release -o C:\Services\OdooSyncWorker_New
+
+2. หยุด service:
+
+sc.exe stop OdooSyncWorker
+
+3. backup โฟลเดอร์เก่า:
+
+Rename C:\Services\OdooSyncWorker to C:\Services\OdooSyncWorker_Backup_YYYYMMDD
+
+4. เปลี่ยนชื่อโฟลเดอร์ใหม่:
+
+Rename C:\Services\OdooSyncWorker_New to C:\Services\OdooSyncWorker
+
+5. เช็กหรือ copy appsettings.json ให้ถูกต้อง ถ้าจำเป็น
+
+6. เริ่ม service:
+
+sc.exe start OdooSyncWorker
+
+
+8. วิธีดู log และ error
+-----------------------
+
+ปกติ Windows Service จะเขียน log ไปที่ Windows Event Viewer
+
+เปิด:
+Event Viewer -> Windows Logs -> Application
+
+หา source ประมาณนี้:
+OdooSyncWorker
+.NET Runtime
+Application Error
+
+เช็ก queue table เพิ่มเติม:
+
+SELECT TOP 100 *
+FROM TEMP_API.dbo.INT_OdooQueue
+ORDER BY QueueId DESC;
+
+ความหมาย Status:
+N = New / รอส่ง
+P = Processing / กำลังส่ง
+S = Success / ส่งสำเร็จ
+E = Error / ส่งไม่สำเร็จครบจำนวน retry
+
+ถ้า Status = E ให้ดูคอลัมน์:
+ErrorMessage
+LastErrorDate
+ResponseJson
+
+
+9. หมายเหตุการใช้งานจริง
+------------------------
+
+ถ้าปิด trigger:
+จะไม่มี queue ใหม่เข้า TEMP_API.dbo.INT_OdooQueue จาก SAP DB นั้น
+
+ถ้า Worker service หยุดอยู่:
+queue ยังเข้าได้จาก trigger แต่จะค้าง Status = 'N' จนกว่า service จะเริ่มใหม่
+
+ถ้า Odoo ล่ม:
+Worker จะ retry ตามค่า MaxRetry ถ้าครบแล้วยังไม่สำเร็จ Status จะเป็น 'E'
+
+ถ้า SQL ล่ม:
+Worker จะ log error แล้ว retry ตามค่า Worker:DelaySeconds
+

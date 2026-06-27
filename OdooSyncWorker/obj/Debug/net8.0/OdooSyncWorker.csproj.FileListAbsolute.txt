@@ -89,3 +89,6 @@ C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\Odoo
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\OdooSyncWorker.genruntimeconfig.cache
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\ref\OdooSyncWorker.dll
 C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\obj\Debug\net8.0\OdooSyncWorker.sourcelink.json
+C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\bin\Debug\net8.0\Microsoft.Extensions.Hosting.WindowsServices.dll
+C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\bin\Debug\net8.0\System.ServiceProcess.ServiceController.dll
+C:\Users\User\Documents\GitHub\thaiinnofood\OdooSyncWorker\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll

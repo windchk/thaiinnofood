@@ -52,15 +52,24 @@ namespace OdooSyncWorker
                             object payload = item.ObjectType switch
                             {
                                 "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId),
+                                "ItemMaster" => await _sapQueryService.GetItemMasterAsync(item.ObjectKey, item.SiteId),
+                                "ProductionOrder" => await _sapQueryService.GetProductionOrderAsync(item.ObjectKey, item.SiteId),
                                 _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
                             };
 
                             var responseJson = await _odooClient.SendAsync(
                                 item.ObjectType,
                                 item.ActionType,
+                                item.SiteId,
+                                item.SapDatabaseName,
                                 payload);
 
-                            await _queueService.MarkSuccessAsync(item.QueueId, payload, responseJson);
+                            await _queueService.MarkSuccessAsync(
+                                item.QueueId,
+                                item.SiteId,
+                                item.SapDatabaseName,
+                                payload,
+                                responseJson);
 
                             _logger.LogInformation(
                                 "Queue {QueueId} sent successfully. SiteId={SiteId}, SapDatabaseName={SapDatabaseName}, ObjectType={ObjectType}, ObjectKey={ObjectKey}",

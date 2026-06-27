@@ -58,8 +58,6 @@ public class SapQueryService
 
         return new
         {
-            siteId = NormalizeSiteId(siteId),
-            sapDatabaseName,
             docEntry = first.DocEntry,
             docNum = first.DocNum,
             cardCode = CleanText(first.CardCode),
@@ -83,11 +81,145 @@ public class SapQueryService
         };
     }
 
+    public async Task<object> GetItemMasterAsync(string objectKey, string siteId)
+    {
+        var sapDatabaseName = GetSapDatabaseName(siteId);
+
+        using var conn = new SqlConnection(BuildSapConnectionString(sapDatabaseName));
+
+        var item = await conn.QueryFirstOrDefaultAsync(@"
+            SELECT
+                ItemCode,
+                ItemName,
+                FrgnName,
+                ItmsGrpCod,
+                InvntryUom,
+                BuyUnitMsr,
+                SalUnitMsr,
+                ManBtchNum,
+                ManSerNum,
+                ValidFor,
+                FrozenFor,
+                CreateDate,
+                UpdateDate
+            FROM dbo.OITM
+            WHERE ItemCode = @ItemCode",
+            new { ItemCode = objectKey });
+
+        if (item is null)
+        {
+            throw new Exception($"ItemMaster not found. ItemCode={objectKey}");
+        }
+
+        return new
+        {
+            itemCode = CleanText(item.ItemCode),
+            itemName = CleanText(item.ItemName),
+            foreignName = CleanText(item.FrgnName),
+            itemGroupCode = item.ItmsGrpCod,
+            inventoryUom = CleanText(item.InvntryUom),
+            purchaseUom = CleanText(item.BuyUnitMsr),
+            salesUom = CleanText(item.SalUnitMsr),
+            manageBatch = CleanText(item.ManBtchNum),
+            manageSerial = CleanText(item.ManSerNum),
+            active = IsItemActive(item.ValidFor, item.FrozenFor) ? "Yes" : "No",
+            createDate = item.CreateDate,
+            updateDate = item.UpdateDate
+        };
+    }
+
+    public async Task<object> GetProductionOrderAsync(string objectKey, string siteId)
+    {
+        var sapDatabaseName = GetSapDatabaseName(siteId);
+
+        using var conn = new SqlConnection(BuildSapConnectionString(sapDatabaseName));
+
+        var rows = (await conn.QueryAsync(@"
+            SELECT
+                H.DocEntry,
+                H.DocNum,
+                H.ItemCode AS ProductItemCode,
+                H.ProdName,
+                H.PlannedQty,
+                H.CmpltQty,
+                H.RjctQty,
+                H.Status,
+                H.Type,
+                H.PostDate,
+                H.DueDate,
+                H.Warehouse,
+                L.LineNum,
+                L.ItemCode,
+                L.ItemName,
+                L.PlannedQty AS LinePlannedQty,
+                L.IssuedQty,
+                L.wareHouse AS LineWarehouse
+            FROM dbo.OWOR H
+            LEFT JOIN dbo.WOR1 L
+                ON H.DocEntry = L.DocEntry
+            WHERE H.DocEntry = @DocEntry
+            ORDER BY L.LineNum",
+            new { DocEntry = int.Parse(objectKey) })).ToList();
+
+        if (!rows.Any())
+        {
+            throw new Exception($"ProductionOrder not found. DocEntry={objectKey}");
+        }
+
+        var first = rows.First();
+
+        return new
+        {
+            docEntry = first.DocEntry,
+            docNum = first.DocNum,
+            productItemCode = CleanText(first.ProductItemCode),
+            productName = CleanText(first.ProdName),
+            plannedQuantity = first.PlannedQty,
+            completedQuantity = first.CmpltQty,
+            rejectedQuantity = first.RjctQty,
+            statusCode = CleanText(first.Status),
+            statusName = GetProductionOrderStatusName(first.Status),
+            type = CleanText(first.Type),
+            postDate = first.PostDate,
+            dueDate = first.DueDate,
+            warehouse = CleanText(first.Warehouse),
+            lines = rows
+                .Where(x => x.LineNum is not null)
+                .Select(x => new
+                {
+                    lineNum = x.LineNum,
+                    itemCode = CleanText(x.ItemCode),
+                    itemName = CleanText(x.ItemName),
+                    plannedQuantity = x.LinePlannedQty,
+                    issuedQuantity = x.IssuedQty,
+                    warehouse = CleanText(x.LineWarehouse)
+                }).ToList()
+        };
+    }
+
     private static string CleanText(object? value)
     {
         return Convert.ToString(value)?
             .Replace('\u00A0', ' ')
             .Trim() ?? "";
+    }
+
+    private static bool IsItemActive(object? validFor, object? frozenFor)
+    {
+        return CleanText(validFor).Equals("Y", StringComparison.OrdinalIgnoreCase)
+            && !CleanText(frozenFor).Equals("Y", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetProductionOrderStatusName(object? status)
+    {
+        return CleanText(status).ToUpperInvariant() switch
+        {
+            "P" => "Planned",
+            "R" => "Released",
+            "L" => "Closed",
+            "C" => "Canceled",
+            _ => "Unknown"
+        };
     }
 
     public string GetSapDatabaseName(string siteId)
