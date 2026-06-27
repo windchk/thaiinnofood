@@ -115,7 +115,11 @@ public class SapDiApiProductionService : ISapProductionService
             ?? throw new InvalidOperationException("Cannot create SAPbobsCOM.Company.");
 
         company.Server = _options.Server;
-        TrySetComProperty(company, "SLDServer", _options.SldServer);
+        if (!string.IsNullOrWhiteSpace(_options.SldServer))
+        {
+            company.SLDServer = _options.SldServer;
+        }
+
         company.LicenseServer = _options.LicenseServer;
         company.CompanyDB = _options.CompanyDb;
         company.UserName = _options.UserName;
@@ -132,7 +136,7 @@ public class SapDiApiProductionService : ISapProductionService
         {
             var errorMessage = company.GetLastErrorDescription();
             Marshal.FinalReleaseComObject(company);
-            throw new InvalidOperationException($"SAP DI API connect failed. {errorMessage}");
+            throw new InvalidOperationException($"SAP DI API connect failed. Code={connectResult}, Message={errorMessage}");
         }
 
         _logger.LogInformation("Connected to SAP CompanyDB={CompanyDb}", _options.CompanyDb);
@@ -259,25 +263,4 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    private static void TrySetComProperty(dynamic target, string propertyName, object? value)
-    {
-        if (value is null || string.IsNullOrWhiteSpace(Convert.ToString(value)))
-        {
-            return;
-        }
-
-        try
-        {
-            target.GetType().InvokeMember(
-                propertyName,
-                System.Reflection.BindingFlags.SetProperty,
-                null,
-                target,
-                new object[] { value });
-        }
-        catch
-        {
-            // Some DI API versions do not expose every optional property.
-        }
-    }
 }
