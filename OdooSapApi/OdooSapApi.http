@@ -1,6 +1,29 @@
 @OdooSapApi_HostAddress = http://localhost:5134
 
-GET {{OdooSapApi_HostAddress}}/weatherforecast/
+POST {{OdooSapApi_HostAddress}}/api/sap/production/receipt
+Content-Type: application/json
 Accept: application/json
+
+{
+  "siteId": "TEST",
+  "docEntry": 48821,
+  "docDate": "2026-06-27",
+  "receiptLines": [
+    {
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 4
+        },
+        {
+          "batchNumber": "FG-BATCH-002",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
 
 ###

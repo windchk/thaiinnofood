@@ -223,10 +223,10 @@ POST /api/sap/production/receipt
 - docEntry: ค่าเดียวกับ ProductionOrder.data.docEntry จาก payload ที่ worker ส่งให้ Odoo
 - docDate: วันที่เอกสาร/วันที่ posting ที่จะใส่เข้า SAP DocDate
 - receiptLines: ต้องมีอย่างน้อย 1 รายการ
-- receiptLines[].itemCode: ปกติใช้ค่าเดียวกับ ProductionOrder.data.productItemCode
 - receiptLines[].quantity: จำนวนที่ต้องการ receipt จาก Odoo
 - receiptLines[].warehouse: ปกติใช้ค่าเดียวกับ ProductionOrder.data.warehouse เป็น warehouse ที่รับของเข้า
-- receiptLines[].lineNum: optional ถ้าต้องอ้าง line ของ Production Order
+- receiptLines[].lineNum: optional; ไม่ต้องส่งสำหรับ Finished Good หลัก ส่งเฉพาะเมื่อต้องอ้างบรรทัดของ Production Order เช่น by-product โดยใช้ ProductionOrder.data.lines[].lineNum
+- ห้ามส่ง receiptLines[].itemCode: เมื่ออ้าง Production Order ด้วย docEntry SAP จะหา ItemCode จาก BaseEntry/BaseLine เอง และไม่อนุญาตให้ DI API กำหนด ItemCode ซ้ำ
 
 Receipt: ไม่มี batch และไม่มี bin
 ---------------------------------
@@ -236,8 +236,6 @@ Receipt: ไม่มี batch และไม่มี bin
   "docDate": "2026-06-27",
   "receiptLines": [
     {
-      "lineNum": 0,
-      "itemCode": "FG05079",
       "quantity": 10,
       "warehouse": "WH-FG"
     }
@@ -252,8 +250,6 @@ Receipt: มี batch แต่ไม่มี bin
   "docDate": "2026-06-27",
   "receiptLines": [
     {
-      "lineNum": 0,
-      "itemCode": "FG05079",
       "quantity": 10,
       "warehouse": "WH-FG",
       "batches": [
@@ -278,8 +274,6 @@ Receipt: ไม่มี batch แต่มี bin
   "docDate": "2026-06-27",
   "receiptLines": [
     {
-      "lineNum": 0,
-      "itemCode": "FG05079",
       "quantity": 10,
       "warehouse": "WH-FG",
       "bins": [
@@ -301,8 +295,6 @@ Receipt: มี batch และมี bin
   "docDate": "2026-06-27",
   "receiptLines": [
     {
-      "lineNum": 0,
-      "itemCode": "FG05079",
       "quantity": 10,
       "warehouse": "WH-FG",
       "batches": [
@@ -338,7 +330,7 @@ Receipt mapping เข้า SAP DI API
 - docDate -> document.DocDate
 - docEntry -> document.Lines.BaseEntry
 - receiptLines[].lineNum -> document.Lines.BaseLine เฉพาะกรณีที่ส่งมา
-- receiptLines[].itemCode -> document.Lines.ItemCode
+- API ไม่กำหนด document.Lines.ItemCode; SAP ดึง ItemCode จาก Production Order ที่อ้างด้วย BaseEntry/BaseLine
 - receiptLines[].quantity -> document.Lines.Quantity
 - receiptLines[].warehouse -> document.Lines.WarehouseCode
 - receiptLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber

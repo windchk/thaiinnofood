@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdooSapApi", "OdooSapApi.csproj", "{541C53E7-B145-4043-8F99-B67E848EC0C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdooSapApi.Tests", "OdooSapApi.Tests\OdooSapApi.Tests.csproj", "{5DED29BD-9ABA-4608-9531-3777A97C6CE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{541C53E7-B145-4043-8F99-B67E848EC0C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{541C53E7-B145-4043-8F99-B67E848EC0C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{541C53E7-B145-4043-8F99-B67E848EC0C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DED29BD-9ABA-4608-9531-3777A97C6CE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DED29BD-9ABA-4608-9531-3777A97C6CE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DED29BD-9ABA-4608-9531-3777A97C6CE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DED29BD-9ABA-4608-9531-3777A97C6CE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

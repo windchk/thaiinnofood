@@ -207,7 +207,7 @@ public class ProductionOrderService
         return JsonSerializer.Serialize(value, JsonOptions);
     }
 
-    private static void ValidateIssueRequest(ProductionIssueRequest request)
+    internal static void ValidateIssueRequest(ProductionIssueRequest request)
     {
         ValidateBaseRequest(request.SiteId, request.DocEntry);
 
@@ -228,7 +228,7 @@ public class ProductionOrderService
         }
     }
 
-    private static void ValidateReceiptRequest(ProductionReceiptRequest request)
+    internal static void ValidateReceiptRequest(ProductionReceiptRequest request)
     {
         ValidateBaseRequest(request.SiteId, request.DocEntry);
 
@@ -244,7 +244,7 @@ public class ProductionOrderService
 
         foreach (var line in request.ReceiptLines)
         {
-            ValidateLine(line.ItemCode, line.Quantity, line.Warehouse);
+            ValidateQuantityAndWarehouse(line.Quantity, line.Warehouse);
             ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
         }
     }
@@ -274,6 +274,11 @@ public class ProductionOrderService
             throw new ArgumentException("itemCode is required.");
         }
 
+        ValidateQuantityAndWarehouse(quantity, warehouse);
+    }
+
+    private static void ValidateQuantityAndWarehouse(decimal quantity, string warehouse)
+    {
         if (quantity <= 0)
         {
             throw new ArgumentException("quantity must be greater than 0.");

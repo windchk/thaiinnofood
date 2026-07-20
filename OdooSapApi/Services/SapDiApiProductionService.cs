@@ -213,22 +213,7 @@ public class SapDiApiProductionService : ISapProductionService
 
             foreach (var line in request.ReceiptLines)
             {
-                document.Lines.BaseType = _options.ProductionOrderObjectType;
-                document.Lines.BaseEntry = request.DocEntry;
-                document.Lines.ItemCode = line.ItemCode;
-                document.Lines.Quantity = Convert.ToDouble(line.Quantity);
-
-                if (line.LineNum.HasValue)
-                {
-                    document.Lines.BaseLine = line.LineNum.Value;
-                }
-
-                if (!string.IsNullOrWhiteSpace(line.Warehouse))
-                {
-                    document.Lines.WarehouseCode = line.Warehouse;
-                }
-
-                ApplyBatchesAndBins(companyDb, document.Lines, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+                ConfigureReceiptLine(companyDb, document.Lines, request.DocEntry, line);
 
                 document.Lines.Add();
             }
@@ -246,6 +231,29 @@ public class SapDiApiProductionService : ISapProductionService
         {
             Marshal.FinalReleaseComObject(document);
         }
+    }
+
+    internal void ConfigureReceiptLine(
+        string companyDb,
+        dynamic documentLine,
+        int productionOrderDocEntry,
+        ProductionReceiptLineRequest line)
+    {
+        documentLine.BaseType = _options.ProductionOrderObjectType;
+        documentLine.BaseEntry = productionOrderDocEntry;
+        documentLine.Quantity = Convert.ToDouble(line.Quantity);
+
+        if (line.LineNum.HasValue)
+        {
+            documentLine.BaseLine = line.LineNum.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(line.Warehouse))
+        {
+            documentLine.WarehouseCode = line.Warehouse;
+        }
+
+        ApplyBatchesAndBins(companyDb, documentLine, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
     }
 
     private SapProductionCloseResult CloseProductionOrder(dynamic company, int DocEntry)
