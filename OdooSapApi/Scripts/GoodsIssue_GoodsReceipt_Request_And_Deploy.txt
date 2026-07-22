@@ -1,0 +1,137 @@
+Odoo to SAP - Goods Issue (TIF) -> Goods Receipt (STL)
+========================================================
+
+Endpoint
+--------
+POST /api/sap/goodsissue-goodsreceipt
+Content-Type: application/json
+
+Status endpoint
+---------------
+GET /api/sap/goodsissue-goodsreceipt/{transferId}?siteId=TEST
+
+TEST payload: batch-managed item without bins
+------------------------------------------------
+{
+  "transferId": "ODOO-TEST-20260723-0001",
+  "siteId": "TEST",
+  "sourceCompanyName": "TEST_INTERFACE",
+  "targetCompanyName": "TEST_STL_ODOO",
+  "postingDate": "2026-07-23",
+  "remarks": "Transfer stock from TIF to STL",
+  "lines": [
+    {
+      "lineId": "1",
+      "itemCode": "FG08006",
+      "quantity": 10,
+      "sourceWarehouse": "WH-FG",
+      "targetWarehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 4
+        },
+        {
+          "batchNumber": "FG-BATCH-002",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
+
+PRD company mapping
+-------------------
+sourceCompanyName = TIF_GOLIVE
+targetCompanyName = SBO_STL_GOLIVE
+
+Rules
+-----
+- transferId is the idempotency key. Reuse the same value only for the same body.
+- remarks is optional and must not exceed 150 characters.
+- itemCode is required because Goods Issue and Goods Receipt are standalone documents.
+- sourceWarehouse is used by the TIF Goods Issue.
+- targetWarehouse is used by the STL Goods Receipt.
+- For batch-managed items, batches is required and its quantity total must equal line quantity.
+- Batch dates are optional. If omitted, the API copies available dates from the TIF batch master.
+- For bin-managed warehouses, send sourceBins and targetBins under each batch.
+- Serial-managed items are rejected by this version.
+- The API reads the actual Goods Issue StockPrice and uses it as the STL Goods Receipt UnitPrice.
+- The API creates Goods Issue first. If STL fails, retry the identical request and transferId;
+  the API recovers the existing Goods Issue and continues the Goods Receipt.
+
+curl: Delivery
+--------------
+curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/delivery" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "siteId": "TEST",
+    "companyName": "TEST_INTERFACE",
+    "docEntry": 999999999,
+    "docDate": "2026-07-23",
+    "comments": "Created from Odoo",
+    "deliveryLines": [
+      {
+        "lineNum": 0,
+        "quantity": 10,
+        "warehouse": "WH-FG",
+        "batches": [
+          {
+            "batchNumber": "FG-BATCH-001",
+            "quantity": 10
+          }
+        ]
+      }
+    ]
+  }'
+
+curl: Goods Issue -> Goods Receipt
+----------------------------------
+curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/goodsissue-goodsreceipt" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "transferId": "ODOO-TEST-20260723-0001",
+    "siteId": "TEST",
+    "sourceCompanyName": "TEST_INTERFACE",
+    "targetCompanyName": "TEST_STL_ODOO",
+    "postingDate": "2026-07-23",
+    "remarks": "Transfer stock from TIF to STL",
+    "lines": [
+      {
+        "lineId": "1",
+        "itemCode": "FG08006",
+        "quantity": 10,
+        "sourceWarehouse": "WH-FG",
+        "targetWarehouse": "WH-FG",
+        "batches": [
+          {
+            "batchNumber": "FG-BATCH-001",
+            "quantity": 4
+          },
+          {
+            "batchNumber": "FG-BATCH-002",
+            "quantity": 6
+          }
+        ]
+      }
+    ]
+  }'
+
+Server setup and publish
+------------------------
+1. Run Scripts\INT_IntercompanyTransfer_Setup.sql against TEMP_API once.
+2. Verify appsettings.json IntercompanyTransfers mappings and GIT/GRT series.
+3. Open PowerShell as Administrator in the OdooSapApi source folder.
+4. Run:
+
+   powershell -ExecutionPolicy Bypass -File ".\Scripts\Publish_GoodsIssue_GoodsReceipt.ps1"
+
+Publish output
+--------------
+D:\API_Publish\GoodsIssue_GoodsReceipt
+
+Important
+---------
+- Test and publish commands do not create SAP documents.
+- POST creates real SAP Goods Issue and Goods Receipt documents.
+- Publishing alone does not host the API. Configure IIS or a Windows service and its URL/port.

@@ -100,6 +100,25 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
+    public Task<SapDocumentResult> DeliveryAsync(DeliveryRequest request)
+    {
+        dynamic? company = null;
+
+        try
+        {
+            var companyDb = _companyResolver.ResolveCompanyDb(
+                request.SiteId,
+                request.CompanyName);
+            company = ConnectCompany(companyDb);
+
+            return Task.FromResult(CreateDelivery(company, companyDb, request));
+        }
+        finally
+        {
+            ReleaseCompany(company);
+        }
+    }
+
     public Task<SapProductionCloseResult> CloseAsync(ProductionCloseRequest request)
     {
         dynamic? company = null;
@@ -233,6 +252,53 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
+    private SapDocumentResult CreateDelivery(
+        dynamic company,
+        string companyDb,
+        DeliveryRequest request)
+    {
+        dynamic document = company.GetBusinessObject(_options.DeliveryObjectType);
+
+        try
+        {
+            document.CardCode = GetReserveInvoiceCardCode(companyDb, request.DocEntry);
+            document.DocDate = request.DocDate!.Value;
+
+            if (!string.IsNullOrWhiteSpace(_options.DeliverySeriesBeginStr))
+            {
+                document.Series = ResolveSeries(
+                    companyDb,
+                    Convert.ToString(_options.DeliveryObjectType),
+                    _options.DeliverySeriesBeginStr,
+                    request.DocDate.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Comments))
+            {
+                document.Comments = request.Comments.Trim();
+            }
+
+            foreach (var line in request.DeliveryLines)
+            {
+                ConfigureDeliveryLine(companyDb, document.Lines, request.DocEntry, line);
+                document.Lines.Add();
+            }
+
+            AddDocument(company, document, "Delivery");
+            var documentEntry = Convert.ToString(company.GetNewObjectKey()) ?? "";
+
+            return new SapDocumentResult
+            {
+                DocumentEntry = documentEntry,
+                DocumentNumber = GetDocumentNumber(company, _options.DeliveryObjectType, documentEntry)
+            };
+        }
+        finally
+        {
+            Marshal.FinalReleaseComObject(document);
+        }
+    }
+
     internal void ConfigureReceiptLine(
         string companyDb,
         dynamic documentLine,
@@ -254,6 +320,31 @@ public class SapDiApiProductionService : ISapProductionService
         }
 
         ApplyBatchesAndBins(companyDb, documentLine, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+    }
+
+    internal void ConfigureDeliveryLine(
+        string companyDb,
+        dynamic documentLine,
+        int reserveInvoiceDocEntry,
+        DeliveryLineRequest line)
+    {
+        documentLine.BaseType = _options.ARInvoiceObjectType;
+        documentLine.BaseEntry = reserveInvoiceDocEntry;
+        documentLine.BaseLine = line.LineNum!.Value;
+        documentLine.Quantity = Convert.ToDouble(line.Quantity);
+
+        if (!string.IsNullOrWhiteSpace(line.Warehouse))
+        {
+            documentLine.WarehouseCode = line.Warehouse;
+        }
+
+        ApplyBatchesAndBins(
+            companyDb,
+            documentLine,
+            line.Quantity,
+            line.BatchNumber,
+            line.Batches,
+            line.Bins);
     }
 
     private SapProductionCloseResult CloseProductionOrder(dynamic company, int DocEntry)
@@ -404,6 +495,32 @@ public class SapDiApiProductionService : ISapProductionService
         }
 
         return Convert.ToInt32(result);
+    }
+
+    private string GetReserveInvoiceCardCode(string companyDb, int docEntry)
+    {
+        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 1 CardCode
+            FROM dbo.OINV
+            WHERE DocEntry = @DocEntry
+              AND isIns = 'Y'
+              AND CANCELED = 'N';
+            """;
+        command.Parameters.AddWithValue("@DocEntry", docEntry);
+
+        var cardCode = Convert.ToString(command.ExecuteScalar());
+
+        if (string.IsNullOrWhiteSpace(cardCode))
+        {
+            throw new ArgumentException(
+                $"Active A/R Reserve Invoice not found. DocEntry={docEntry}");
+        }
+
+        return cardCode;
     }
 
     private int ResolveSeries(string companyDb, string objectCode, string beginStr, DateTime docDate)

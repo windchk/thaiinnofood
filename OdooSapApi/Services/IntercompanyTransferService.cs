@@ -1,0 +1,369 @@
+using OdooSapApi.Models;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+
+namespace OdooSapApi.Services;
+
+public class IntercompanyTransferService
+{
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private readonly IntercompanyTransferResolver _resolver;
+    private readonly IntercompanyTransferLedger _ledger;
+    private readonly IIntercompanySapService _sapService;
+    private readonly ILogger<IntercompanyTransferService> _logger;
+
+    public IntercompanyTransferService(
+        IntercompanyTransferResolver resolver,
+        IntercompanyTransferLedger ledger,
+        IIntercompanySapService sapService,
+        ILogger<IntercompanyTransferService> logger)
+    {
+        _resolver = resolver;
+        _ledger = ledger;
+        _sapService = sapService;
+        _logger = logger;
+    }
+
+    public async Task<IntercompanyTransferResult> ProcessAsync(
+        IntercompanyTransferRequest request)
+    {
+        IntercompanyTransferValidator.Validate(request);
+        NormalizeDates(request);
+
+        var siteOptions = _resolver.Resolve(
+            request.SiteId,
+            request.SourceCompanyName,
+            request.TargetCompanyName);
+        request.SiteId = request.SiteId.ToUpperInvariant();
+        request.SourceCompanyName = siteOptions.SourceCompanyName;
+        request.TargetCompanyName = siteOptions.TargetCompanyName;
+        var requestJson = JsonSerializer.Serialize(request, JsonOptions);
+        var requestHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(requestJson)));
+
+        await using var transferLock = await _ledger.AcquireAsync(
+            request.SiteId,
+            request.TransferId);
+
+        var record = await _ledger.GetAsync(
+            transferLock.Connection,
+            request.SiteId,
+            request.TransferId);
+
+        if (record is null)
+        {
+            await _ledger.InsertAsync(
+                transferLock.Connection,
+                request,
+                requestHash,
+                requestJson);
+            record = await GetRequiredRecordAsync(
+                transferLock,
+                request.SiteId,
+                request.TransferId);
+        }
+
+        if (!string.Equals(record.RequestHash, requestHash, StringComparison.Ordinal))
+        {
+            throw new IntercompanyTransferConflictException(
+                "transferId already exists with a different request body.",
+                BuildResult(record));
+        }
+
+        if (string.Equals(record.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!record.GoodsIssueDocEntry.HasValue
+                || !record.GoodsReceiptDocEntry.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "Intercompany transfer ledger is inconsistent: COMPLETED document references are missing.");
+            }
+
+            return BuildResult(record);
+        }
+
+        SapDocumentResult? goodsIssueDocument = BuildGoodsIssueDocument(record);
+        var goodsIssueKnown = goodsIssueDocument is not null;
+
+        try
+        {
+            var lineCosts = TryDeserializeLineCosts(record.ActualCostJson);
+
+            if (goodsIssueDocument is null || lineCosts is null)
+            {
+                var goodsIssue = await _sapService.GetOrCreateGoodsIssueAsync(
+                    request,
+                    siteOptions);
+                goodsIssue.Document.SiteId = request.SiteId;
+                goodsIssue.Document.SapDatabaseName = request.SourceCompanyName;
+                goodsIssueDocument = goodsIssue.Document;
+                goodsIssueKnown = true;
+                lineCosts = goodsIssue.LineCosts;
+
+                await _ledger.MarkGoodsIssueAsync(
+                    transferLock.Connection,
+                    request.SiteId,
+                    request.TransferId,
+                    goodsIssueDocument,
+                    JsonSerializer.Serialize(lineCosts, JsonOptions));
+            }
+
+            var goodsReceiptDocument = await _sapService.GetOrCreateGoodsReceiptAsync(
+                request,
+                siteOptions,
+                lineCosts);
+            goodsReceiptDocument.SiteId = request.SiteId;
+            goodsReceiptDocument.SapDatabaseName = request.TargetCompanyName;
+
+            await _ledger.MarkCompletedAsync(
+                transferLock.Connection,
+                request.SiteId,
+                request.TransferId,
+                goodsReceiptDocument);
+
+            record = await GetRequiredRecordAsync(
+                transferLock,
+                request.SiteId,
+                request.TransferId);
+
+            _logger.LogInformation(
+                "Intercompany transfer completed. SiteId={SiteId}, TransferId={TransferId}, GoodsIssueDocEntry={GoodsIssueDocEntry}, GoodsReceiptDocEntry={GoodsReceiptDocEntry}",
+                request.SiteId,
+                request.TransferId,
+                record.GoodsIssueDocEntry,
+                record.GoodsReceiptDocEntry);
+
+            return BuildResult(record);
+        }
+        catch (IntercompanyTransferConflictException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            var failureStatus = goodsIssueKnown ? "GR_PENDING" : "GI_FAILED";
+
+            try
+            {
+                await _ledger.MarkFailureAsync(
+                    transferLock.Connection,
+                    request.SiteId,
+                    request.TransferId,
+                    failureStatus,
+                    ex.Message);
+                record = await GetRequiredRecordAsync(
+                    transferLock,
+                    request.SiteId,
+                    request.TransferId);
+            }
+            catch (Exception ledgerException)
+            {
+                _logger.LogError(
+                    ledgerException,
+                    "Cannot update intercompany transfer failure status. SiteId={SiteId}, TransferId={TransferId}",
+                    request.SiteId,
+                    request.TransferId);
+            }
+
+            var result = record is null
+                ? new IntercompanyTransferResult
+                {
+                    TransferId = request.TransferId,
+                    SiteId = request.SiteId,
+                    SourceCompanyName = request.SourceCompanyName,
+                    TargetCompanyName = request.TargetCompanyName,
+                    Status = failureStatus,
+                    GoodsIssue = goodsIssueDocument,
+                    ErrorMessage = ex.Message
+                }
+                : BuildResult(record);
+
+            result.GoodsIssue ??= goodsIssueDocument;
+            result.ErrorMessage ??= ex.Message;
+
+            throw new IntercompanyTransferProcessingException(
+                "Goods Issue / Goods Receipt transfer did not complete.",
+                result,
+                ex);
+        }
+    }
+
+    public async Task<IntercompanyTransferResult?> GetStatusAsync(
+        string siteId,
+        string transferId)
+    {
+        siteId = siteId?.Trim() ?? "";
+        transferId = transferId?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(siteId))
+        {
+            throw new ArgumentException("siteId is required.");
+        }
+
+        if (siteId.Length > 20)
+        {
+            throw new ArgumentException("siteId must not exceed 20 characters.");
+        }
+
+        if (string.IsNullOrWhiteSpace(transferId))
+        {
+            throw new ArgumentException("transferId is required.");
+        }
+
+        if (transferId.Length > 80)
+        {
+            throw new ArgumentException("transferId must not exceed 80 characters.");
+        }
+
+        if (transferId.Any(char.IsControl) || transferId.Contains('|'))
+        {
+            throw new ArgumentException("transferId contains unsupported characters.");
+        }
+
+        _ = _resolver.ResolveSite(siteId);
+
+        await using var transferLock = await _ledger.AcquireAsync(siteId, transferId);
+        var record = await _ledger.GetAsync(
+            transferLock.Connection,
+            siteId,
+            transferId);
+        return record is null ? null : BuildResult(record);
+    }
+
+    private async Task<IntercompanyTransferRecord> GetRequiredRecordAsync(
+        IntercompanyTransferLock transferLock,
+        string siteId,
+        string transferId)
+    {
+        return await _ledger.GetAsync(transferLock.Connection, siteId, transferId)
+            ?? throw new InvalidOperationException(
+                $"Intercompany transfer ledger record was not found. transferId={transferId}");
+    }
+
+    private List<IntercompanyLineCost>? TryDeserializeLineCosts(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        try
+        {
+            var costs = JsonSerializer.Deserialize<List<IntercompanyLineCost>>(
+                value,
+                JsonOptions);
+            return costs is { Count: > 0 } ? costs : null;
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Stored Goods Issue cost JSON is invalid; SAP document recovery will be used.");
+            return null;
+        }
+    }
+
+    private static void NormalizeDates(IntercompanyTransferRequest request)
+    {
+        request.PostingDate = request.PostingDate!.Value.Date;
+
+        foreach (var batch in request.Lines.SelectMany(x => x.Batches))
+        {
+            batch.ManufacturingDate = batch.ManufacturingDate?.Date;
+            batch.ExpiryDate = batch.ExpiryDate?.Date;
+            batch.AdmissionDate = batch.AdmissionDate?.Date;
+        }
+    }
+
+    private static IntercompanyTransferResult BuildResult(
+        IntercompanyTransferRecord record)
+    {
+        return new IntercompanyTransferResult
+        {
+            TransferId = record.TransferId,
+            SiteId = record.SiteId,
+            SourceCompanyName = record.SourceCompanyName,
+            TargetCompanyName = record.TargetCompanyName,
+            Status = record.Status,
+            GoodsIssue = BuildDocument(
+                record.SiteId,
+                record.SourceCompanyName,
+                record.GoodsIssueDocEntry,
+                record.GoodsIssueDocNum),
+            GoodsReceipt = BuildDocument(
+                record.SiteId,
+                record.TargetCompanyName,
+                record.GoodsReceiptDocEntry,
+                record.GoodsReceiptDocNum),
+            ErrorMessage = record.ErrorMessage
+        };
+    }
+
+    private static SapDocumentResult? BuildGoodsIssueDocument(
+        IntercompanyTransferRecord record)
+    {
+        return BuildDocument(
+            record.SiteId,
+            record.SourceCompanyName,
+            record.GoodsIssueDocEntry,
+            record.GoodsIssueDocNum);
+    }
+
+    private static SapDocumentResult? BuildDocument(
+        string siteId,
+        string companyName,
+        int? docEntry,
+        int? docNum)
+    {
+        if (!docEntry.HasValue)
+        {
+            return null;
+        }
+
+        return new SapDocumentResult
+        {
+            SiteId = siteId,
+            SapDatabaseName = companyName,
+            DocumentEntry = docEntry.Value.ToString(CultureInfo.InvariantCulture),
+            DocumentNumber = docNum?.ToString(CultureInfo.InvariantCulture)
+        };
+    }
+}
+
+internal sealed class IntercompanyTransferConflictException : Exception
+{
+    public IntercompanyTransferConflictException(
+        string message,
+        IntercompanyTransferResult result)
+        : base(message)
+    {
+        Result = result;
+    }
+
+    public IntercompanyTransferResult Result { get; }
+}
+
+internal sealed class IntercompanyTransferProcessingException : Exception
+{
+    public IntercompanyTransferProcessingException(
+        string message,
+        IntercompanyTransferResult result,
+        Exception innerException)
+        : base(message, innerException)
+    {
+        Result = result;
+    }
+
+    public IntercompanyTransferResult Result { get; }
+}
+
+internal sealed class IntercompanyTransferBusyException : Exception
+{
+    public IntercompanyTransferBusyException(string message)
+        : base(message)
+    {
+    }
+}

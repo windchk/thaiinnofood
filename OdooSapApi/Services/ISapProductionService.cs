@@ -7,5 +7,6 @@ public interface ISapProductionService
     Task<ApiResponse> CheckConnectionAsync(string? siteId = null);
     Task<SapDocumentResult> IssueAsync(ProductionIssueRequest request);
     Task<SapDocumentResult> ReceiptAsync(ProductionReceiptRequest request);
+    Task<SapDocumentResult> DeliveryAsync(DeliveryRequest request);
     Task<SapProductionCloseResult> CloseAsync(ProductionCloseRequest request);
 }

@@ -7,10 +7,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.Configure<SapCompanyOptions>(builder.Configuration.GetSection("SapCompany"));
+builder.Services.Configure<IntercompanyTransferOptions>(
+    builder.Configuration.GetSection("IntercompanyTransfers"));
 builder.Services.AddSingleton<SapCompanyResolver>();
 builder.Services.AddSingleton<SapApiLogService>();
 builder.Services.AddSingleton<ProductionOrderService>();
 builder.Services.AddSingleton<ISapProductionService, SapDiApiProductionService>();
+builder.Services.AddSingleton<IntercompanyTransferResolver>();
+builder.Services.AddSingleton<IntercompanyTransferLedger>();
+builder.Services.AddSingleton<IIntercompanySapService, SapDiApiIntercompanyService>();
+builder.Services.AddSingleton<IntercompanyTransferService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

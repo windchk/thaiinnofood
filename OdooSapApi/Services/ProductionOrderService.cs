@@ -83,6 +83,40 @@ public class ProductionOrderService
             });
     }
 
+    public async Task<ApiResponse> DeliveryAsync(DeliveryRequest request)
+    {
+        return await ExecuteWithLogAsync(
+            "Delivery",
+            request.SiteId,
+            request.DocEntry,
+            request,
+            async () =>
+            {
+                ValidateDeliveryRequest(request);
+                var sapDatabaseName = _companyResolver.ResolveCompanyDb(
+                    request.SiteId,
+                    request.CompanyName);
+
+                _logger.LogInformation(
+                    "Delivery request received. SiteId={SiteId}, CompanyName={CompanyName}, ReserveInvoiceDocEntry={DocEntry}, Lines={LineCount}",
+                    request.SiteId,
+                    request.CompanyName,
+                    request.DocEntry,
+                    request.DeliveryLines.Count);
+
+                var sapResult = await _sapProductionService.DeliveryAsync(request);
+                sapResult.SiteId = request.SiteId;
+                sapResult.SapDatabaseName = sapDatabaseName;
+
+                return new ApiResponse
+                {
+                    Success = true,
+                    Message = "Delivery completed.",
+                    Data = sapResult
+                };
+            });
+    }
+
     public async Task<ApiResponse> CloseAsync(ProductionCloseRequest request)
     {
         return await ExecuteWithLogAsync(
@@ -244,6 +278,57 @@ public class ProductionOrderService
 
         foreach (var line in request.ReceiptLines)
         {
+            ValidateQuantityAndWarehouse(line.Quantity, line.Warehouse);
+            ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+        }
+    }
+
+    internal static void ValidateDeliveryRequest(DeliveryRequest request)
+    {
+        ValidateBaseRequest(request.SiteId, request.DocEntry);
+
+        if (string.IsNullOrWhiteSpace(request.CompanyName))
+        {
+            throw new ArgumentException("companyName is required.");
+        }
+
+        if (!request.DocDate.HasValue)
+        {
+            throw new ArgumentException("docDate is required.");
+        }
+
+        if (request.DeliveryLines is null || request.DeliveryLines.Count == 0)
+        {
+            throw new ArgumentException("deliveryLines is required.");
+        }
+
+        if (request.DeliveryLines.Any(x => !x.LineNum.HasValue))
+        {
+            throw new ArgumentException("deliveryLines[].lineNum is required.");
+        }
+
+        if (request.DeliveryLines.Any(x => x.LineNum < 0))
+        {
+            throw new ArgumentException("deliveryLines[].lineNum must be zero or greater.");
+        }
+
+        var duplicateLine = request.DeliveryLines
+            .GroupBy(x => x.LineNum!.Value)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateLine is not null)
+        {
+            throw new ArgumentException(
+                $"deliveryLines[].lineNum must be unique. Duplicate lineNum={duplicateLine.Key}.");
+        }
+
+        foreach (var line in request.DeliveryLines)
+        {
+            if (line.Batches is null || line.Bins is null)
+            {
+                throw new ArgumentException("deliveryLines[].batches and deliveryLines[].bins cannot be null.");
+            }
+
             ValidateQuantityAndWarehouse(line.Quantity, line.Warehouse);
             ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
         }

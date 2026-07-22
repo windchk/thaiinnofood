@@ -1,0 +1,121 @@
+Odoo to SAP - Delivery
+======================
+
+Purpose
+-------
+Create an SAP Business One Delivery based on an active A/R Reserve Invoice.
+
+Endpoint
+--------
+POST /api/sap/delivery
+Content-Type: application/json
+
+Request example: batch without bin
+----------------------------------
+{
+  "siteId": "TEST",
+  "companyName": "TEST_INTERFACE",
+  "docEntry": 999999999,
+  "docDate": "2026-07-23",
+  "comments": "Created from Odoo",
+  "deliveryLines": [
+    {
+      "lineNum": 0,
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 4
+        },
+        {
+          "batchNumber": "FG-BATCH-002",
+          "quantity": 6
+        }
+      ]
+    }
+  ]
+}
+
+Request example: batch with bin
+-------------------------------
+{
+  "siteId": "PRD",
+  "companyName": "TIF_GOLIVE",
+  "docEntry": 999999999,
+  "docDate": "2026-07-23",
+  "deliveryLines": [
+    {
+      "lineNum": 0,
+      "quantity": 10,
+      "warehouse": "WH-FG",
+      "batches": [
+        {
+          "batchNumber": "FG-BATCH-001",
+          "quantity": 10,
+          "bins": [
+            {
+              "binCode": "WH-FG-BIN-01",
+              "quantity": 10
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Field mapping
+-------------
+- docEntry is the A/R Reserve Invoice DocEntry.
+- companyName is the SAP database name received from SAP -> Odoo.
+- deliveryLines[].lineNum is the INV1.LineNum of the A/R Reserve Invoice.
+- SAP Delivery object type is 15.
+- SAP base document type is 13 (A/R Invoice / A/R Reserve Invoice).
+- ItemCode is not accepted in the request. SAP derives it from BaseEntry/BaseLine.
+- The sum of batches[].quantity must equal the delivery line quantity.
+- When a batch uses bins, use batches[].bins. Do not send line-level bins.
+- A duplicate lineNum in the same request is rejected.
+
+Database mapping
+----------------
+- TEST -> TEST_INTERFACE
+- PRD  -> TIF_GOLIVE
+
+The API rejects a companyName that does not match its siteId mapping.
+
+Configuration
+-------------
+SapCompany:ARInvoiceObjectType = 13
+SapCompany:DeliveryObjectType = 15
+SapCompany:DeliverySeriesBeginStr = DO
+
+The TEST_INTERFACE and TIF_GOLIVE databases currently use BeginStr DO for
+Delivery object type 15. The API resolves the monthly series from NNM1 using
+the request docDate.
+
+Publish on the SAP server
+-------------------------
+Open PowerShell as Administrator, change to the OdooSapApi source folder, and
+run each command separately:
+
+New-Item -ItemType Directory -Path "D:\API_Publish\Delivery" -Force
+
+dotnet test ".\OdooSapApi.sln" --configuration Release
+
+dotnet publish ".\OdooSapApi.csproj" --configuration Release --output "D:\API_Publish\Delivery"
+
+Verify:
+
+Get-ChildItem "D:\API_Publish\Delivery"
+
+The publish folder must contain OdooSapApi.exe, OdooSapApi.dll, and
+appsettings.json.
+
+Important
+---------
+- Publishing does not call SAP and does not create a Delivery.
+- A POST request to /api/sap/delivery creates a real SAP document.
+- Verify the deployed appsettings.json and SAP Delivery series before testing.
+- Host the published ASP.NET Core API with IIS or a separately configured
+  Windows service. Publishing alone does not make the endpoint reachable.

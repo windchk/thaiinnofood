@@ -29,4 +29,25 @@ public class SapCompanyResolver
 
         throw new ArgumentException($"Unknown siteId '{siteId}'.");
     }
+
+    public string ResolveCompanyDb(string? siteId, string? companyName)
+    {
+        var resolvedCompanyDb = ResolveCompanyDb(siteId);
+
+        if (string.IsNullOrWhiteSpace(companyName))
+        {
+            throw new ArgumentException("companyName is required.");
+        }
+
+        if (!string.Equals(
+                resolvedCompanyDb,
+                companyName.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"companyName '{companyName}' does not match siteId '{siteId}'.");
+        }
+
+        return resolvedCompanyDb;
+    }
 }
