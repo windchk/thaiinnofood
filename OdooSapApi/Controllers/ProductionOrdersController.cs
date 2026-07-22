@@ -27,11 +27,14 @@ public class ProductionOrdersController : ControllerBase
         return await ExecuteAsync(() => _productionOrderService.ReceiptAsync(request));
     }
 
+#if false
+    // Temporarily disabled: Odoo -> SAP Close Production Order.
     [HttpPost("close")]
     public async Task<ActionResult<ApiResponse>> Close([FromBody] ProductionCloseRequest request)
     {
         return await ExecuteAsync(() => _productionOrderService.CloseAsync(request));
     }
+#endif
 
     private async Task<ActionResult<ApiResponse>> ExecuteAsync(Func<Task<ApiResponse>> action)
     {

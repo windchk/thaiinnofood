@@ -19,18 +19,27 @@ S = Success
 E = Error
 
 ObjectType values:
+ProductionOrder
+ARReserveInvoice
+
+Temporarily disabled ObjectType values retained for future use:
 SalesOrder
 ItemMaster
-ProductionOrder
 
 ObjectKey meaning:
 SalesOrder      = ORDR.DocEntry
 ProductionOrder = OWOR.DocEntry
 ItemMaster      = OITM.ItemCode
+ARReserveInvoice = OINV.DocEntry where OINV.isIns = 'Y'
 
-SiteId mapping:
-TEST = TEST_INTERFACE
-PRD  = TIF_GOLIVE
+SAP company mapping:
+SiteId = TEST, CompanyName = TIF -> TEST_INTERFACE
+SiteId = TEST, CompanyName = STL -> TEST_STL_ODOO
+SiteId = PRD,  CompanyName = TIF -> TIF_GOLIVE
+SiteId = PRD,  CompanyName = STL -> SBO_STL_GOLIVE
+
+Queue CompanyName stores the company code TIF/STL for routing.
+The outgoing Odoo JSON field companyName uses SapDatabaseName instead.
 
 
 Full setup SQL
@@ -74,6 +83,7 @@ BEGIN
         ProcessBy NVARCHAR(100) NULL,
 
         SiteId NVARCHAR(10) NULL,
+        CompanyName NVARCHAR(10) NULL,
         SapDatabaseName NVARCHAR(50) NULL
     );
 END;
@@ -105,6 +115,20 @@ BEGIN
     ALTER TABLE dbo.INT_OdooQueue
     ADD SapDatabaseName NVARCHAR(50) NULL;
 END;
+GO
+
+IF COL_LENGTH('dbo.INT_OdooQueue', 'CompanyName') IS NULL
+BEGIN
+    ALTER TABLE dbo.INT_OdooQueue
+    ADD CompanyName NVARCHAR(10) NULL;
+END;
+GO
+
+-- Legacy queue rows came from TIF before CompanyName was introduced.
+UPDATE dbo.INT_OdooQueue
+SET CompanyName = 'TIF'
+WHERE CompanyName IS NULL
+   OR LTRIM(RTRIM(CompanyName)) = '';
 GO
 
 IF NOT EXISTS

@@ -343,9 +343,11 @@ Receipt mapping เข้า SAP DI API
 - API ใส่ document.Lines.BaseType = 202 เอง
 
 
-3. Close Production Order
--------------------------
+3. Close Production Order (TEMPORARILY DISABLED)
+-------------------------------------------------
 POST /api/sap/production/close
+
+สถานะปัจจุบัน: route ถูกปิดและจะตอบ 404 จนกว่าจะเปิดใช้งานอีกครั้ง
 
 JSON body
 ---------
@@ -389,8 +391,8 @@ Receipt From Production
   }
 }
 
-Close Production Order
-----------------------
+Close Production Order (disabled reference)
+-------------------------------------------
 {
   "success": true,
   "message": "Production Order closed.",

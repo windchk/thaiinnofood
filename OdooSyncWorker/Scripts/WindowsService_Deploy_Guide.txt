@@ -70,26 +70,69 @@ C:\Services\OdooSyncWorker\appsettings.json
 เช็กค่าหลัก ๆ เหล่านี้:
 
 "ConnectionStrings": {
-  "TempApiDb": "Server=192.168.10.1;Database=TEMP_API;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;",
-  "SapDb": "Server=192.168.10.1;Database=TEST_INTERFACE;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;"
+  "SapDb": "<SAP SQL connection string>",
+  "TempApiDb": "<TEMP_API connection string>"
 },
+
 "SapDatabases": {
-  "TEST": "TEST_INTERFACE",
-  "PRD": "TIF_GOLIVE"
+  "TEST": {
+    "TIF": "TEST_INTERFACE",
+    "STL": "TEST_STL_ODOO"
+  },
+  "PRD": {
+    "TIF": "TIF_GOLIVE",
+    "STL": "SBO_STL_GOLIVE"
+  }
 },
 "Odoo": {
-  "BaseUrl": "https://odoo-real-url",
-  "ApiKey": "real-api-key"
+  "BaseUrl": "http://192.168.10.2:8069",
+  "ApiKeyHeader": "x-api-key",
+  "ApiKey": "<Odoo API key>",
+  "Routes": {
+    "ProductionOrder": {
+      "Enabled": true,
+      "Endpoint": "/api/v1/b1/production",
+      "PayloadFormat": "B1Document",
+      "CollectionName": "productions",
+      "DocStates": {
+        "RELEASED": "release",
+        "CANCEL": "cancel"
+      }
+    },
+    "ARReserveInvoice": {
+      "Enabled": true,
+      "Endpoint": "/api/v1/b1/delivery",
+      "PayloadFormat": "B1Document",
+      "CollectionName": "deliverys",
+      "DocStates": {
+        "ADD": "release",
+        "CANCEL": "cancel"
+      }
+    }
+  }
 },
 "Worker": {
   "DefaultSiteId": "TEST",
+  "DefaultCompanyName": "TIF",
   "DelaySeconds": 10,
-  "MaxRetry": 3
+  "MaxRetry": 3,
+  "EnabledObjectTypes": [
+    "ProductionOrder",
+    "ARReserveInvoice"
+  ]
 }
+
+SalesOrder และ ItemMaster ถูกปิดชั่วคราวด้วย Enabled = false ใน appsettings.json
+และไม่อยู่ใน Worker:EnabledObjectTypes
+
+ค่าที่ Worker ใช้งานทั้งหมดแก้จาก appsettings.json ไฟล์เดียว ไม่มี
+appsettings.Development.json มา override ค่า
 
 สำคัญ:
 - Server ต้องเป็น IP หรือชื่อ SQL Server ที่ SAP Server ต่อถึง
-- BaseUrl ถ้าพร้อมต่อ Odoo จริง ให้ใส่ URL จริง
+- BaseUrl ต้องกำหนดเป็น URL ของ environment ปลายทางที่ถูกต้องก่อนเริ่ม service
+- หลังกรอก SQL password และ Odoo API key ให้จำกัดสิทธิ์อ่านไฟล์เฉพาะ account ที่รัน service
+- ห้าม commit หรือส่งต่อ appsettings.json ที่กรอก credential จริงแล้ว
 - ถ้ายังเทส webhook อยู่ ให้ใช้ URL webhook.site ไปก่อน
 
 
@@ -230,4 +273,3 @@ Worker จะ retry ตามค่า MaxRetry ถ้าครบแล้ว�
 
 ถ้า SQL ล่ม:
 Worker จะ log error แล้ว retry ตามค่า Worker:DelaySeconds
-

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdooSyncWorker", "OdooSyncWorker.csproj", "{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdooSyncWorker.Tests", "..\OdooSyncWorker.Tests\OdooSyncWorker.Tests.csproj", "{23B41F9A-FBBE-47AC-9838-27918247AB8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A68CF53E-EEE7-4D10-8448-E695B7A4FD2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23B41F9A-FBBE-47AC-9838-27918247AB8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23B41F9A-FBBE-47AC-9838-27918247AB8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23B41F9A-FBBE-47AC-9838-27918247AB8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23B41F9A-FBBE-47AC-9838-27918247AB8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

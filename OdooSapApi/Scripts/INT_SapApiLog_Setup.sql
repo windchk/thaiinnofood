@@ -11,7 +11,7 @@ BEGIN
         SiteId NVARCHAR(10) NOT NULL,
         SapDatabaseName NVARCHAR(50) NOT NULL,
 
-        ProcessType NVARCHAR(30) NOT NULL, -- IssueFromProduction, ReceiptFromProduction, CloseProductionOrder
+        ProcessType NVARCHAR(30) NOT NULL, -- IssueFromProduction, ReceiptFromProduction; CloseProductionOrder is disabled
         ProductionOrderDocEntry INT NOT NULL,
 
         RequestJson NVARCHAR(MAX) NULL,
@@ -20,8 +20,8 @@ BEGIN
         Status CHAR(1) NOT NULL, -- S=Success, E=Error
         ErrorMessage NVARCHAR(MAX) NULL,
 
-        SapDocumentEntry NVARCHAR(50) NULL, -- Issue/Receipt DocEntry; ProductionOrder DocEntry for CloseProductionOrder
-        SapDocumentNumber NVARCHAR(50) NULL, -- Issue/Receipt DocNum; ProductionOrder DocNum for CloseProductionOrder
+        SapDocumentEntry NVARCHAR(50) NULL, -- Issue/Receipt DocEntry; legacy close value retained
+        SapDocumentNumber NVARCHAR(50) NULL, -- Issue/Receipt DocNum; legacy close value retained
 
         CreateDate DATETIME NOT NULL
             CONSTRAINT DF_INT_SapApiLog_CreateDate DEFAULT GETDATE(),

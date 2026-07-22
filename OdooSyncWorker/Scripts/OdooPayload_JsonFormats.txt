@@ -5,36 +5,43 @@ Important
 ---------
 JSON field names are case-sensitive.
 Use the exact lowercase/camelCase field names shown in this file.
+Endpoint, collection name, and docState mappings are loaded from
+appsettings.json under Odoo:Routes.
 
-Do not change:
-objectType
+Current B1 endpoint fields:
+params
+productions
+deliverys
 siteId
-sapDatabaseName
 docEntry
-docNum
-cardCode
-itemCode
-statusCode
-statusName
+docState
+companyName
+
+SalesOrder and ItemMaster sync are temporarily disabled. Their legacy fields
+remain documented below only as a reference for possible future reactivation.
 
 
-Common wrapper
+Disabled legacy wrapper
 --------------
-Every request sent by OdooSyncWorker uses this wrapper:
+SalesOrder and ItemMaster previously used this wrapper but are currently disabled.
+ProductionOrder and ARReserveInvoice do not use this wrapper; their exact
+request bodies are documented in their sections below.
 
 {
-  "objectType": "SalesOrder | ItemMaster | ProductionOrder",
+  "objectType": "SalesOrder | ItemMaster",
   "action": "ADD | UPDATE | CANCEL | CLOSE",
   "siteId": "TEST | PRD",
-  "sapDatabaseName": "TEST_INTERFACE | TIF_GOLIVE",
+  "companyName": "TIF | STL",
+  "sapDatabaseName": "TEST_INTERFACE | TEST_STL_ODOO | TIF_GOLIVE | SBO_STL_GOLIVE",
   "data": {
   }
 }
 
 Endpoint by objectType:
-SalesOrder      -> /api/sap/sales-orders
-ItemMaster      -> /api/sap/items
-ProductionOrder -> /api/sap/production-orders
+SalesOrder      -> disabled
+ItemMaster      -> disabled
+ProductionOrder -> /api/v1/b1/production
+ARReserveInvoice -> /api/v1/b1/delivery
 
 
 SalesOrder
@@ -78,6 +85,7 @@ Full request body example:
   "objectType": "SalesOrder",
   "action": "UPDATE",
   "siteId": "TEST",
+  "companyName": "TIF",
   "sapDatabaseName": "TEST_INTERFACE",
   "data": {
     "docEntry": 78949,
@@ -147,6 +155,7 @@ Full request body example:
   "objectType": "ItemMaster",
   "action": "UPDATE",
   "siteId": "PRD",
+  "companyName": "TIF",
   "sapDatabaseName": "TIF_GOLIVE",
   "data": {
     "itemCode": "FG05037",
@@ -185,7 +194,29 @@ ProductionOrder
 ObjectKey:
 OWOR.DocEntry
 
-data format:
+Current request body sent to /api/v1/b1/production:
+
+{
+  "params": {
+    "productions": [
+      {
+        "siteId": "TEST",
+        "docEntry": 47805,
+        "docState": "release",
+        "companyName": "TEST_INTERFACE"
+      }
+    ]
+  }
+}
+
+Production docState mapping:
+RELEASED -> release
+CANCEL   -> cancel
+
+Outgoing companyName:
+Uses SapDatabaseName, for example TEST_INTERFACE or TIF_GOLIVE.
+
+Reference SAP detail format (not sent to the current production endpoint):
 
 {
   "docEntry": 49123,
@@ -234,12 +265,13 @@ data format:
   ]
 }
 
-Full request body example:
+Legacy full wrapper example (not sent to /api/v1/b1/production):
 
 {
   "objectType": "ProductionOrder",
-  "action": "UPDATE",
+  "action": "RELEASED",
   "siteId": "TEST",
+  "companyName": "TIF",
   "sapDatabaseName": "TEST_INTERFACE",
   "data": {
     "docEntry": 49123,
@@ -324,7 +356,50 @@ L = Closed
 C = Canceled
 
 ActionType:
-ADD    = new OWOR row
-UPDATE = existing OWOR row changed
-CANCEL = OWOR.Status changes to 'C'
-CLOSE  = OWOR.Status changes to 'L'
+RELEASED = OWOR.Status changes to 'R'
+CANCEL   = OWOR.Status changes to 'C'
+Other Production Order changes are not queued.
+
+
+ARReserveInvoice
+----------------
+
+objectType:
+ARReserveInvoice
+
+ObjectKey:
+OINV.DocEntry where OINV.isIns = 'Y'
+
+Current request body sent to /api/v1/b1/delivery:
+
+{
+  "params": {
+    "deliverys": [
+      {
+        "siteId": "TEST",
+        "docEntry": 47805,
+        "docState": "release",
+        "companyName": "TEST_STL_ODOO"
+      }
+    ]
+  }
+}
+
+The field name "deliverys" is required by the current Odoo contract.
+
+Delivery docState mapping:
+ADD    -> release
+CANCEL -> cancel
+
+Outgoing companyName:
+Uses SapDatabaseName, for example TEST_INTERFACE, TEST_STL_ODOO,
+TIF_GOLIVE, or SBO_STL_GOLIVE.
+
+Source tables:
+Header = OINV where isIns = 'Y'
+Lines  = INV1
+
+ActionType:
+ADD    = reserve invoice inserted
+CANCEL = original reserve invoice CANCELED changes to 'Y'
+Other reserve invoice updates are not queued.

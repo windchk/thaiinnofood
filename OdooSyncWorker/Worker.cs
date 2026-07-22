@@ -38,7 +38,9 @@ namespace OdooSyncWorker
                     {
                         try
                         {
-                            item.SapDatabaseName = _sapQueryService.GetSapDatabaseName(item.SiteId);
+                            item.SapDatabaseName = _sapQueryService.GetSapDatabaseName(
+                                item.SiteId,
+                                item.CompanyName);
 
                             var locked = await _queueService.MarkProcessingAsync(
                                 item.QueueId,
@@ -49,32 +51,41 @@ namespace OdooSyncWorker
                                 continue;
                             }
 
-                            object payload = item.ObjectType switch
+                            object? payload = _odooClient.UsesB1DocumentPayload(item.ObjectType)
+                                ? null
+                                : item.ObjectType switch
                             {
-                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId),
-                                "ItemMaster" => await _sapQueryService.GetItemMasterAsync(item.ObjectKey, item.SiteId),
-                                "ProductionOrder" => await _sapQueryService.GetProductionOrderAsync(item.ObjectKey, item.SiteId),
+#if false
+                                // Temporarily disabled: SAP -> Odoo Sales Order Sync.
+                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId, item.CompanyName),
+                                // Temporarily disabled: SAP -> Odoo Item Master Sync.
+                                "ItemMaster" => await _sapQueryService.GetItemMasterAsync(item.ObjectKey, item.SiteId, item.CompanyName),
+#endif
                                 _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
                             };
 
-                            var responseJson = await _odooClient.SendAsync(
+                            var sendResult = await _odooClient.SendAsync(
                                 item.ObjectType,
+                                item.ObjectKey,
                                 item.ActionType,
                                 item.SiteId,
+                                item.CompanyName,
                                 item.SapDatabaseName,
                                 payload);
 
                             await _queueService.MarkSuccessAsync(
                                 item.QueueId,
                                 item.SiteId,
+                                item.CompanyName,
                                 item.SapDatabaseName,
-                                payload,
-                                responseJson);
+                                sendResult.RequestBody,
+                                sendResult.ResponseContent);
 
                             _logger.LogInformation(
-                                "Queue {QueueId} sent successfully. SiteId={SiteId}, SapDatabaseName={SapDatabaseName}, ObjectType={ObjectType}, ObjectKey={ObjectKey}",
+                                "Queue {QueueId} sent successfully. SiteId={SiteId}, CompanyName={CompanyName}, SapDatabaseName={SapDatabaseName}, ObjectType={ObjectType}, ObjectKey={ObjectKey}",
                                 item.QueueId,
                                 item.SiteId,
+                                item.CompanyName,
                                 item.SapDatabaseName,
                                 item.ObjectType,
                                 item.ObjectKey);

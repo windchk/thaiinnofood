@@ -6,20 +6,45 @@ namespace OdooSyncWorker.Services;
 public class SapQueryService
 {
     private readonly string _sapConn;
-    private readonly Dictionary<string, string> _sapDatabases;
+    private readonly Dictionary<string, Dictionary<string, string>> _sapDatabases =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public SapQueryService(IConfiguration configuration)
     {
-        _sapConn = configuration.GetConnectionString("SapDb")
-            ?? throw new Exception("Missing SapDb connection string");
-        _sapDatabases = configuration
-            .GetSection("SapDatabases")
-            .Get<Dictionary<string, string>>() ?? new Dictionary<string, string>();
+        _sapConn = configuration.GetConnectionString("SapDb") ?? "";
+
+        if (string.IsNullOrWhiteSpace(_sapConn))
+        {
+            throw new Exception("Missing SapDb connection string");
+        }
+        foreach (var siteSection in configuration.GetSection("SapDatabases").GetChildren())
+        {
+            var companies = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var companySections = siteSection.GetChildren().ToList();
+
+            if (companySections.Count == 0 && !string.IsNullOrWhiteSpace(siteSection.Value))
+            {
+                // Backward compatibility for the previous TEST/PRD -> database format.
+                companies["TIF"] = siteSection.Value;
+            }
+            else
+            {
+                foreach (var companySection in companySections)
+                {
+                    if (!string.IsNullOrWhiteSpace(companySection.Value))
+                    {
+                        companies[companySection.Key] = companySection.Value;
+                    }
+                }
+            }
+
+            _sapDatabases[siteSection.Key] = companies;
+        }
     }
 
-    public async Task<object> GetSalesOrderAsync(string objectKey, string siteId)
+    public async Task<object> GetSalesOrderAsync(string objectKey, string siteId, string companyName)
     {
-        var sapDatabaseName = GetSapDatabaseName(siteId);
+        var sapDatabaseName = GetSapDatabaseName(siteId, companyName);
 
         using var conn = new SqlConnection(BuildSapConnectionString(sapDatabaseName));
 
@@ -81,9 +106,9 @@ public class SapQueryService
         };
     }
 
-    public async Task<object> GetItemMasterAsync(string objectKey, string siteId)
+    public async Task<object> GetItemMasterAsync(string objectKey, string siteId, string companyName)
     {
-        var sapDatabaseName = GetSapDatabaseName(siteId);
+        var sapDatabaseName = GetSapDatabaseName(siteId, companyName);
 
         using var conn = new SqlConnection(BuildSapConnectionString(sapDatabaseName));
 
@@ -128,9 +153,9 @@ public class SapQueryService
         };
     }
 
-    public async Task<object> GetProductionOrderAsync(string objectKey, string siteId)
+    public async Task<object> GetProductionOrderAsync(string objectKey, string siteId, string companyName)
     {
-        var sapDatabaseName = GetSapDatabaseName(siteId);
+        var sapDatabaseName = GetSapDatabaseName(siteId, companyName);
 
         using var conn = new SqlConnection(BuildSapConnectionString(sapDatabaseName));
 
@@ -370,13 +395,17 @@ public class SapQueryService
         };
     }
 
-    public string GetSapDatabaseName(string siteId)
+    public string GetSapDatabaseName(string siteId, string companyName)
     {
         var normalizedSiteId = NormalizeSiteId(siteId);
+        var normalizedCompanyName = NormalizeCompanyName(companyName);
 
-        if (!_sapDatabases.TryGetValue(normalizedSiteId, out var databaseName))
+        if (!_sapDatabases.TryGetValue(normalizedSiteId, out var companies)
+            || !companies.TryGetValue(normalizedCompanyName, out var databaseName)
+            || string.IsNullOrWhiteSpace(databaseName))
         {
-            throw new Exception($"Unknown SiteId: {normalizedSiteId}");
+            throw new Exception(
+                $"Unknown SAP company mapping: SiteId={normalizedSiteId}, CompanyName={normalizedCompanyName}");
         }
 
         return databaseName;
@@ -397,6 +426,13 @@ public class SapQueryService
         return string.IsNullOrWhiteSpace(siteId)
             ? "TEST"
             : siteId.Trim().ToUpperInvariant();
+    }
+
+    private static string NormalizeCompanyName(string companyName)
+    {
+        return string.IsNullOrWhiteSpace(companyName)
+            ? "TIF"
+            : companyName.Trim().ToUpperInvariant();
     }
 
     private sealed record ProductionLineBatchBinLookup(
