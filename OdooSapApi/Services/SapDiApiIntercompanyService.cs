@@ -262,20 +262,9 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 if (setInboundBatchMetadata
                     && !BatchExists(companyDb, line.ItemCode, batch.BatchNumber))
                 {
-                    if (batch.ManufacturingDate.HasValue)
-                    {
-                        documentLine.BatchNumbers.ManufacturingDate = batch.ManufacturingDate.Value.Date;
-                    }
-
-                    if (batch.ExpiryDate.HasValue)
-                    {
-                        documentLine.BatchNumbers.ExpiryDate = batch.ExpiryDate.Value.Date;
-                    }
-
-                    if (batch.AdmissionDate.HasValue)
-                    {
-                        documentLine.BatchNumbers.AdmissionDate = batch.AdmissionDate.Value.Date;
-                    }
+                    ConfigureInboundBatchMetadata(
+                        documentLine.BatchNumbers,
+                        batch);
                 }
 
                 documentLine.BatchNumbers.Add();
@@ -304,6 +293,28 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 bin,
                 null,
                 useSourceBins ? line.SourceWarehouse : line.TargetWarehouse);
+        }
+    }
+
+    internal static void ConfigureInboundBatchMetadata(
+        dynamic batchNumbers,
+        IntercompanyTransferBatchRequest batch)
+    {
+        if (batch.ManufacturingDate.HasValue)
+        {
+            batchNumbers.ManufacturingDate = batch.ManufacturingDate.Value.Date;
+        }
+
+        if (batch.ExpiryDate.HasValue)
+        {
+            batchNumbers.ExpiryDate = batch.ExpiryDate.Value.Date;
+        }
+
+        if (batch.AdmissionDate.HasValue)
+        {
+            // SAP Business One DI API intentionally exposes the legacy
+            // misspelling "AddmisionDate" on the BatchNumbers object.
+            batchNumbers.AddmisionDate = batch.AdmissionDate.Value.Date;
         }
     }
 

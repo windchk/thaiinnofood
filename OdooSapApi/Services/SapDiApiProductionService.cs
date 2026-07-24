@@ -186,18 +186,11 @@ public class SapDiApiProductionService : ISapProductionService
 
             foreach (var line in request.IssueLines)
             {
-                document.Lines.BaseType = _options.ProductionOrderObjectType;
-                document.Lines.BaseEntry = request.DocEntry;
-                document.Lines.BaseLine = line.LineNum;
-                document.Lines.ItemCode = line.ItemCode;
-                document.Lines.Quantity = Convert.ToDouble(line.Quantity);
-
-                if (!string.IsNullOrWhiteSpace(line.Warehouse))
-                {
-                    document.Lines.WarehouseCode = line.Warehouse;
-                }
-
-                ApplyBatchesAndBins(companyDb, document.Lines, line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+                ConfigureIssueLine(
+                    companyDb,
+                    document.Lines,
+                    request.DocEntry,
+                    line);
 
                 document.Lines.Add();
             }
@@ -297,6 +290,33 @@ public class SapDiApiProductionService : ISapProductionService
         {
             Marshal.FinalReleaseComObject(document);
         }
+    }
+
+    internal void ConfigureIssueLine(
+        string companyDb,
+        dynamic documentLine,
+        int productionOrderDocEntry,
+        ProductionIssueLineRequest line)
+    {
+        documentLine.BaseType = _options.ProductionOrderObjectType;
+        documentLine.BaseEntry = productionOrderDocEntry;
+        documentLine.BaseLine = line.LineNum;
+        documentLine.Quantity = Convert.ToDouble(line.Quantity);
+
+        if (!string.IsNullOrWhiteSpace(line.Warehouse))
+        {
+            documentLine.WarehouseCode = line.Warehouse;
+        }
+
+        // ItemCode must remain empty when the inventory line references
+        // a Production Order through BaseType/BaseEntry/BaseLine.
+        ApplyBatchesAndBins(
+            companyDb,
+            documentLine,
+            line.Quantity,
+            line.BatchNumber,
+            line.Batches,
+            line.Bins);
     }
 
     internal void ConfigureReceiptLine(

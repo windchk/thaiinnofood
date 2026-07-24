@@ -63,6 +63,49 @@ public class ReceiptFromProductionTests
     }
 
     [Fact]
+    public void ConfigureIssueLine_UsesProductionOrderBaseWithoutSettingItemCode()
+    {
+        var service = CreateService();
+        var documentLine = new FakeDocumentLine();
+        var requestLine = new ProductionIssueLineRequest
+        {
+            LineNum = 12,
+            ItemCode = "PKG08008",
+            Quantity = 1,
+            Warehouse = "WH-PD",
+            Batches =
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "260520143334",
+                    Quantity = 1,
+                    Bins =
+                    [
+                        new ProductionBinAllocationRequest
+                        {
+                            BinAbsEntry = 1,
+                            Quantity = 1
+                        }
+                    ]
+                }
+            ]
+        };
+
+        service.ConfigureIssueLine("TEST_DB", documentLine, 48847, requestLine);
+
+        Assert.Equal(202, documentLine.BaseType);
+        Assert.Equal(48847, documentLine.BaseEntry);
+        Assert.Equal(12, documentLine.BaseLine);
+        Assert.Equal(0, documentLine.ItemCodeSetCount);
+        Assert.Equal(1d, documentLine.Quantity);
+        Assert.Equal("WH-PD", documentLine.WarehouseCode);
+        Assert.Equal("260520143334", documentLine.BatchNumbers.BatchNumber);
+        Assert.Equal(1, documentLine.BatchNumbers.AddCount);
+        Assert.Equal(1, documentLine.BinAllocations.BinAbsEntry);
+        Assert.Equal(1, documentLine.BinAllocations.AddCount);
+    }
+
+    [Fact]
     public void ConfigureReceiptLine_ForParentItem_UsesBaseReferenceWithoutItemCodeOrBaseLine()
     {
         var service = CreateService();
@@ -140,6 +183,7 @@ public class ReceiptFromProductionTests
     public sealed class FakeDocumentLine
     {
         private int _baseLine;
+        private string _itemCode = "";
 
         public int BaseType { get; set; }
         public int BaseEntry { get; set; }
@@ -148,6 +192,7 @@ public class ReceiptFromProductionTests
         public FakeBatchNumbers BatchNumbers { get; } = new();
         public FakeBinAllocations BinAllocations { get; } = new();
         public int BaseLineSetCount { get; private set; }
+        public int ItemCodeSetCount { get; private set; }
 
         public int BaseLine
         {
@@ -156,6 +201,16 @@ public class ReceiptFromProductionTests
             {
                 _baseLine = value;
                 BaseLineSetCount++;
+            }
+        }
+
+        public string ItemCode
+        {
+            get => _itemCode;
+            set
+            {
+                _itemCode = value;
+                ItemCodeSetCount++;
             }
         }
     }

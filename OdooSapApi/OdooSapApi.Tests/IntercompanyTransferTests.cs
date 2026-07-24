@@ -100,6 +100,26 @@ public class IntercompanyTransferTests
     }
 
     [Fact]
+    public void InboundBatchMetadata_UsesSapDiApiAddmisionDateProperty()
+    {
+        var batchNumbers = new FakeBatchNumbers();
+        var batch = new IntercompanyTransferBatchRequest
+        {
+            ManufacturingDate = new DateTime(2026, 7, 1),
+            ExpiryDate = new DateTime(2026, 8, 1),
+            AdmissionDate = new DateTime(2026, 7, 24)
+        };
+
+        SapDiApiIntercompanyService.ConfigureInboundBatchMetadata(
+            batchNumbers,
+            batch);
+
+        Assert.Equal(new DateTime(2026, 7, 1), batchNumbers.ManufacturingDate);
+        Assert.Equal(new DateTime(2026, 8, 1), batchNumbers.ExpiryDate);
+        Assert.Equal(new DateTime(2026, 7, 24), batchNumbers.AddmisionDate);
+    }
+
+    [Fact]
     public void Route_IsPostAndProvidesStatusGet()
     {
         var route = typeof(GoodsIssueGoodsReceiptController)
@@ -204,5 +224,12 @@ public class IntercompanyTransferTests
             IntercompanyTransferSiteOptions siteOptions,
             IReadOnlyList<IntercompanyLineCost> lineCosts)
             => throw new NotSupportedException();
+    }
+
+    public sealed class FakeBatchNumbers
+    {
+        public DateTime ManufacturingDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public DateTime AddmisionDate { get; set; }
     }
 }
