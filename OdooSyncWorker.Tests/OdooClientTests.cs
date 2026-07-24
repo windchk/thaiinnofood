@@ -9,12 +9,12 @@ namespace OdooSyncWorker.Tests;
 public class OdooClientTests
 {
     [Theory]
-    [InlineData("ProductionOrder", "RELEASED", "TEST", "TIF", "TEST_INTERFACE", "productions", "release", "/api/v1/b1/production")]
-    [InlineData("ProductionOrder", "CANCEL", "TEST", "TIF", "TEST_INTERFACE", "productions", "cancel", "/api/v1/b1/production")]
-    [InlineData("ProductionOrder", "RELEASED", "PRD", "TIF", "TIF_GOLIVE", "productions", "release", "/api/v1/b1/production")]
-    [InlineData("ARReserveInvoice", "ADD", "TEST", "TIF", "TEST_INTERFACE", "deliverys", "release", "/api/v1/b1/delivery")]
-    [InlineData("ARReserveInvoice", "CANCEL", "TEST", "STL", "TEST_STL_ODOO", "deliverys", "cancel", "/api/v1/b1/delivery")]
-    [InlineData("ARReserveInvoice", "ADD", "PRD", "STL", "SBO_STL_GOLIVE", "deliverys", "release", "/api/v1/b1/delivery")]
+    [InlineData("ProductionOrder", "RELEASED", "TEST-TIF", "TIF", "TEST_INTERFACE", "productions", "release", "/api/v1/b1/production")]
+    [InlineData("ProductionOrder", "CANCEL", "TEST-TIF", "TIF", "TEST_INTERFACE", "productions", "cancel", "/api/v1/b1/production")]
+    [InlineData("ProductionOrder", "RELEASED", "PRD-TIF", "TIF", "TIF_GOLIVE", "productions", "release", "/api/v1/b1/production")]
+    [InlineData("ARReserveInvoice", "ADD", "TEST-TIF", "TIF", "TEST_INTERFACE", "deliverys", "release", "/api/v1/b1/delivery")]
+    [InlineData("ARReserveInvoice", "CANCEL", "TEST-STL", "STL", "TEST_STL_ODOO", "deliverys", "cancel", "/api/v1/b1/delivery")]
+    [InlineData("ARReserveInvoice", "ADD", "PRD-STL", "STL", "SBO_STL_GOLIVE", "deliverys", "release", "/api/v1/b1/delivery")]
     public async Task SendAsync_UsesExactB1Contract(
         string objectType,
         string action,
@@ -69,7 +69,7 @@ public class OdooClientTests
             "ProductionOrder",
             "47805",
             "UPDATE",
-            "TEST",
+            "TEST-TIF",
             "TIF",
             "TEST_INTERFACE",
             payload: null));
@@ -86,7 +86,7 @@ public class OdooClientTests
             "ARReserveInvoice",
             "not-a-number",
             "ADD",
-            "TEST",
+            "TEST-TIF",
             "TIF",
             "TEST_INTERFACE",
             payload: null));
@@ -103,7 +103,7 @@ public class OdooClientTests
             "SalesOrder",
             "47805",
             "ADD",
-            "TEST",
+            "TEST-TIF",
             "TIF",
             "TEST_INTERFACE",
             payload: null));

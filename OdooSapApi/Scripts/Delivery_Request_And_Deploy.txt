@@ -13,7 +13,7 @@ Content-Type: application/json
 Request example: batch without bin
 ----------------------------------
 {
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "companyName": "TEST_INTERFACE",
   "docEntry": 999999999,
   "docDate": "2026-07-23",
@@ -40,7 +40,7 @@ Request example: batch without bin
 Request example: batch with bin
 -------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "companyName": "TIF_GOLIVE",
   "docEntry": 999999999,
   "docDate": "2026-07-23",
@@ -79,8 +79,10 @@ Field mapping
 
 Database mapping
 ----------------
-- TEST -> TEST_INTERFACE
-- PRD  -> TIF_GOLIVE
+- TEST-TIF -> TEST_INTERFACE
+- TEST-STL -> TEST_STL_ODOO
+- PRD-TIF  -> TIF_GOLIVE
+- PRD-STL  -> SBO_STL_GOLIVE
 
 The API rejects a companyName that does not match its siteId mapping.
 

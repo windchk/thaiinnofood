@@ -6,7 +6,7 @@ namespace OdooSyncWorker.Services;
 public class SapQueryService
 {
     private readonly string _sapConn;
-    private readonly Dictionary<string, Dictionary<string, string>> _sapDatabases =
+    private readonly Dictionary<string, string> _sapDatabases =
         new(StringComparer.OrdinalIgnoreCase);
 
     public SapQueryService(IConfiguration configuration)
@@ -17,15 +17,20 @@ public class SapQueryService
         {
             throw new Exception("Missing SapDb connection string");
         }
+
         foreach (var siteSection in configuration.GetSection("SapDatabases").GetChildren())
         {
-            var companies = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var companySections = siteSection.GetChildren().ToList();
 
             if (companySections.Count == 0 && !string.IsNullOrWhiteSpace(siteSection.Value))
             {
-                // Backward compatibility for the previous TEST/PRD -> database format.
-                companies["TIF"] = siteSection.Value;
+                var configuredSiteId = NormalizeSiteId(siteSection.Key);
+                var canonicalSiteId = TryGetCompanyFromCanonicalSiteId(
+                    configuredSiteId,
+                    out _)
+                    ? configuredSiteId
+                    : BuildCanonicalSiteId(configuredSiteId, "TIF");
+                _sapDatabases[canonicalSiteId] = siteSection.Value.Trim();
             }
             else
             {
@@ -33,12 +38,13 @@ public class SapQueryService
                 {
                     if (!string.IsNullOrWhiteSpace(companySection.Value))
                     {
-                        companies[companySection.Key] = companySection.Value;
+                        var canonicalSiteId = BuildCanonicalSiteId(
+                            siteSection.Key,
+                            companySection.Key);
+                        _sapDatabases[canonicalSiteId] = companySection.Value.Trim();
                     }
                 }
             }
-
-            _sapDatabases[siteSection.Key] = companies;
         }
     }
 
@@ -397,11 +403,10 @@ public class SapQueryService
 
     public string GetSapDatabaseName(string siteId, string companyName)
     {
-        var normalizedSiteId = NormalizeSiteId(siteId);
+        var normalizedSiteId = GetCanonicalSiteId(siteId, companyName);
         var normalizedCompanyName = NormalizeCompanyName(companyName);
 
-        if (!_sapDatabases.TryGetValue(normalizedSiteId, out var companies)
-            || !companies.TryGetValue(normalizedCompanyName, out var databaseName)
+        if (!_sapDatabases.TryGetValue(normalizedSiteId, out var databaseName)
             || string.IsNullOrWhiteSpace(databaseName))
         {
             throw new Exception(
@@ -409,6 +414,30 @@ public class SapQueryService
         }
 
         return databaseName;
+    }
+
+    public string GetCanonicalSiteId(string siteId, string companyName)
+    {
+        var normalizedSiteId = NormalizeSiteId(siteId);
+
+        if (TryGetCompanyFromCanonicalSiteId(
+                normalizedSiteId,
+                out var siteCompanyName))
+        {
+            if (!string.IsNullOrWhiteSpace(companyName)
+                && !string.Equals(
+                    siteCompanyName,
+                    NormalizeCompanyName(companyName),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception(
+                    $"SiteId/CompanyName mismatch: SiteId={normalizedSiteId}, CompanyName={NormalizeCompanyName(companyName)}");
+            }
+
+            return normalizedSiteId;
+        }
+
+        return BuildCanonicalSiteId(normalizedSiteId, companyName);
     }
 
     private string BuildSapConnectionString(string databaseName)
@@ -424,7 +453,7 @@ public class SapQueryService
     private static string NormalizeSiteId(string siteId)
     {
         return string.IsNullOrWhiteSpace(siteId)
-            ? "TEST"
+            ? "TEST-TIF"
             : siteId.Trim().ToUpperInvariant();
     }
 
@@ -433,6 +462,50 @@ public class SapQueryService
         return string.IsNullOrWhiteSpace(companyName)
             ? "TIF"
             : companyName.Trim().ToUpperInvariant();
+    }
+
+    private static string BuildCanonicalSiteId(string siteId, string companyName)
+    {
+        var normalizedSiteId = NormalizeSiteId(siteId);
+        var normalizedCompanyName = NormalizeCompanyName(companyName);
+
+        if (TryGetCompanyFromCanonicalSiteId(
+                normalizedSiteId,
+                out var siteCompanyName))
+        {
+            if (!string.Equals(
+                    siteCompanyName,
+                    normalizedCompanyName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception(
+                    $"SiteId/CompanyName mismatch: SiteId={normalizedSiteId}, CompanyName={normalizedCompanyName}");
+            }
+
+            return normalizedSiteId;
+        }
+
+        return $"{normalizedSiteId}-{normalizedCompanyName}";
+    }
+
+    private static bool TryGetCompanyFromCanonicalSiteId(
+        string siteId,
+        out string companyName)
+    {
+        if (siteId.EndsWith("-TIF", StringComparison.OrdinalIgnoreCase))
+        {
+            companyName = "TIF";
+            return true;
+        }
+
+        if (siteId.EndsWith("-STL", StringComparison.OrdinalIgnoreCase))
+        {
+            companyName = "STL";
+            return true;
+        }
+
+        companyName = "";
+        return false;
     }
 
     private sealed record ProductionLineBatchBinLookup(

@@ -18,7 +18,7 @@ public class IntercompanyTransferTests
         const string json = """
             {
               "transferId": " ODOO-TEST-0001 ",
-              "siteId": " TEST ",
+              "siteId": " TEST-TIF ",
               "sourceCompanyName": " TEST_INTERFACE ",
               "targetCompanyName": " TEST_STL_ODOO ",
               "postingDate": "2026-07-23",
@@ -44,6 +44,7 @@ public class IntercompanyTransferTests
         Assert.NotNull(request);
         IntercompanyTransferValidator.Validate(request);
         Assert.Equal("ODOO-TEST-0001", request.TransferId);
+        Assert.Equal("TEST-TIF", request.SiteId);
         Assert.Equal("TEST_INTERFACE", request.SourceCompanyName);
         Assert.Equal("TEST_STL_ODOO", request.TargetCompanyName);
         Assert.Equal("FG08006", request.Lines[0].ItemCode);
@@ -70,12 +71,12 @@ public class IntercompanyTransferTests
         var resolver = NewResolver();
 
         var exception = Assert.Throws<ArgumentException>(() => resolver.Resolve(
-            "TEST",
+            "TEST-TIF",
             "TIF_GOLIVE",
             "TEST_STL_ODOO"));
 
         Assert.Equal(
-            "sourceCompanyName 'TIF_GOLIVE' does not match siteId 'TEST'.",
+            "sourceCompanyName 'TIF_GOLIVE' does not match siteId 'TEST-TIF'.",
             exception.Message);
     }
 
@@ -137,7 +138,7 @@ public class IntercompanyTransferTests
         return new IntercompanyTransferRequest
         {
             TransferId = "ODOO-TEST-0001",
-            SiteId = "TEST",
+            SiteId = "TEST-TIF",
             SourceCompanyName = "TEST_INTERFACE",
             TargetCompanyName = "TEST_STL_ODOO",
             PostingDate = new DateTime(2026, 7, 23),
@@ -173,14 +174,14 @@ public class IntercompanyTransferTests
             Sites = new Dictionary<string, IntercompanyTransferSiteOptions>(
                 StringComparer.OrdinalIgnoreCase)
             {
-                ["TEST"] = new()
+                ["TEST-TIF"] = new()
                 {
                     SourceCompanyName = "TEST_INTERFACE",
                     TargetCompanyName = "TEST_STL_ODOO",
                     GoodsIssueSeriesBeginStr = "GIT",
                     GoodsReceiptSeriesBeginStr = "GRT"
                 },
-                ["PRD"] = new()
+                ["PRD-TIF"] = new()
                 {
                     SourceCompanyName = "TIF_GOLIVE",
                     TargetCompanyName = "SBO_STL_GOLIVE",

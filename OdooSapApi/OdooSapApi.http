@@ -5,7 +5,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "docEntry": 48821,
   "docDate": "2026-06-27",
   "receiptLines": [
@@ -35,7 +35,7 @@ Accept: application/json
 
 {
   "transferId": "ODOO-TEST-20260723-0001",
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "sourceCompanyName": "TEST_INTERFACE",
   "targetCompanyName": "TEST_STL_ODOO",
   "postingDate": "2026-07-23",
@@ -63,7 +63,7 @@ Accept: application/json
 
 ###
 
-GET {{OdooSapApi_HostAddress}}/api/sap/goodsissue-goodsreceipt/ODOO-TEST-20260723-0001?siteId=TEST
+GET {{OdooSapApi_HostAddress}}/api/sap/goodsissue-goodsreceipt/ODOO-TEST-20260723-0001?siteId=TEST-TIF
 Accept: application/json
 
 ###
@@ -74,7 +74,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "companyName": "TEST_INTERFACE",
   "docEntry": 999999999,
   "docDate": "2026-07-23",

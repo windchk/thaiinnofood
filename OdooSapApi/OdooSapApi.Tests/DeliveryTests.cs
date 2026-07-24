@@ -17,7 +17,7 @@ public class DeliveryTests
     {
         const string json = """
             {
-              "siteId": "TEST",
+              "siteId": "TEST-TIF",
               "companyName": "TEST_INTERFACE",
               "docEntry": 47805,
               "docDate": "2026-07-23",
@@ -55,7 +55,7 @@ public class DeliveryTests
     {
         var request = new DeliveryRequest
         {
-            SiteId = "TEST",
+            SiteId = "TEST-TIF",
             CompanyName = "TEST_INTERFACE",
             DocEntry = 47805,
             DocDate = new DateTime(2026, 7, 23),
@@ -131,22 +131,37 @@ public class DeliveryTests
     [Fact]
     public void CompanyResolver_RejectsCompanyNameThatDoesNotMatchSite()
     {
-        var options = Options.Create(new SapCompanyOptions
-        {
-            SiteDatabases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["TEST"] = "TEST_INTERFACE",
-                ["PRD"] = "TIF_GOLIVE"
-            }
-        });
-        var resolver = new SapCompanyResolver(options);
+        var resolver = CreateCompanyResolver();
 
         var exception = Assert.Throws<ArgumentException>(
-            () => resolver.ResolveCompanyDb("TEST", "TIF_GOLIVE"));
+            () => resolver.ResolveCompanyDb("TEST-TIF", "TIF_GOLIVE"));
 
         Assert.Equal(
-            "companyName 'TIF_GOLIVE' does not match siteId 'TEST'.",
+            "companyName 'TIF_GOLIVE' does not match siteId 'TEST-TIF'.",
             exception.Message);
+    }
+
+    [Theory]
+    [InlineData("TEST-TIF", "TEST_INTERFACE")]
+    [InlineData("TEST-STL", "TEST_STL_ODOO")]
+    [InlineData("PRD-TIF", "TIF_GOLIVE")]
+    [InlineData("PRD-STL", "SBO_STL_GOLIVE")]
+    public void CompanyResolver_ResolvesCanonicalSiteIds(
+        string siteId,
+        string expectedDatabase)
+    {
+        Assert.Equal(
+            expectedDatabase,
+            CreateCompanyResolver().ResolveCompanyDb(siteId));
+    }
+
+    [Fact]
+    public void CompanyResolver_RejectsLegacySiteId()
+    {
+        var exception = Assert.Throws<ArgumentException>(
+            () => CreateCompanyResolver().ResolveCompanyDb("TEST"));
+
+        Assert.Equal("Unknown siteId 'TEST'.", exception.Message);
     }
 
     private static DeliveryLineRequest NewLine(int lineNum, decimal quantity)
@@ -172,5 +187,22 @@ public class DeliveryTests
             wrappedOptions,
             NullLogger<SapDiApiProductionService>.Instance,
             new SapCompanyResolver(wrappedOptions));
+    }
+
+    private static SapCompanyResolver CreateCompanyResolver()
+    {
+        var options = Options.Create(new SapCompanyOptions
+        {
+            SiteDatabases = new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase)
+            {
+                ["TEST-TIF"] = "TEST_INTERFACE",
+                ["TEST-STL"] = "TEST_STL_ODOO",
+                ["PRD-TIF"] = "TIF_GOLIVE",
+                ["PRD-STL"] = "SBO_STL_GOLIVE"
+            }
+        });
+
+        return new SapCompanyResolver(options);
     }
 }

@@ -33,10 +33,10 @@ ItemMaster      = OITM.ItemCode
 ARReserveInvoice = OINV.DocEntry where OINV.isIns = 'Y'
 
 SAP company mapping:
-SiteId = TEST, CompanyName = TIF -> TEST_INTERFACE
-SiteId = TEST, CompanyName = STL -> TEST_STL_ODOO
-SiteId = PRD,  CompanyName = TIF -> TIF_GOLIVE
-SiteId = PRD,  CompanyName = STL -> SBO_STL_GOLIVE
+SiteId = TEST-TIF, CompanyName = TIF -> TEST_INTERFACE
+SiteId = TEST-STL, CompanyName = STL -> TEST_STL_ODOO
+SiteId = PRD-TIF,  CompanyName = TIF -> TIF_GOLIVE
+SiteId = PRD-STL,  CompanyName = STL -> SBO_STL_GOLIVE
 
 Queue CompanyName stores the company code TIF/STL for routing.
 The outgoing Odoo JSON field companyName uses SapDatabaseName instead.
@@ -129,6 +129,24 @@ UPDATE dbo.INT_OdooQueue
 SET CompanyName = 'TIF'
 WHERE CompanyName IS NULL
    OR LTRIM(RTRIM(CompanyName)) = '';
+GO
+
+-- Convert pending rows created by the previous TEST/PRD trigger format.
+-- Historical S/E rows are retained unchanged for audit consistency.
+UPDATE dbo.INT_OdooQueue
+SET SiteId = CASE
+    WHEN UPPER(LTRIM(RTRIM(SiteId))) = 'TEST'
+     AND UPPER(LTRIM(RTRIM(CompanyName))) = 'TIF' THEN 'TEST-TIF'
+    WHEN UPPER(LTRIM(RTRIM(SiteId))) = 'TEST'
+     AND UPPER(LTRIM(RTRIM(CompanyName))) = 'STL' THEN 'TEST-STL'
+    WHEN UPPER(LTRIM(RTRIM(SiteId))) = 'PRD'
+     AND UPPER(LTRIM(RTRIM(CompanyName))) = 'TIF' THEN 'PRD-TIF'
+    WHEN UPPER(LTRIM(RTRIM(SiteId))) = 'PRD'
+     AND UPPER(LTRIM(RTRIM(CompanyName))) = 'STL' THEN 'PRD-STL'
+    ELSE SiteId
+END
+WHERE Status = 'N'
+  AND UPPER(LTRIM(RTRIM(SiteId))) IN ('TEST', 'PRD');
 GO
 
 IF NOT EXISTS

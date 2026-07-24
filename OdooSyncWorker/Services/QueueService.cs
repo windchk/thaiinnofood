@@ -27,7 +27,7 @@ public class QueueService
             throw new Exception("Missing TempApiDb connection string");
         }
         _maxRetry = int.Parse(configuration["Worker:MaxRetry"] ?? "3");
-        _defaultSiteId = configuration["Worker:DefaultSiteId"] ?? "TEST";
+        _defaultSiteId = configuration["Worker:DefaultSiteId"] ?? "TEST-TIF";
         _defaultCompanyName = configuration["Worker:DefaultCompanyName"] ?? "TIF";
         _enabledObjectTypes = configuration
             .GetSection("Worker:EnabledObjectTypes")

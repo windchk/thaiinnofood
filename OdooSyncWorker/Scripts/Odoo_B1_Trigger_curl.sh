@@ -13,7 +13,7 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://192.168.10.2:8069}"
 API_KEY_HEADER="${API_KEY_HEADER:-x-api-key}"
 API_KEY="${API_KEY:-}"
-SITE_ID="${SITE_ID:-TEST}"
+SITE_ID="${SITE_ID:-TEST-TIF}"
 SAP_DATABASE_NAME="${SAP_DATABASE_NAME:-TEST_INTERFACE}"
 DOC_ENTRY="${DOC_ENTRY:-47805}"
 CASE_NAME="${1:-}"
@@ -29,19 +29,19 @@ Usage:
 Optional environment variables:
   BASE_URL       Default: http://192.168.10.2:8069
   API_KEY_HEADER Default: x-api-key
-  SITE_ID        Default: TEST
+  SITE_ID        Default: TEST-TIF
   SAP_DATABASE_NAME
                   Value sent as companyName. Default: TEST_INTERFACE
   DOC_ENTRY      Default: 47805
 
 Examples:
-  API_KEY='<key>' SITE_ID=TEST SAP_DATABASE_NAME=TEST_INTERFACE DOC_ENTRY=47805 \
+  API_KEY='<key>' SITE_ID=TEST-TIF SAP_DATABASE_NAME=TEST_INTERFACE DOC_ENTRY=47805 \
     bash ./Odoo_B1_Trigger_curl.sh production-release
 
-  API_KEY='<key>' SITE_ID=TEST SAP_DATABASE_NAME=TEST_INTERFACE DOC_ENTRY=47805 \
+  API_KEY='<key>' SITE_ID=TEST-TIF SAP_DATABASE_NAME=TEST_INTERFACE DOC_ENTRY=47805 \
     bash ./Odoo_B1_Trigger_curl.sh delivery-release
 
-  API_KEY='<key>' SITE_ID=TEST SAP_DATABASE_NAME=TEST_STL_ODOO DOC_ENTRY=47805 \
+  API_KEY='<key>' SITE_ID=TEST-STL SAP_DATABASE_NAME=TEST_STL_ODOO DOC_ENTRY=47805 \
     bash ./Odoo_B1_Trigger_curl.sh delivery-release
 
 Warning:

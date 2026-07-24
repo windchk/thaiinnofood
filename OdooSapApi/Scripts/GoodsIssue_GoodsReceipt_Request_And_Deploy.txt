@@ -8,13 +8,13 @@ Content-Type: application/json
 
 Status endpoint
 ---------------
-GET /api/sap/goodsissue-goodsreceipt/{transferId}?siteId=TEST
+GET /api/sap/goodsissue-goodsreceipt/{transferId}?siteId=TEST-TIF
 
 TEST payload: batch-managed item without bins
 ------------------------------------------------
 {
   "transferId": "ODOO-TEST-20260723-0001",
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "sourceCompanyName": "TEST_INTERFACE",
   "targetCompanyName": "TEST_STL_ODOO",
   "postingDate": "2026-07-23",
@@ -42,6 +42,7 @@ TEST payload: batch-managed item without bins
 
 PRD company mapping
 -------------------
+siteId = PRD-TIF
 sourceCompanyName = TIF_GOLIVE
 targetCompanyName = SBO_STL_GOLIVE
 
@@ -65,7 +66,7 @@ curl: Delivery
 curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/delivery" \
   --header "Content-Type: application/json" \
   --data-raw '{
-    "siteId": "TEST",
+    "siteId": "TEST-TIF",
     "companyName": "TEST_INTERFACE",
     "docEntry": 999999999,
     "docDate": "2026-07-23",
@@ -91,7 +92,7 @@ curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/goodsissue-goodsreceip
   --header "Content-Type: application/json" \
   --data-raw '{
     "transferId": "ODOO-TEST-20260723-0001",
-    "siteId": "TEST",
+    "siteId": "TEST-TIF",
     "sourceCompanyName": "TEST_INTERFACE",
     "targetCompanyName": "TEST_STL_ODOO",
     "postingDate": "2026-07-23",

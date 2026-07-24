@@ -38,6 +38,9 @@ namespace OdooSyncWorker
                     {
                         try
                         {
+                            item.SiteId = _sapQueryService.GetCanonicalSiteId(
+                                item.SiteId,
+                                item.CompanyName);
                             item.SapDatabaseName = _sapQueryService.GetSapDatabaseName(
                                 item.SiteId,
                                 item.CompanyName);
@@ -54,15 +57,15 @@ namespace OdooSyncWorker
                             object? payload = _odooClient.UsesB1DocumentPayload(item.ObjectType)
                                 ? null
                                 : item.ObjectType switch
-                            {
+                                {
 #if false
-                                // Temporarily disabled: SAP -> Odoo Sales Order Sync.
-                                "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId, item.CompanyName),
-                                // Temporarily disabled: SAP -> Odoo Item Master Sync.
-                                "ItemMaster" => await _sapQueryService.GetItemMasterAsync(item.ObjectKey, item.SiteId, item.CompanyName),
+                                    // Temporarily disabled: SAP -> Odoo Sales Order Sync.
+                                    "SalesOrder" => await _sapQueryService.GetSalesOrderAsync(item.ObjectKey, item.SiteId, item.CompanyName),
+                                    // Temporarily disabled: SAP -> Odoo Item Master Sync.
+                                    "ItemMaster" => await _sapQueryService.GetItemMasterAsync(item.ObjectKey, item.SiteId, item.CompanyName),
 #endif
-                                _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
-                            };
+                                    _ => throw new Exception($"Unsupported ObjectType: {item.ObjectType}")
+                                };
 
                             var sendResult = await _odooClient.SendAsync(
                                 item.ObjectType,

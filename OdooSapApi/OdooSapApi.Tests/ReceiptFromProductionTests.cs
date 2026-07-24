@@ -14,7 +14,7 @@ public class ReceiptFromProductionTests
     {
         const string json = """
             {
-              "siteId": "TEST",
+              "siteId": "TEST-TIF",
               "docEntry": 48821,
               "docDate": "2026-06-27",
               "receiptLines": [
@@ -42,7 +42,7 @@ public class ReceiptFromProductionTests
     {
         var request = new ProductionIssueRequest
         {
-            SiteId = "TEST",
+            SiteId = "TEST-TIF",
             DocEntry = 48821,
             DocDate = new DateTime(2026, 6, 27),
             IssueLines =

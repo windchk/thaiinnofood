@@ -8,10 +8,10 @@ contains SiteId, CompanyName, and SapDatabaseName.
 
 Company mapping
 ---------------
-TEST + TIF = TEST_INTERFACE
-TEST + STL = TEST_STL_ODOO
-PRD  + TIF = TIF_GOLIVE
-PRD  + STL = SBO_STL_GOLIVE
+TEST-TIF = TEST_INTERFACE
+TEST-STL = TEST_STL_ODOO
+PRD-TIF  = TIF_GOLIVE
+PRD-STL  = SBO_STL_GOLIVE
 
 Queue CompanyName stores TIF/STL. The outgoing Odoo field companyName uses
 the resolved SapDatabaseName shown on the right side of this mapping.
@@ -73,7 +73,7 @@ BEGIN
         'ProductionOrder',
         CAST(I.DocEntry AS NVARCHAR(50)),
         CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END,
-        'TEST',
+        'TEST-TIF',
         'TIF',
         'N',
         0,
@@ -100,7 +100,7 @@ BEGIN
             WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ProductionOrder'
               AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
               AND Q.ActionType COLLATE DATABASE_DEFAULT = CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END
-              AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+              AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('TEST-TIF', 'TEST')
               AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'
               AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
         );
@@ -129,7 +129,7 @@ BEGIN
         'ARReserveInvoice',
         CAST(I.DocEntry AS NVARCHAR(50)),
         A.ActionType,
-        'TEST',
+        'TEST-TIF',
         'TIF',
         'N',
         0,
@@ -153,7 +153,7 @@ BEGIN
           WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'
             AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
             AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
-            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+            AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('TEST-TIF', 'TEST')
             AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'
             AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
       );
@@ -189,7 +189,7 @@ BEGIN
         'ARReserveInvoice',
         CAST(I.DocEntry AS NVARCHAR(50)),
         A.ActionType,
-        'TEST',
+        'TEST-STL',
         'STL',
         'N',
         0,
@@ -213,7 +213,7 @@ BEGIN
           WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'
             AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
             AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
-            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'
+            AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('TEST-STL', 'TEST')
             AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'STL'
             AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
       );
@@ -257,7 +257,7 @@ BEGIN
         'ProductionOrder',
         CAST(I.DocEntry AS NVARCHAR(50)),
         CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END,
-        'PRD',
+        'PRD-TIF',
         'TIF',
         'N',
         0,
@@ -284,7 +284,7 @@ BEGIN
             WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ProductionOrder'
               AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
               AND Q.ActionType COLLATE DATABASE_DEFAULT = CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END
-              AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'
+              AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('PRD-TIF', 'PRD')
               AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'
               AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
         );
@@ -313,7 +313,7 @@ BEGIN
         'ARReserveInvoice',
         CAST(I.DocEntry AS NVARCHAR(50)),
         A.ActionType,
-        'PRD',
+        'PRD-TIF',
         'TIF',
         'N',
         0,
@@ -337,7 +337,7 @@ BEGIN
           WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'
             AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
             AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
-            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'
+            AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('PRD-TIF', 'PRD')
             AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'
             AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
       );
@@ -373,7 +373,7 @@ BEGIN
         'ARReserveInvoice',
         CAST(I.DocEntry AS NVARCHAR(50)),
         A.ActionType,
-        'PRD',
+        'PRD-STL',
         'STL',
         'N',
         0,
@@ -397,7 +397,7 @@ BEGIN
           WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'
             AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))
             AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT
-            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'
+            AND Q.SiteId COLLATE DATABASE_DEFAULT IN ('PRD-STL', 'PRD')
             AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'STL'
             AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')
       );

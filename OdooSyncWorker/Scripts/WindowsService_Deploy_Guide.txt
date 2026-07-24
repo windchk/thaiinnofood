@@ -75,14 +75,10 @@ C:\Services\OdooSyncWorker\appsettings.json
 },
 
 "SapDatabases": {
-  "TEST": {
-    "TIF": "TEST_INTERFACE",
-    "STL": "TEST_STL_ODOO"
-  },
-  "PRD": {
-    "TIF": "TIF_GOLIVE",
-    "STL": "SBO_STL_GOLIVE"
-  }
+  "TEST-TIF": "TEST_INTERFACE",
+  "TEST-STL": "TEST_STL_ODOO",
+  "PRD-TIF": "TIF_GOLIVE",
+  "PRD-STL": "SBO_STL_GOLIVE"
 },
 "Odoo": {
   "BaseUrl": "http://192.168.10.2:8069",
@@ -112,7 +108,7 @@ C:\Services\OdooSyncWorker\appsettings.json
   }
 },
 "Worker": {
-  "DefaultSiteId": "TEST",
+  "DefaultSiteId": "TEST-TIF",
   "DefaultCompanyName": "TIF",
   "DelaySeconds": 10,
   "MaxRetry": 3,

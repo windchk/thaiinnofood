@@ -30,7 +30,7 @@ request bodies are documented in their sections below.
 {
   "objectType": "SalesOrder | ItemMaster",
   "action": "ADD | UPDATE | CANCEL | CLOSE",
-  "siteId": "TEST | PRD",
+  "siteId": "TEST-TIF | TEST-STL | PRD-TIF | PRD-STL",
   "companyName": "TIF | STL",
   "sapDatabaseName": "TEST_INTERFACE | TEST_STL_ODOO | TIF_GOLIVE | SBO_STL_GOLIVE",
   "data": {
@@ -84,7 +84,7 @@ Full request body example:
 {
   "objectType": "SalesOrder",
   "action": "UPDATE",
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "companyName": "TIF",
   "sapDatabaseName": "TEST_INTERFACE",
   "data": {
@@ -154,7 +154,7 @@ Full request body example:
 {
   "objectType": "ItemMaster",
   "action": "UPDATE",
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "companyName": "TIF",
   "sapDatabaseName": "TIF_GOLIVE",
   "data": {
@@ -200,7 +200,7 @@ Current request body sent to /api/v1/b1/production:
   "params": {
     "productions": [
       {
-        "siteId": "TEST",
+        "siteId": "TEST-TIF",
         "docEntry": 47805,
         "docState": "release",
         "companyName": "TEST_INTERFACE"
@@ -270,7 +270,7 @@ Legacy full wrapper example (not sent to /api/v1/b1/production):
 {
   "objectType": "ProductionOrder",
   "action": "RELEASED",
-  "siteId": "TEST",
+  "siteId": "TEST-TIF",
   "companyName": "TIF",
   "sapDatabaseName": "TEST_INTERFACE",
   "data": {
@@ -376,7 +376,7 @@ Current request body sent to /api/v1/b1/delivery:
   "params": {
     "deliverys": [
       {
-        "siteId": "TEST",
+        "siteId": "TEST-STL",
         "docEntry": 47805,
         "docState": "release",
         "companyName": "TEST_STL_ODOO"

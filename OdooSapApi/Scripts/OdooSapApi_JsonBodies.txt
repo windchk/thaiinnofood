@@ -7,8 +7,10 @@
 - ชื่อ field ที่เป็นข้อมูลเดียวกับ ProductionOrder payload ฝั่ง OdooSyncWorker ใช้ชื่อเดียวกัน เช่น docEntry, docNum, lineNum, itemCode, warehouse
 - ตอนส่ง request จริง ให้ส่งเฉพาะ JSON body ไม่ต้องใส่บรรทัดคำอธิบาย
 - siteId ใช้เลือกฐานข้อมูล SAP จาก appsettings.json:
-  PRD  = TIF_GOLIVE
-  TEST = TEST_INTERFACE
+  TEST-TIF = TEST_INTERFACE
+  TEST-STL = TEST_STL_ODOO
+  PRD-TIF  = TIF_GOLIVE
+  PRD-STL  = SBO_STL_GOLIVE
 
 
 ข้อมูลที่ Odoo ไม่ต้องส่งมา
@@ -55,7 +57,7 @@ field สำหรับ batch/bin:
 POST /api/sap/production/issue
 
 ข้อมูลที่ต้องส่ง
-- siteId: PRD หรือ TEST
+- siteId: TEST-TIF, TEST-STL, PRD-TIF หรือ PRD-STL
 - docEntry: ค่าเดียวกับ ProductionOrder.data.docEntry จาก payload ที่ worker ส่งให้ Odoo
 - docDate: วันที่เอกสาร/วันที่ posting ที่จะใส่เข้า SAP DocDate
 - issueLines: ต้องมีอย่างน้อย 1 รายการ
@@ -67,7 +69,7 @@ POST /api/sap/production/issue
 Issue: ไม่มี batch และไม่มี bin
 -------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "issueLines": [
@@ -83,7 +85,7 @@ Issue: ไม่มี batch และไม่มี bin
 Issue: มี batch แต่ไม่มี bin
 ----------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "issueLines": [
@@ -109,7 +111,7 @@ Issue: มี batch แต่ไม่มี bin
 Issue: ไม่มี batch แต่มี bin
 ----------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "issueLines": [
@@ -137,7 +139,7 @@ Issue: ไม่มี batch แต่มี bin
 Issue: มี batch และมี bin
 -------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "issueLines": [
@@ -182,7 +184,7 @@ Issue: มี batch และมี bin
 Issue: format เดิม 1 batch ต่อ 1 line
 -------------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "issueLines": [
@@ -219,7 +221,7 @@ Issue mapping เข้า SAP DI API
 POST /api/sap/production/receipt
 
 ข้อมูลที่ต้องส่ง
-- siteId: PRD หรือ TEST
+- siteId: TEST-TIF, TEST-STL, PRD-TIF หรือ PRD-STL
 - docEntry: ค่าเดียวกับ ProductionOrder.data.docEntry จาก payload ที่ worker ส่งให้ Odoo
 - docDate: วันที่เอกสาร/วันที่ posting ที่จะใส่เข้า SAP DocDate
 - receiptLines: ต้องมีอย่างน้อย 1 รายการ
@@ -231,7 +233,7 @@ POST /api/sap/production/receipt
 Receipt: ไม่มี batch และไม่มี bin
 ---------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "receiptLines": [
@@ -245,7 +247,7 @@ Receipt: ไม่มี batch และไม่มี bin
 Receipt: มี batch แต่ไม่มี bin
 ------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "receiptLines": [
@@ -269,7 +271,7 @@ Receipt: มี batch แต่ไม่มี bin
 Receipt: ไม่มี batch แต่มี bin
 ------------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "receiptLines": [
@@ -290,7 +292,7 @@ Receipt: ไม่มี batch แต่มี bin
 Receipt: มี batch และมี bin
 ---------------------------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123,
   "docDate": "2026-06-27",
   "receiptLines": [
@@ -352,7 +354,7 @@ POST /api/sap/production/close
 JSON body
 ---------
 {
-  "siteId": "PRD",
+  "siteId": "PRD-TIF",
   "docEntry": 49123
 }
 
@@ -371,7 +373,7 @@ Issue From Production
   "success": true,
   "message": "Issue From Production completed.",
   "data": {
-    "siteId": "PRD",
+    "siteId": "PRD-TIF",
     "sapDatabaseName": "TIF_GOLIVE",
     "documentEntry": "12345",
     "documentNumber": "60000123"
@@ -384,7 +386,7 @@ Receipt From Production
   "success": true,
   "message": "Receipt From Production completed.",
   "data": {
-    "siteId": "PRD",
+    "siteId": "PRD-TIF",
     "sapDatabaseName": "TIF_GOLIVE",
     "documentEntry": "12346",
     "documentNumber": "59000123"
@@ -397,7 +399,7 @@ Close Production Order (disabled reference)
   "success": true,
   "message": "Production Order closed.",
   "data": {
-    "siteId": "PRD",
+    "siteId": "PRD-TIF",
     "sapDatabaseName": "TIF_GOLIVE",
     "docEntry": 49123,
     "docNum": "2601088",
