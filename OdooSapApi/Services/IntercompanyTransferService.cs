@@ -70,7 +70,7 @@ public class IntercompanyTransferService
         {
             throw new IntercompanyTransferConflictException(
                 "transferId already exists with a different request body.",
-                BuildResult(record));
+                BuildResult(record, siteOptions));
         }
 
         if (string.Equals(record.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
@@ -82,10 +82,12 @@ public class IntercompanyTransferService
                     "Intercompany transfer ledger is inconsistent: COMPLETED document references are missing.");
             }
 
-            return BuildResult(record);
+            return BuildResult(record, siteOptions);
         }
 
-        SapDocumentResult? goodsIssueDocument = BuildGoodsIssueDocument(record);
+        SapDocumentResult? goodsIssueDocument = BuildGoodsIssueDocument(
+            record,
+            siteOptions);
         var goodsIssueKnown = goodsIssueDocument is not null;
 
         try
@@ -97,7 +99,7 @@ public class IntercompanyTransferService
                 var goodsIssue = await _sapService.GetOrCreateGoodsIssueAsync(
                     request,
                     siteOptions);
-                goodsIssue.Document.SiteId = request.SiteId;
+                goodsIssue.Document.SiteId = siteOptions.SourceSiteId;
                 goodsIssue.Document.SapDatabaseName = request.SourceCompanyName;
                 goodsIssueDocument = goodsIssue.Document;
                 goodsIssueKnown = true;
@@ -115,7 +117,7 @@ public class IntercompanyTransferService
                 request,
                 siteOptions,
                 lineCosts);
-            goodsReceiptDocument.SiteId = request.SiteId;
+            goodsReceiptDocument.SiteId = siteOptions.TargetSiteId;
             goodsReceiptDocument.SapDatabaseName = request.TargetCompanyName;
 
             await _ledger.MarkCompletedAsync(
@@ -136,7 +138,7 @@ public class IntercompanyTransferService
                 record.GoodsIssueDocEntry,
                 record.GoodsReceiptDocEntry);
 
-            return BuildResult(record);
+            return BuildResult(record, siteOptions);
         }
         catch (IntercompanyTransferConflictException)
         {
@@ -179,7 +181,7 @@ public class IntercompanyTransferService
                     GoodsIssue = goodsIssueDocument,
                     ErrorMessage = ex.Message
                 }
-                : BuildResult(record);
+                : BuildResult(record, siteOptions);
 
             result.GoodsIssue ??= goodsIssueDocument;
             result.ErrorMessage ??= ex.Message;
@@ -223,14 +225,14 @@ public class IntercompanyTransferService
             throw new ArgumentException("transferId contains unsupported characters.");
         }
 
-        _ = _resolver.ResolveSite(siteId);
+        var siteOptions = _resolver.ResolveSite(siteId);
 
         await using var transferLock = await _ledger.AcquireAsync(siteId, transferId);
         var record = await _ledger.GetAsync(
             transferLock.Connection,
             siteId,
             transferId);
-        return record is null ? null : BuildResult(record);
+        return record is null ? null : BuildResult(record, siteOptions);
     }
 
     private async Task<IntercompanyTransferRecord> GetRequiredRecordAsync(
@@ -278,8 +280,9 @@ public class IntercompanyTransferService
         }
     }
 
-    private static IntercompanyTransferResult BuildResult(
-        IntercompanyTransferRecord record)
+    internal static IntercompanyTransferResult BuildResult(
+        IntercompanyTransferRecord record,
+        IntercompanyTransferSiteOptions siteOptions)
     {
         return new IntercompanyTransferResult
         {
@@ -289,12 +292,12 @@ public class IntercompanyTransferService
             TargetCompanyName = record.TargetCompanyName,
             Status = record.Status,
             GoodsIssue = BuildDocument(
-                record.SiteId,
+                siteOptions.SourceSiteId,
                 record.SourceCompanyName,
                 record.GoodsIssueDocEntry,
                 record.GoodsIssueDocNum),
             GoodsReceipt = BuildDocument(
-                record.SiteId,
+                siteOptions.TargetSiteId,
                 record.TargetCompanyName,
                 record.GoodsReceiptDocEntry,
                 record.GoodsReceiptDocNum),
@@ -303,10 +306,11 @@ public class IntercompanyTransferService
     }
 
     private static SapDocumentResult? BuildGoodsIssueDocument(
-        IntercompanyTransferRecord record)
+        IntercompanyTransferRecord record,
+        IntercompanyTransferSiteOptions siteOptions)
     {
         return BuildDocument(
-            record.SiteId,
+            siteOptions.SourceSiteId,
             record.SourceCompanyName,
             record.GoodsIssueDocEntry,
             record.GoodsIssueDocNum);

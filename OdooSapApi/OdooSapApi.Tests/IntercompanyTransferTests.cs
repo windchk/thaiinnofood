@@ -81,6 +81,65 @@ public class IntercompanyTransferTests
     }
 
     [Fact]
+    public void Resolver_ReturnsConfiguredSourceAndTargetSiteIds()
+    {
+        var resolver = NewResolver();
+
+        var siteOptions = resolver.Resolve(
+            "TEST-TIF",
+            "TEST_INTERFACE",
+            "TEST_STL_ODOO");
+
+        Assert.Equal("TEST-TIF", siteOptions.SourceSiteId);
+        Assert.Equal("TEST-STL", siteOptions.TargetSiteId);
+    }
+
+    [Fact]
+    public void Resolver_RejectsSiteIdMappedToDifferentDatabase()
+    {
+        var options = NewOptions();
+        options.Sites["TEST-TIF"].TargetSiteId = "TEST-TIF";
+        var resolver = new IntercompanyTransferResolver(
+            Options.Create(options),
+            Options.Create(NewSapOptions()));
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => resolver.ResolveSite("TEST-TIF"));
+
+        Assert.Equal(
+            "target siteId 'TEST-TIF' maps to 'TEST_INTERFACE', not 'TEST_STL_ODOO'.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void Result_UsesSiteIdForEachSapDatabase()
+    {
+        var siteOptions = NewResolver().ResolveSite("TEST-TIF");
+        var record = new IntercompanyTransferRecord
+        {
+            TransferId = "ODOO-TEST-0001",
+            SiteId = "TEST-TIF",
+            SourceCompanyName = "TEST_INTERFACE",
+            TargetCompanyName = "TEST_STL_ODOO",
+            Status = "COMPLETED",
+            GoodsIssueDocEntry = 57298,
+            GoodsIssueDocNum = 26070003,
+            GoodsReceiptDocEntry = 56275,
+            GoodsReceiptDocNum = 26070004
+        };
+
+        var result = IntercompanyTransferService.BuildResult(
+            record,
+            siteOptions);
+
+        Assert.Equal("TEST-TIF", result.SiteId);
+        Assert.Equal("TEST-TIF", result.GoodsIssue?.SiteId);
+        Assert.Equal("TEST_INTERFACE", result.GoodsIssue?.SapDatabaseName);
+        Assert.Equal("TEST-STL", result.GoodsReceipt?.SiteId);
+        Assert.Equal("TEST_STL_ODOO", result.GoodsReceipt?.SapDatabaseName);
+    }
+
+    [Fact]
     public void IdempotencyMarkers_AreStableAndFitSapFields()
     {
         const string transferId = "ODOO-TEST-20260723-0001";
@@ -185,7 +244,24 @@ public class IntercompanyTransferTests
     }
 
     private static IntercompanyTransferResolver NewResolver()
-        => new(Options.Create(NewOptions()));
+        => new(
+            Options.Create(NewOptions()),
+            Options.Create(NewSapOptions()));
+
+    private static SapCompanyOptions NewSapOptions()
+    {
+        return new SapCompanyOptions
+        {
+            SiteDatabases = new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase)
+            {
+                ["TEST-TIF"] = "TEST_INTERFACE",
+                ["TEST-STL"] = "TEST_STL_ODOO",
+                ["PRD-TIF"] = "TIF_GOLIVE",
+                ["PRD-STL"] = "SBO_STL_GOLIVE"
+            }
+        };
+    }
 
     private static IntercompanyTransferOptions NewOptions()
     {
@@ -196,6 +272,8 @@ public class IntercompanyTransferTests
             {
                 ["TEST-TIF"] = new()
                 {
+                    SourceSiteId = "TEST-TIF",
+                    TargetSiteId = "TEST-STL",
                     SourceCompanyName = "TEST_INTERFACE",
                     TargetCompanyName = "TEST_STL_ODOO",
                     GoodsIssueSeriesBeginStr = "GIT",
@@ -203,6 +281,8 @@ public class IntercompanyTransferTests
                 },
                 ["PRD-TIF"] = new()
                 {
+                    SourceSiteId = "PRD-TIF",
+                    TargetSiteId = "PRD-STL",
                     SourceCompanyName = "TIF_GOLIVE",
                     TargetCompanyName = "SBO_STL_GOLIVE",
                     GoodsIssueSeriesBeginStr = "GIT",

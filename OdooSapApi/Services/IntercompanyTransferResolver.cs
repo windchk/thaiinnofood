@@ -6,10 +6,14 @@ namespace OdooSapApi.Services;
 public class IntercompanyTransferResolver
 {
     private readonly IntercompanyTransferOptions _options;
+    private readonly SapCompanyOptions _sapOptions;
 
-    public IntercompanyTransferResolver(IOptions<IntercompanyTransferOptions> options)
+    public IntercompanyTransferResolver(
+        IOptions<IntercompanyTransferOptions> options,
+        IOptions<SapCompanyOptions> sapOptions)
     {
         _options = options.Value;
+        _sapOptions = sapOptions.Value;
     }
 
     public IntercompanyTransferSiteOptions Resolve(
@@ -74,8 +78,49 @@ public class IntercompanyTransferResolver
                 $"Goods Receipt series is not configured for siteId '{siteId}'.");
         }
 
+        ValidateSiteDatabaseMapping(
+            siteId,
+            "source",
+            match.Value.SourceSiteId,
+            match.Value.SourceCompanyName);
+        ValidateSiteDatabaseMapping(
+            siteId,
+            "target",
+            match.Value.TargetSiteId,
+            match.Value.TargetCompanyName);
+
         return match.Value;
     }
 
     public IntercompanyTransferOptions GetOptions() => _options;
+
+    private void ValidateSiteDatabaseMapping(
+        string transferSiteId,
+        string side,
+        string documentSiteId,
+        string companyName)
+    {
+        if (string.IsNullOrWhiteSpace(documentSiteId))
+        {
+            throw new InvalidOperationException(
+                $"{side} siteId is not configured for transfer siteId '{transferSiteId}'.");
+        }
+
+        if (!_sapOptions.SiteDatabases.TryGetValue(
+                documentSiteId,
+                out var mappedCompanyName))
+        {
+            throw new InvalidOperationException(
+                $"{side} siteId '{documentSiteId}' is not configured in SapCompany:SiteDatabases.");
+        }
+
+        if (!string.Equals(
+                mappedCompanyName,
+                companyName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"{side} siteId '{documentSiteId}' maps to '{mappedCompanyName}', not '{companyName}'.");
+        }
+    }
 }

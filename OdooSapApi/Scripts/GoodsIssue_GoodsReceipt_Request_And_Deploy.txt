@@ -48,6 +48,10 @@ targetCompanyName = SBO_STL_GOLIVE
 
 Rules
 -----
+- siteId identifies the transfer route/source site (TEST-TIF or PRD-TIF).
+- SourceSiteId and TargetSiteId are configured under IntercompanyTransfers:Sites.
+- Response data.siteId remains the transfer route; goodsIssue.siteId uses SourceSiteId
+  and goodsReceipt.siteId uses TargetSiteId.
 - transferId is the idempotency key. Reuse the same value only for the same body.
 - remarks is optional and must not exceed 150 characters.
 - itemCode is required because Goods Issue and Goods Receipt are standalone documents.

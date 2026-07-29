@@ -12,6 +12,8 @@ public class IntercompanyTransferOptions
 
 public class IntercompanyTransferSiteOptions
 {
+    public string SourceSiteId { get; set; } = "";
+    public string TargetSiteId { get; set; } = "";
     public string SourceCompanyName { get; set; } = "";
     public string TargetCompanyName { get; set; } = "";
     public string GoodsIssueSeriesBeginStr { get; set; } = "GIT";
