@@ -168,6 +168,21 @@ public class IntercompanyTransferTests
     }
 
     [Fact]
+    public void TransferIdUdf_UsesFullTransferIdAndExactSapFieldName()
+    {
+        var transferId = new string('T', 80);
+        var document = new FakeDocument();
+
+        SapDiApiIntercompanyService.SetTransferIdUserField(document, transferId);
+
+        Assert.Equal(
+            SapDiApiIntercompanyService.TransferIdUserFieldName,
+            document.UserFields.Fields.RequestedFieldName);
+        Assert.Equal("U_ODoo_Doc", document.UserFields.Fields.RequestedFieldName);
+        Assert.Equal(transferId, document.UserFields.Fields.Field.Value);
+    }
+
+    [Fact]
     public void InboundBatchMetadata_UsesSapDiApiAddmisionDateProperty()
     {
         var batchNumbers = new FakeBatchNumbers();
@@ -320,5 +335,32 @@ public class IntercompanyTransferTests
         public DateTime ManufacturingDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public DateTime AddmisionDate { get; set; }
+    }
+
+    public sealed class FakeDocument
+    {
+        public FakeUserFields UserFields { get; } = new();
+    }
+
+    public sealed class FakeUserFields
+    {
+        public FakeFields Fields { get; } = new();
+    }
+
+    public sealed class FakeFields
+    {
+        public string? RequestedFieldName { get; private set; }
+        public FakeField Field { get; } = new();
+
+        public FakeField Item(string fieldName)
+        {
+            RequestedFieldName = fieldName;
+            return Field;
+        }
+    }
+
+    public sealed class FakeField
+    {
+        public object? Value { get; set; }
     }
 }

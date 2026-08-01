@@ -64,8 +64,39 @@ Rules
 - The API reads the actual Goods Issue StockPrice and uses it as the STL Goods Receipt UnitPrice.
 - Goods Issue and Goods Receipt lines use the fixed AccountCode 91010114.
 - AccountCode 91010114 must exist and be postable in both source and target companies.
+- The API writes the full transferId to header UDF U_ODoo_Doc on both documents:
+  source OIGE.U_ODoo_Doc and target OIGN.U_ODoo_Doc.
+- U_ODoo_Doc must exist in both companies and support at least 80 characters.
 - The API creates Goods Issue first. If STL fails, retry the identical request and transferId;
   the API recovers the existing Goods Issue and continues the Goods Receipt.
+
+Failure and retry behavior
+--------------------------
+- Before SAP posting, the API creates/loads one ledger row keyed by siteId + transferId.
+- If the source Goods Issue cannot be created or confirmed, status becomes GI_FAILED.
+  Goods Receipt is not attempted. Retry the identical body and transferId.
+- If Goods Issue is known but the target Goods Receipt cannot be created or confirmed,
+  status becomes GR_PENDING. The existing Goods Issue is not cancelled or reversed.
+- A GR_PENDING retry reuses the same Goods Issue and creates/recovers only Goods Receipt.
+- If SAP created a document but the response or ledger update failed, retry searches OIGE/OIGN
+  by the existing Comments/Ref2 idempotency marker before creating another document.
+- Each failed attempt increments RetryCount and stores ErrorMessage in
+  TEMP_API.dbo.INT_IntercompanyTransfer. POST returns HTTP 500 with the current status/data.
+- Use the status endpoint to inspect recovery state. COMPLETED requests return existing documents.
+- Reusing transferId with a different body returns HTTP 409 and does not post another document.
+- A concurrent request for the same siteId + transferId returns HTTP 409 while processing.
+
+Verify UDF values on TEST
+-------------------------
+DECLARE @TransferId NVARCHAR(80) = N'ODOO-TEST-20260723-0001';
+
+SELECT DocEntry, DocNum, U_ODoo_Doc, Ref2, Comments
+FROM [TEST_INTERFACE].dbo.OIGE
+WHERE U_ODoo_Doc = @TransferId;
+
+SELECT DocEntry, DocNum, U_ODoo_Doc, Ref2, Comments
+FROM [TEST_STL_ODOO].dbo.OIGN
+WHERE U_ODoo_Doc = @TransferId;
 
 curl: Delivery
 --------------

@@ -11,6 +11,7 @@ namespace OdooSapApi.Services;
 public class SapDiApiIntercompanyService : IIntercompanySapService
 {
     private static readonly SemaphoreSlim DiApiGate = new(1, 1);
+    internal const string TransferIdUserFieldName = "U_ODoo_Doc";
 
     private readonly SapCompanyOptions _sapOptions;
     private readonly IntercompanyTransferOptions _transferOptions;
@@ -242,7 +243,11 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         document.JournalMemo = Truncate(
             $"Odoo {documentName} {request.TransferId}",
             50);
+        SetTransferIdUserField(document, request.TransferId);
     }
+
+    internal static void SetTransferIdUserField(dynamic document, string transferId)
+        => document.UserFields.Fields.Item(TransferIdUserFieldName).Value = transferId;
 
     private void ApplyBatchesAndBins(
         string companyDb,
