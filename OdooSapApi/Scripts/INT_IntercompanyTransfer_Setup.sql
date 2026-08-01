@@ -33,8 +33,41 @@ BEGIN
         CONSTRAINT PK_INT_IntercompanyTransfer
             PRIMARY KEY CLUSTERED (SiteId, TransferId),
         CONSTRAINT CK_INT_IntercompanyTransfer_Status
-            CHECK (Status IN ('NEW', 'GI_FAILED', 'GI_POSTED', 'GR_PENDING', 'COMPLETED'))
+            CHECK (Status IN ('NEW', 'ERROR', 'GI_FAILED', 'GI_POSTED', 'GR_PENDING', 'COMPLETED'))
     );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.INT_IntercompanyTransfer', N'U') IS NOT NULL
+   AND EXISTS
+   (
+       SELECT 1
+       FROM sys.check_constraints
+       WHERE name = N'CK_INT_IntercompanyTransfer_Status'
+         AND parent_object_id = OBJECT_ID(N'dbo.INT_IntercompanyTransfer')
+         AND definition NOT LIKE N'%''ERROR''%'
+   )
+BEGIN
+    ALTER TABLE dbo.INT_IntercompanyTransfer
+        DROP CONSTRAINT CK_INT_IntercompanyTransfer_Status;
+END;
+GO
+
+IF OBJECT_ID(N'dbo.INT_IntercompanyTransfer', N'U') IS NOT NULL
+   AND NOT EXISTS
+   (
+       SELECT 1
+       FROM sys.check_constraints
+       WHERE name = N'CK_INT_IntercompanyTransfer_Status'
+         AND parent_object_id = OBJECT_ID(N'dbo.INT_IntercompanyTransfer')
+   )
+BEGIN
+    ALTER TABLE dbo.INT_IntercompanyTransfer WITH CHECK
+        ADD CONSTRAINT CK_INT_IntercompanyTransfer_Status
+        CHECK (Status IN ('NEW', 'ERROR', 'GI_FAILED', 'GI_POSTED', 'GR_PENDING', 'COMPLETED'));
+
+    ALTER TABLE dbo.INT_IntercompanyTransfer
+        CHECK CONSTRAINT CK_INT_IntercompanyTransfer_Status;
 END;
 GO
 

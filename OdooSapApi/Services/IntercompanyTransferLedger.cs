@@ -174,7 +174,7 @@ public class IntercompanyTransferLedger
         string siteId,
         string transferId,
         SapDocumentResult document,
-        string actualCostJson)
+        string? actualCostJson)
     {
         await using var command = connection.CreateCommand();
         command.CommandText = """
@@ -196,7 +196,8 @@ public class IntercompanyTransferLedger
         command.Parameters.AddWithValue(
             "@GoodsIssueDocNum",
             ParseSapDocumentNumber(document.DocumentNumber, "Goods Issue DocNum"));
-        command.Parameters.Add("@ActualCostJson", SqlDbType.NVarChar, -1).Value = actualCostJson;
+        command.Parameters.Add("@ActualCostJson", SqlDbType.NVarChar, -1).Value =
+            (object?)actualCostJson ?? DBNull.Value;
         command.Parameters.AddWithValue("@ProcessBy", Environment.MachineName);
         await command.ExecuteNonQueryAsync();
     }
@@ -205,12 +206,17 @@ public class IntercompanyTransferLedger
         SqlConnection connection,
         string siteId,
         string transferId,
-        SapDocumentResult document)
+        SapDocumentResult goodsIssueDocument,
+        string actualCostJson,
+        SapDocumentResult goodsReceiptDocument)
     {
         await using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE dbo.INT_IntercompanyTransfer
             SET Status = 'COMPLETED',
+                GoodsIssueDocEntry = @GoodsIssueDocEntry,
+                GoodsIssueDocNum = @GoodsIssueDocNum,
+                ActualCostJson = @ActualCostJson,
                 GoodsReceiptDocEntry = @GoodsReceiptDocEntry,
                 GoodsReceiptDocNum = @GoodsReceiptDocNum,
                 ErrorMessage = NULL,
@@ -221,11 +227,26 @@ public class IntercompanyTransferLedger
             """;
         AddIdentityParameters(command, siteId, transferId);
         command.Parameters.AddWithValue(
+            "@GoodsIssueDocEntry",
+            ParseSapDocumentNumber(
+                goodsIssueDocument.DocumentEntry,
+                "Goods Issue DocEntry"));
+        command.Parameters.AddWithValue(
+            "@GoodsIssueDocNum",
+            ParseSapDocumentNumber(
+                goodsIssueDocument.DocumentNumber,
+                "Goods Issue DocNum"));
+        command.Parameters.Add("@ActualCostJson", SqlDbType.NVarChar, -1).Value = actualCostJson;
+        command.Parameters.AddWithValue(
             "@GoodsReceiptDocEntry",
-            ParseSapDocumentNumber(document.DocumentEntry, "Goods Receipt DocEntry"));
+            ParseSapDocumentNumber(
+                goodsReceiptDocument.DocumentEntry,
+                "Goods Receipt DocEntry"));
         command.Parameters.AddWithValue(
             "@GoodsReceiptDocNum",
-            ParseSapDocumentNumber(document.DocumentNumber, "Goods Receipt DocNum"));
+            ParseSapDocumentNumber(
+                goodsReceiptDocument.DocumentNumber,
+                "Goods Receipt DocNum"));
         command.Parameters.AddWithValue("@ProcessBy", Environment.MachineName);
         await command.ExecuteNonQueryAsync();
     }

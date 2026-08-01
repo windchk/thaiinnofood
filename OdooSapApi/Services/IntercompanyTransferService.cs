@@ -89,41 +89,59 @@ public class IntercompanyTransferService
             record,
             siteOptions);
         var goodsIssueKnown = goodsIssueDocument is not null;
+        SapDocumentResult? goodsReceiptDocument = null;
+        List<IntercompanyLineCost>? lineCosts = null;
 
         try
         {
-            var lineCosts = TryDeserializeLineCosts(record.ActualCostJson);
+            lineCosts = TryDeserializeLineCosts(record.ActualCostJson);
 
             if (goodsIssueDocument is null || lineCosts is null)
             {
-                var goodsIssue = await _sapService.GetOrCreateGoodsIssueAsync(
-                    request,
-                    siteOptions);
-                goodsIssue.Document.SiteId = siteOptions.SourceSiteId;
-                goodsIssue.Document.SapDatabaseName = request.SourceCompanyName;
-                goodsIssueDocument = goodsIssue.Document;
-                goodsIssueKnown = true;
-                lineCosts = goodsIssue.LineCosts;
+                try
+                {
+                    var transfer = await _sapService.GetOrCreateTransferAsync(
+                        request,
+                        siteOptions);
+                    goodsIssueDocument = transfer.GoodsIssue.Document;
+                    lineCosts = transfer.GoodsIssue.LineCosts;
+                    goodsReceiptDocument = transfer.GoodsReceipt;
+                    goodsIssueKnown = true;
+                }
+                catch (IntercompanySapPostingException ex)
+                {
+                    if (ex.CommittedGoodsIssueDocument is not null)
+                    {
+                        goodsIssueDocument = ex.CommittedGoodsIssueDocument;
+                        lineCosts = ex.LineCosts?.ToList();
+                        goodsIssueKnown = true;
+                    }
 
-                await _ledger.MarkGoodsIssueAsync(
-                    transferLock.Connection,
-                    request.SiteId,
-                    request.TransferId,
-                    goodsIssueDocument,
-                    JsonSerializer.Serialize(lineCosts, JsonOptions));
+                    goodsIssueKnown |= ex.GoodsIssueStateUnknown;
+                    throw;
+                }
+            }
+            else
+            {
+                goodsReceiptDocument = await _sapService.GetOrCreateGoodsReceiptAsync(
+                    request,
+                    siteOptions,
+                    lineCosts);
             }
 
-            var goodsReceiptDocument = await _sapService.GetOrCreateGoodsReceiptAsync(
-                request,
-                siteOptions,
-                lineCosts);
+            goodsIssueDocument.SiteId = siteOptions.SourceSiteId;
+            goodsIssueDocument.SapDatabaseName = request.SourceCompanyName;
             goodsReceiptDocument.SiteId = siteOptions.TargetSiteId;
             goodsReceiptDocument.SapDatabaseName = request.TargetCompanyName;
+
+            var actualCostJson = JsonSerializer.Serialize(lineCosts, JsonOptions);
 
             await _ledger.MarkCompletedAsync(
                 transferLock.Connection,
                 request.SiteId,
                 request.TransferId,
+                goodsIssueDocument,
+                actualCostJson,
                 goodsReceiptDocument);
 
             record = await GetRequiredRecordAsync(
@@ -146,10 +164,24 @@ public class IntercompanyTransferService
         }
         catch (Exception ex)
         {
-            var failureStatus = goodsIssueKnown ? "GR_PENDING" : "GI_FAILED";
+            var failureStatus = ResolveFailureStatus(goodsIssueKnown);
 
             try
             {
+                if (goodsIssueDocument is not null)
+                {
+                    goodsIssueDocument.SiteId = siteOptions.SourceSiteId;
+                    goodsIssueDocument.SapDatabaseName = request.SourceCompanyName;
+                    await _ledger.MarkGoodsIssueAsync(
+                        transferLock.Connection,
+                        request.SiteId,
+                        request.TransferId,
+                        goodsIssueDocument,
+                        lineCosts is { Count: > 0 }
+                            ? JsonSerializer.Serialize(lineCosts, JsonOptions)
+                            : null);
+                }
+
                 await _ledger.MarkFailureAsync(
                     transferLock.Connection,
                     request.SiteId,
@@ -267,6 +299,9 @@ public class IntercompanyTransferService
             return null;
         }
     }
+
+    internal static string ResolveFailureStatus(bool goodsIssueKnown)
+        => goodsIssueKnown ? "GR_PENDING" : "ERROR";
 
     private static void NormalizeDates(IntercompanyTransferRequest request)
     {

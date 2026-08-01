@@ -27,6 +27,12 @@ public sealed class IntercompanyGoodsIssueResult
     public List<IntercompanyLineCost> LineCosts { get; set; } = [];
 }
 
+public sealed class IntercompanySapTransferResult
+{
+    public IntercompanyGoodsIssueResult GoodsIssue { get; set; } = new();
+    public SapDocumentResult GoodsReceipt { get; set; } = new();
+}
+
 internal sealed class IntercompanyTransferRecord
 {
     public string TransferId { get; set; } = "";

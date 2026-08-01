@@ -67,17 +67,28 @@ Rules
 - The API writes the full transferId to header UDF U_ODoo_Doc on both documents:
   source OIGE.U_ODoo_Doc and target OIGN.U_ODoo_Doc.
 - U_ODoo_Doc must exist in both companies and support at least 80 characters.
-- The API creates Goods Issue first. If STL fails, retry the identical request and transferId;
-  the API recovers the existing Goods Issue and continues the Goods Receipt.
+- For a new transfer, all validation and SAP lookup preparation finishes before document
+  transactions start. The API adds Goods Issue inside a short source transaction, reads its
+  actual StockPrice through the same SAP Company, then adds Goods Receipt inside a short
+  target transaction.
+- Target Goods Receipt commits first and source Goods Issue commits immediately afterwards.
+- If Goods Receipt Add fails before target commit, both target and source transactions roll
+  back. No Goods Issue remains; retry the identical request and transferId to create both again.
 
 Failure and retry behavior
 --------------------------
 - Before SAP posting, the API creates/loads one ledger row keyed by siteId + transferId.
-- If the source Goods Issue cannot be created or confirmed, status becomes GI_FAILED.
-  Goods Receipt is not attempted. Retry the identical body and transferId.
-- If Goods Issue is known but the target Goods Receipt cannot be created or confirmed,
-  status becomes GR_PENDING. The existing Goods Issue is not cancelled or reversed.
-- A GR_PENDING retry reuses the same Goods Issue and creates/recovers only Goods Receipt.
+- If the source Goods Issue cannot be added, status becomes ERROR. Goods Receipt is not
+  attempted. Retry the identical body and transferId.
+- For a new transfer, if target Goods Receipt Add fails and source rollback succeeds, status
+  becomes ERROR and no Goods Issue remains. Retry creates both documents again.
+- GR_PENDING is retained for recovery of a Goods Issue that was already committed before the
+  current attempt (for example, an older deployment or a response/ledger recovery case).
+- A GR_PENDING retry reuses the committed Goods Issue and creates/recovers only Goods Receipt.
+- The two company transactions are deliberately short and contain no await or external API
+  call. Master-data checks, series, batch existence and bin resolution run before they start.
+- This flow does not use MS DTC. If target commit succeeds but source commit cannot be
+  confirmed, keep the same transferId and inspect OIGE/OIGN markers before any manual action.
 - If SAP created a document but the response or ledger update failed, retry searches OIGE/OIGN
   by the existing Comments/Ref2 idempotency marker before creating another document.
 - Each failed attempt increments RetryCount and stores ErrorMessage in
@@ -157,7 +168,8 @@ curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/goodsissue-goodsreceip
 
 Server setup and publish
 ------------------------
-1. Run Scripts\INT_IntercompanyTransfer_Setup.sql against TEMP_API once.
+1. Run Scripts\INT_IntercompanyTransfer_Setup.sql against TEMP_API. Re-run it before deploying
+   this version so the existing status check constraint accepts ERROR.
 2. Verify appsettings.json IntercompanyTransfers mappings and GIT/GRT series.
 3. Open PowerShell as Administrator in the OdooSapApi source folder.
 4. Run:

@@ -218,6 +218,163 @@ public class IntercompanyTransferTests
     }
 
     [Fact]
+    public void PayloadContract_PropertyNamesRemainUnchanged()
+    {
+        Assert.Equal(
+            new[]
+            {
+                "lines",
+                "postingDate",
+                "remarks",
+                "siteId",
+                "sourceCompanyName",
+                "targetCompanyName",
+                "transferId"
+            },
+            GetJsonPropertyNames<IntercompanyTransferRequest>());
+        Assert.Equal(
+            new[]
+            {
+                "batches",
+                "itemCode",
+                "lineId",
+                "quantity",
+                "sourceBins",
+                "sourceWarehouse",
+                "targetBins",
+                "targetWarehouse"
+            },
+            GetJsonPropertyNames<IntercompanyTransferLineRequest>());
+        Assert.Equal(
+            new[]
+            {
+                "admissionDate",
+                "batchNumber",
+                "expiryDate",
+                "manufacturingDate",
+                "quantity",
+                "sourceBins",
+                "targetBins"
+            },
+            GetJsonPropertyNames<IntercompanyTransferBatchRequest>());
+    }
+
+    [Theory]
+    [InlineData(false, "ERROR")]
+    [InlineData(true, "GR_PENDING")]
+    public void FailureStatus_DependsOnWhetherCommittedGoodsIssueExists(
+        bool goodsIssueKnown,
+        string expectedStatus)
+    {
+        Assert.Equal(
+            expectedStatus,
+            IntercompanyTransferService.ResolveFailureStatus(goodsIssueKnown));
+    }
+
+    [Fact]
+    public void CompanyTransactions_CommitTargetBeforeSource()
+    {
+        var events = new List<string>();
+        var source = new FakeTransactionCompany("Source", events);
+        var target = new FakeTransactionCompany("Target", events);
+
+        var result = SapDiApiIntercompanyService.ExecuteCompanyTransaction(
+            source,
+            "Goods Issue",
+            () => SapDiApiIntercompanyService.ExecuteCompanyTransaction(
+                target,
+                "Goods Receipt",
+                () => 42));
+
+        Assert.Equal(42, result);
+        Assert.Equal(
+            new[]
+            {
+                "Source:Start",
+                "Target:Start",
+                "Target:Commit",
+                "Source:Commit"
+            },
+            events);
+    }
+
+    [Fact]
+    public void CompanyTransactions_RollBackSourceWhenGoodsReceiptAddFails()
+    {
+        var events = new List<string>();
+        var source = new FakeTransactionCompany("Source", events);
+        var target = new FakeTransactionCompany("Target", events);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            SapDiApiIntercompanyService.ExecuteCompanyTransaction<int>(
+                source,
+                "Goods Issue",
+                () => SapDiApiIntercompanyService.ExecuteCompanyTransaction<int>(
+                    target,
+                    "Goods Receipt",
+                    () => throw new InvalidOperationException("GR Add failed"))));
+
+        Assert.Equal("GR Add failed", exception.Message);
+        Assert.Equal(
+            new[]
+            {
+                "Source:Start",
+                "Target:Start",
+                "Target:Rollback",
+                "Source:Rollback"
+            },
+            events);
+        Assert.False(source.InTransaction);
+        Assert.False(target.InTransaction);
+    }
+
+    [Fact]
+    public void CompanyTransaction_DoesNotRollbackTwiceAfterSapAutoRollback()
+    {
+        var events = new List<string>();
+        var source = new FakeTransactionCompany("Source", events);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            SapDiApiIntercompanyService.ExecuteCompanyTransaction<int>(
+                source,
+                "Goods Issue",
+                () =>
+                {
+                    source.SimulateAutomaticRollback();
+                    throw new InvalidOperationException("GI Add failed");
+                }));
+
+        Assert.Equal(
+            new[]
+            {
+                "Source:Start",
+                "Source:AutoRollback"
+            },
+            events);
+    }
+
+    [Fact]
+    public void CompanyTransaction_ReportsWhichRollbackCouldNotBeConfirmed()
+    {
+        var events = new List<string>();
+        var source = new FakeTransactionCompany("Source", events)
+        {
+            ThrowOnRollback = true
+        };
+
+        var exception = Assert.Throws<SapTransactionRollbackException>(() =>
+            SapDiApiIntercompanyService.ExecuteCompanyTransaction<int>(
+                source,
+                "Goods Issue",
+                () => throw new InvalidOperationException("GR Add failed")));
+
+        Assert.Equal("Goods Issue", exception.TransactionName);
+        Assert.Equal(
+            "Goods Issue failed and rollback could not be confirmed.",
+            exception.Message);
+    }
+
+    [Fact]
     public void ApplicationServices_CanResolveTransferControllerDependencies()
     {
         var services = new ServiceCollection();
@@ -265,6 +422,15 @@ public class IntercompanyTransferTests
                 }
             ]
         };
+    }
+
+    private static string[] GetJsonPropertyNames<T>()
+    {
+        return typeof(T)
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Select(x => JsonNamingPolicy.CamelCase.ConvertName(x.Name))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static IntercompanyTransferResolver NewResolver()
@@ -318,6 +484,11 @@ public class IntercompanyTransferTests
 
     private sealed class FakeSapService : IIntercompanySapService
     {
+        public Task<IntercompanySapTransferResult> GetOrCreateTransferAsync(
+            IntercompanyTransferRequest request,
+            IntercompanyTransferSiteOptions siteOptions)
+            => throw new NotSupportedException();
+
         public Task<IntercompanyGoodsIssueResult> GetOrCreateGoodsIssueAsync(
             IntercompanyTransferRequest request,
             IntercompanyTransferSiteOptions siteOptions)
@@ -362,5 +533,52 @@ public class IntercompanyTransferTests
     public sealed class FakeField
     {
         public object? Value { get; set; }
+    }
+
+    public sealed class FakeTransactionCompany
+    {
+        private readonly string _name;
+        private readonly List<string> _events;
+
+        public FakeTransactionCompany(string name, List<string> events)
+        {
+            _name = name;
+            _events = events;
+        }
+
+        public bool InTransaction { get; private set; }
+        public bool ThrowOnRollback { get; set; }
+
+        public void StartTransaction()
+        {
+            Assert.False(InTransaction);
+            InTransaction = true;
+            _events.Add($"{_name}:Start");
+        }
+
+        public void EndTransaction(int option)
+        {
+            Assert.True(InTransaction);
+            Assert.True(
+                option is SapDiApiIntercompanyService.CommitTransactionOption
+                    or SapDiApiIntercompanyService.RollbackTransactionOption);
+
+            if (option == SapDiApiIntercompanyService.RollbackTransactionOption
+                && ThrowOnRollback)
+            {
+                throw new InvalidOperationException("Rollback failed");
+            }
+
+            _events.Add(
+                $"{_name}:{(option == SapDiApiIntercompanyService.CommitTransactionOption ? "Commit" : "Rollback")}");
+            InTransaction = false;
+        }
+
+        public void SimulateAutomaticRollback()
+        {
+            Assert.True(InTransaction);
+            InTransaction = false;
+            _events.Add($"{_name}:AutoRollback");
+        }
     }
 }
