@@ -95,6 +95,15 @@ public class IntercompanyTransferTests
     }
 
     [Fact]
+    public void Resolver_UsesFixedAccountCodeForGoodsIssueAndGoodsReceipt()
+    {
+        var siteOptions = NewResolver().ResolveSite("TEST-TIF");
+
+        Assert.Equal("91010114", siteOptions.GoodsIssueAccountCode);
+        Assert.Equal("91010114", siteOptions.GoodsReceiptAccountCode);
+    }
+
+    [Fact]
     public void Resolver_RejectsSiteIdMappedToDifferentDatabase()
     {
         var options = NewOptions();

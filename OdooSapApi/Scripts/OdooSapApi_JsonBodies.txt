@@ -66,6 +66,13 @@ POST /api/sap/production/issue
 - issueLines[].quantity: จำนวนที่ต้องการ issue จาก Odoo
 - issueLines[].warehouse: ค่าเดียวกับ ProductionOrder.data.lines[].warehouse ใช้เป็น warehouse ที่ตัดของ
 
+กฎเลือก Batch สำหรับ Issue From Production
+- Item Group 109 (สินค้าระหว่างผลิต) และ 110 (สินค้าสำเร็จรูป): ถ้า item จัดการด้วย batch ต้องส่ง batchNumber หรือ batches[] ใน JSON เท่านั้น ระบบจะไม่เปลี่ยน batch ที่ส่งมา
+- Item Group อื่นที่จัดการด้วย batch: ไม่ต้องส่ง batch ใน JSON เพราะ API จะเลือก batch อัตโนมัติตาม Batch Number จากน้อยไปมากจนเต็ม quantity
+- ถ้า warehouse จัดการด้วย bin: auto-select จะเลือก bin ภายใน batch ตาม BinCode จากน้อยไปมาก
+- ถ้า batch stock ไม่พอ API จะไม่สร้าง Issue From Production และตอบ error พร้อม itemCode, warehouse, required และ available
+- issueLines[].itemCode ต้องตรงกับ item ของ Production Order line ตาม docEntry + lineNum
+
 Issue: ไม่มี batch และไม่มี bin
 -------------------------------
 {
@@ -82,8 +89,8 @@ Issue: ไม่มี batch และไม่มี bin
   ]
 }
 
-Issue: มี batch แต่ไม่มี bin
-----------------------------
+Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 แต่ไม่มี bin
+-----------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -91,7 +98,7 @@ Issue: มี batch แต่ไม่มี bin
   "issueLines": [
     {
       "lineNum": 0,
-      "itemCode": "PKG06033",
+      "itemCode": "WP00001",
       "quantity": 10,
       "warehouse": "WH-PD",
       "batches": [
@@ -136,8 +143,8 @@ Issue: ไม่มี batch แต่มี bin
   ]
 }
 
-Issue: มี batch และมี bin
--------------------------
+Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 และมี bin
+--------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -145,7 +152,7 @@ Issue: มี batch และมี bin
   "issueLines": [
     {
       "lineNum": 0,
-      "itemCode": "PKG06033",
+      "itemCode": "WP00001",
       "quantity": 10,
       "warehouse": "WH-PD",
       "batches": [
@@ -181,8 +188,8 @@ Issue: มี batch และมี bin
   ]
 }
 
-Issue: format เดิม 1 batch ต่อ 1 line
--------------------------------------
+Issue: format เดิม 1 batch ต่อ 1 line สำหรับ Item Group 109/110
+-------------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -190,7 +197,7 @@ Issue: format เดิม 1 batch ต่อ 1 line
   "issueLines": [
     {
       "lineNum": 0,
-      "itemCode": "PKG06033",
+      "itemCode": "WP00001",
       "quantity": 10,
       "warehouse": "WH-PD",
       "batchNumber": "BATCH-001"
@@ -203,7 +210,7 @@ Issue mapping เข้า SAP DI API
 - docDate -> document.DocDate
 - docEntry -> document.Lines.BaseEntry
 - issueLines[].lineNum -> document.Lines.BaseLine
-- issueLines[].itemCode -> document.Lines.ItemCode
+- issueLines[].itemCode -> ใช้ตรวจสอบกับ Production Order line; ไม่กำหนด document.Lines.ItemCode เมื่ออ้าง BaseType/BaseEntry/BaseLine
 - issueLines[].quantity -> document.Lines.Quantity
 - issueLines[].warehouse -> document.Lines.WarehouseCode
 - issueLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber

@@ -18,6 +18,6 @@ public class IntercompanyTransferSiteOptions
     public string TargetCompanyName { get; set; } = "";
     public string GoodsIssueSeriesBeginStr { get; set; } = "GIT";
     public string GoodsReceiptSeriesBeginStr { get; set; } = "GRT";
-    public string GoodsIssueAccountCode { get; set; } = "";
-    public string GoodsReceiptAccountCode { get; set; } = "";
+    public string GoodsIssueAccountCode { get; set; } = "91010114";
+    public string GoodsReceiptAccountCode { get; set; } = "91010114";
 }

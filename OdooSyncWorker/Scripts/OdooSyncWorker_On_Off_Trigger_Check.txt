@@ -1,0 +1,653 @@
+คู่มือเปิด-ปิด OdooSyncWorker และตรวจสอบ SQL Trigger
+=====================================================
+
+ขอบเขต
+------
+
+Service name : OdooSyncWorker
+Queue table  : TEMP_API.dbo.INT_OdooQueue
+
+SAP database mapping:
+
+TEST-TIF = TEST_INTERFACE
+TEST-STL = TEST_STL_ODOO
+PRD-TIF  = TIF_GOLIVE
+PRD-STL  = SBO_STL_GOLIVE
+
+Trigger ที่ใช้งาน:
+
+Database       Table  Trigger
+-------------- ------ ----------------------------------
+TEST_INTERFACE OWOR   TRG_OWOR_ToOdooQueue
+TEST_INTERFACE OINV   TRG_OINV_Reserve_ToOdooQueue
+TEST_STL_ODOO  OINV   TRG_OINV_Reserve_ToOdooQueue
+TIF_GOLIVE     OWOR   TRG_OWOR_ToOdooQueue
+TIF_GOLIVE     OINV   TRG_OINV_Reserve_ToOdooQueue
+SBO_STL_GOLIVE OINV   TRG_OINV_Reserve_ToOdooQueue
+
+TRG_ORDR_ToOdooQueue และ TRG_OITM_ToOdooQueue เป็น flow เก่าที่ปิดไว้
+ถ้ามี trigger สองตัวนี้อยู่ ให้คงสถานะ DISABLED ไว้
+
+
+เลือกวิธีหยุดให้ถูกต้อง
+----------------------
+
+1. ต้องการหยุดส่ง Odoo ชั่วคราว แต่ไม่ต้องการให้ SAP event หาย
+   - หยุด Windows Service เท่านั้น
+   - ปล่อย trigger เป็น ENABLED
+   - queue ใหม่จะยังเข้าและค้าง Status = 'N'
+   - เมื่อเริ่ม Service อีกครั้ง Worker จะส่ง backlog ต่อ
+
+2. ต้องการหยุดเฉพาะ ProductionOrder หรือ ARReserveInvoice
+   - นำ ObjectType นั้นออกจาก Worker:EnabledObjectTypes
+   - restart Service
+   - ปล่อย trigger เป็น ENABLED เพื่อให้ queue ยังถูกเก็บไว้
+
+3. ต้องการหยุดสร้าง queue ใหม่จาก SAP โดยสมบูรณ์
+   - หยุด Service ก่อน
+   - DISABLE trigger ที่ระบุแบบเจาะจง
+   - SAP event ที่เกิดระหว่าง trigger ปิดจะไม่ถูกสร้างเป็น queue ย้อนหลังอัตโนมัติ
+
+ห้ามใช้คำสั่งต่อไปนี้:
+
+DISABLE TRIGGER ALL ON DATABASE;
+ENABLE TRIGGER ALL ON DATABASE;
+
+เพราะอาจกระทบ trigger อื่นของ SAP หรือเปิด trigger เก่า ORDR/OITM กลับมา
+
+
+1. เช็ก เปิด ปิด Windows Service
+--------------------------------
+
+เปิด PowerShell แบบ Run as Administrator
+
+เช็กว่าติดตั้ง Service หรือยัง:
+
+Get-Service -Name 'OdooSyncWorker'
+
+เช็กรายละเอียด executable, account และ startup mode:
+
+Get-CimInstance Win32_Service -Filter "Name='OdooSyncWorker'" | Select-Object Name, State, StartMode, StartName, PathName
+
+หยุดส่ง Odoo ชั่วคราว:
+
+Stop-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+ผลที่ต้องได้:
+
+Status = Stopped
+
+เริ่มส่ง Odoo:
+
+Start-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+ผลที่ต้องได้:
+
+Status = Running
+
+Restart หลังแก้ appsettings.json:
+
+Restart-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+ตั้งให้เริ่มอัตโนมัติหลัง Windows boot:
+
+Set-Service -Name 'OdooSyncWorker' -StartupType Automatic
+
+คำสั่ง sc.exe ที่ใช้แทน PowerShell ได้:
+
+sc.exe query OdooSyncWorker
+sc.exe stop OdooSyncWorker
+sc.exe start OdooSyncWorker
+sc.exe qc OdooSyncWorker
+
+ถ้า sc.exe query แสดง STATE : 4 RUNNING แปลว่า Service ทำงานอยู่
+ถ้าแสดง STATE : 1 STOPPED แปลว่า Service หยุดอยู่
+
+
+2. เปิด-ปิดเฉพาะ ObjectType ผ่าน appsettings.json
+-------------------------------------------------
+
+ไฟล์บน Server โดยทั่วไป:
+
+C:\Services\OdooSyncWorker\appsettings.json
+
+เปิดทั้ง Production Order และ Delivery จาก A/R Reserve Invoice:
+
+"Worker": {
+  "EnabledObjectTypes": [
+    "ProductionOrder",
+    "ARReserveInvoice"
+  ]
+}
+
+เปิดเฉพาะ Production Order:
+
+"Worker": {
+  "EnabledObjectTypes": [
+    "ProductionOrder"
+  ]
+}
+
+เปิดเฉพาะ Delivery จาก A/R Reserve Invoice:
+
+"Worker": {
+  "EnabledObjectTypes": [
+    "ARReserveInvoice"
+  ]
+}
+
+ข้อควรระวัง:
+
+- ห้ามกำหนด EnabledObjectTypes เป็น array ว่าง เพราะ Worker จะ start ไม่ผ่าน
+- ถ้าต้องการปิดทั้งหมด ให้ Stop-Service แทน
+- Route ที่อยู่ใน EnabledObjectTypes ต้องมี Odoo:Routes:<ObjectType>:Enabled = true
+- ห้ามเปลี่ยนเฉพาะ Routes:<ObjectType>:Enabled เป็น false ขณะที่ ObjectType ยังอยู่ใน
+  EnabledObjectTypes เพราะ Worker จะหยิบ queue ไป process แล้วบันทึกเป็น error/retry
+
+หลังแก้ config ให้ตรวจ JSON และ restart Service:
+
+Get-Content 'C:\Services\OdooSyncWorker\appsettings.json' -Raw | ConvertFrom-Json | Out-Null
+
+Restart-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+
+3. เช็กสถานะ trigger ทุกฐานข้อมูล
+---------------------------------
+
+รันใน SQL Server Management Studio ด้วย user ที่อ่าน sys catalog ได้:
+
+SELECT
+    N'TEST_INTERFACE' AS DatabaseName,
+    S.name COLLATE DATABASE_DEFAULT AS SchemaName,
+    T.name COLLATE DATABASE_DEFAULT AS TableName,
+    TR.name COLLATE DATABASE_DEFAULT AS TriggerName,
+    CASE WHEN TR.is_disabled = 0 THEN 'ENABLED' ELSE 'DISABLED' END AS TriggerStatus,
+    TR.create_date,
+    TR.modify_date
+FROM [TEST_INTERFACE].sys.triggers AS TR
+INNER JOIN [TEST_INTERFACE].sys.tables AS T
+    ON T.object_id = TR.parent_id
+INNER JOIN [TEST_INTERFACE].sys.schemas AS S
+    ON S.schema_id = T.schema_id
+WHERE TR.name IN
+(
+    N'TRG_OWOR_ToOdooQueue',
+    N'TRG_OINV_Reserve_ToOdooQueue',
+    N'TRG_ORDR_ToOdooQueue',
+    N'TRG_OITM_ToOdooQueue'
+)
+
+UNION ALL
+
+SELECT
+    N'TEST_STL_ODOO',
+    S.name COLLATE DATABASE_DEFAULT,
+    T.name COLLATE DATABASE_DEFAULT,
+    TR.name COLLATE DATABASE_DEFAULT,
+    CASE WHEN TR.is_disabled = 0 THEN 'ENABLED' ELSE 'DISABLED' END,
+    TR.create_date, TR.modify_date
+FROM [TEST_STL_ODOO].sys.triggers AS TR
+INNER JOIN [TEST_STL_ODOO].sys.tables AS T
+    ON T.object_id = TR.parent_id
+INNER JOIN [TEST_STL_ODOO].sys.schemas AS S
+    ON S.schema_id = T.schema_id
+WHERE TR.name IN
+(
+    N'TRG_OWOR_ToOdooQueue',
+    N'TRG_OINV_Reserve_ToOdooQueue',
+    N'TRG_ORDR_ToOdooQueue',
+    N'TRG_OITM_ToOdooQueue'
+)
+
+UNION ALL
+
+SELECT
+    N'TIF_GOLIVE',
+    S.name COLLATE DATABASE_DEFAULT,
+    T.name COLLATE DATABASE_DEFAULT,
+    TR.name COLLATE DATABASE_DEFAULT,
+    CASE WHEN TR.is_disabled = 0 THEN 'ENABLED' ELSE 'DISABLED' END,
+    TR.create_date, TR.modify_date
+FROM [TIF_GOLIVE].sys.triggers AS TR
+INNER JOIN [TIF_GOLIVE].sys.tables AS T
+    ON T.object_id = TR.parent_id
+INNER JOIN [TIF_GOLIVE].sys.schemas AS S
+    ON S.schema_id = T.schema_id
+WHERE TR.name IN
+(
+    N'TRG_OWOR_ToOdooQueue',
+    N'TRG_OINV_Reserve_ToOdooQueue',
+    N'TRG_ORDR_ToOdooQueue',
+    N'TRG_OITM_ToOdooQueue'
+)
+
+UNION ALL
+
+SELECT
+    N'SBO_STL_GOLIVE',
+    S.name COLLATE DATABASE_DEFAULT,
+    T.name COLLATE DATABASE_DEFAULT,
+    TR.name COLLATE DATABASE_DEFAULT,
+    CASE WHEN TR.is_disabled = 0 THEN 'ENABLED' ELSE 'DISABLED' END,
+    TR.create_date, TR.modify_date
+FROM [SBO_STL_GOLIVE].sys.triggers AS TR
+INNER JOIN [SBO_STL_GOLIVE].sys.tables AS T
+    ON T.object_id = TR.parent_id
+INNER JOIN [SBO_STL_GOLIVE].sys.schemas AS S
+    ON S.schema_id = T.schema_id
+WHERE TR.name IN
+(
+    N'TRG_OWOR_ToOdooQueue',
+    N'TRG_OINV_Reserve_ToOdooQueue',
+    N'TRG_ORDR_ToOdooQueue',
+    N'TRG_OITM_ToOdooQueue'
+)
+ORDER BY DatabaseName, TableName, TriggerName;
+
+สถานะปกติที่คาดหวัง:
+
+Database       Trigger                            Expected
+-------------- ---------------------------------- --------
+TEST_INTERFACE TRG_OWOR_ToOdooQueue               ENABLED
+TEST_INTERFACE TRG_OINV_Reserve_ToOdooQueue       ENABLED
+TEST_INTERFACE TRG_ORDR_ToOdooQueue               DISABLED ถ้ามี
+TEST_INTERFACE TRG_OITM_ToOdooQueue               DISABLED ถ้ามี
+TEST_STL_ODOO  TRG_OINV_Reserve_ToOdooQueue       ENABLED
+TIF_GOLIVE     TRG_OWOR_ToOdooQueue               ENABLED
+TIF_GOLIVE     TRG_OINV_Reserve_ToOdooQueue       ENABLED
+TIF_GOLIVE     TRG_ORDR_ToOdooQueue               DISABLED ถ้ามี
+TIF_GOLIVE     TRG_OITM_ToOdooQueue               DISABLED ถ้ามี
+SBO_STL_GOLIVE TRG_OINV_Reserve_ToOdooQueue       ENABLED
+
+ถ้า trigger ที่ควรมีไม่แสดงในผลลัพธ์ แปลว่ายังไม่ได้ติดตั้งหรือชื่อไม่ตรง
+ให้ตรวจและติดตั้งจาก Scripts\OdooQueue_Triggers_TEST_PRD.txt
+
+
+4. ปิด-เปิด trigger ฝั่ง TEST
+------------------------------
+
+4.1 ปิด trigger TEST ทั้งหมดของ Odoo queue
+
+USE [TEST_INTERFACE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [TEST_STL_ODOO];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+4.2 เปิด trigger TEST ทั้งหมดของ Odoo queue
+
+USE [TEST_INTERFACE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [TEST_STL_ODOO];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+4.3 ปิดเฉพาะ Production Order ของ TEST
+
+USE [TEST_INTERFACE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+GO
+
+4.4 เปิดเฉพาะ Production Order ของ TEST
+
+USE [TEST_INTERFACE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+GO
+
+4.5 ปิดเฉพาะ Delivery/A-R Reserve Invoice ของ TEST
+
+USE [TEST_INTERFACE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [TEST_STL_ODOO];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+4.6 เปิดเฉพาะ Delivery/A-R Reserve Invoice ของ TEST
+
+USE [TEST_INTERFACE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [TEST_STL_ODOO];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+
+5. ปิด-เปิด trigger ฝั่ง PRD
+-----------------------------
+
+คำเตือน: ตรวจฐานข้อมูลและขออนุมัติก่อนรันทุกครั้ง
+
+5.1 ปิด trigger PRD ทั้งหมดของ Odoo queue
+
+USE [TIF_GOLIVE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [SBO_STL_GOLIVE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+5.2 เปิด trigger PRD ทั้งหมดของ Odoo queue
+
+USE [TIF_GOLIVE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [SBO_STL_GOLIVE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+5.3 ปิดเฉพาะ Production Order ของ PRD
+
+USE [TIF_GOLIVE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+GO
+
+5.4 เปิดเฉพาะ Production Order ของ PRD
+
+USE [TIF_GOLIVE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OWOR_ToOdooQueue] ON [dbo].[OWOR];
+GO
+
+5.5 ปิดเฉพาะ Delivery/A-R Reserve Invoice ของ PRD
+
+USE [TIF_GOLIVE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [SBO_STL_GOLIVE];
+GO
+DISABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+5.6 เปิดเฉพาะ Delivery/A-R Reserve Invoice ของ PRD
+
+USE [TIF_GOLIVE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+USE [SBO_STL_GOLIVE];
+GO
+ENABLE TRIGGER [dbo].[TRG_OINV_Reserve_ToOdooQueue] ON [dbo].[OINV];
+GO
+
+
+6. เช็ก event และ source code ภายใน trigger
+-------------------------------------------
+
+เปลี่ยน USE เป็นฐานข้อมูลที่ต้องการตรวจ:
+
+USE [TEST_INTERFACE];
+GO
+
+SELECT
+    TR.name AS TriggerName,
+    S.name AS SchemaName,
+    T.name AS TableName,
+    E.type_desc AS TriggerEvent,
+    TR.is_disabled,
+    TR.modify_date
+FROM sys.triggers AS TR
+INNER JOIN sys.tables AS T
+    ON T.object_id = TR.parent_id
+INNER JOIN sys.schemas AS S
+    ON S.schema_id = T.schema_id
+LEFT JOIN sys.trigger_events AS E
+    ON E.object_id = TR.object_id
+WHERE TR.name IN
+(
+    N'TRG_OWOR_ToOdooQueue',
+    N'TRG_OINV_Reserve_ToOdooQueue'
+)
+ORDER BY TR.name, E.type_desc;
+GO
+
+ดู definition ของ Production Order trigger:
+
+SELECT OBJECT_DEFINITION(OBJECT_ID(N'dbo.TRG_OWOR_ToOdooQueue')) AS TriggerDefinition;
+GO
+
+ดู definition ของ A/R Reserve Invoice trigger:
+
+SELECT OBJECT_DEFINITION(OBJECT_ID(N'dbo.TRG_OINV_Reserve_ToOdooQueue')) AS TriggerDefinition;
+GO
+
+
+7. เช็ก queue ก่อนและหลังเปิด-ปิด
+---------------------------------
+
+สรุปจำนวน queue ตามสถานะ:
+
+SELECT
+    Status,
+    ObjectType,
+    SiteId,
+    CompanyName,
+    COUNT_BIG(*) AS QueueCount,
+    MIN(CreateDate) AS OldestCreateDate,
+    MAX(CreateDate) AS LatestCreateDate
+FROM TEMP_API.dbo.INT_OdooQueue
+GROUP BY Status, ObjectType, SiteId, CompanyName
+ORDER BY Status, ObjectType, SiteId, CompanyName;
+
+ดู 100 รายการล่าสุด:
+
+SELECT TOP (100)
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    SapDatabaseName,
+    Status,
+    RetryCount,
+    CreateDate,
+    ProcessDate,
+    LastErrorDate,
+    ErrorMessage
+FROM TEMP_API.dbo.INT_OdooQueue
+ORDER BY QueueId DESC;
+
+ดู queue ที่ยังรอส่ง:
+
+SELECT
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    Status,
+    RetryCount,
+    CreateDate
+FROM TEMP_API.dbo.INT_OdooQueue
+WHERE Status = 'N'
+ORDER BY QueueId;
+
+ดู queue ที่ค้าง Processing:
+
+SELECT
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    Status,
+    RetryCount,
+    CreateDate,
+    ProcessDate,
+    ProcessBy
+FROM TEMP_API.dbo.INT_OdooQueue
+WHERE Status = 'P'
+ORDER BY ProcessDate;
+
+ห้ามเปลี่ยน P กลับเป็น N ทันทีโดยไม่ตรวจ Odoo และ log ก่อน
+เพราะ request อาจส่งถึง Odoo แล้ว และการ retry อาจทำข้อมูลซ้ำ
+
+ดู error ล่าสุด:
+
+SELECT TOP (100)
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    RetryCount,
+    LastErrorDate,
+    ErrorMessage,
+    ResponseJson
+FROM TEMP_API.dbo.INT_OdooQueue
+WHERE Status = 'E'
+ORDER BY COALESCE(LastErrorDate, CreateDate) DESC;
+
+ความหมาย Status:
+
+N = New / รอส่ง
+P = Processing / กำลังส่ง
+S = Success / ส่งสำเร็จ
+E = Error / ส่งไม่สำเร็จครบจำนวน retry
+
+
+8. วิธีทดสอบ trigger บน TEST แบบไม่ยิง Odoo ทันที
+----------------------------------------------------
+
+1. หยุด Worker แต่ไม่ปิด trigger:
+
+Stop-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+2. จด QueueId ล่าสุด:
+
+SELECT ISNULL(MAX(QueueId), 0) AS BeforeQueueId
+FROM TEMP_API.dbo.INT_OdooQueue;
+
+3. ทำรายการจริงผ่าน SAP Business One Client ในฐาน TEST เท่านั้น:
+
+- Release Production Order ใน TEST_INTERFACE
+  ควรได้ ObjectType = ProductionOrder, ActionType = RELEASED, SiteId = TEST-TIF
+
+- Cancel Production Order ใน TEST_INTERFACE
+  ควรได้ ObjectType = ProductionOrder, ActionType = CANCEL, SiteId = TEST-TIF
+
+- Add A/R Reserve Invoice
+  TEST_INTERFACE ควรได้ SiteId = TEST-TIF, CompanyName = TIF
+  TEST_STL_ODOO  ควรได้ SiteId = TEST-STL, CompanyName = STL
+
+- Cancel A/R Reserve Invoice ต้นฉบับ
+  ควรได้ ObjectType = ARReserveInvoice, ActionType = CANCEL
+
+ห้าม INSERT หรือ UPDATE ตาราง OWOR/OINV โดยตรงเพื่อทดสอบ
+ต้องทำรายการผ่าน SAP Business One เพื่อไม่ข้าม business logic ของ SAP
+
+4. ใส่ BeforeQueueId ที่จดไว้แล้วตรวจ queue ใหม่:
+
+DECLARE @BeforeQueueId INT = <ใส่ QueueId ที่จดไว้>;
+
+SELECT
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    Status,
+    RetryCount,
+    CreateDate
+FROM TEMP_API.dbo.INT_OdooQueue
+WHERE QueueId > @BeforeQueueId
+ORDER BY QueueId;
+
+เมื่อ Worker หยุดอยู่ รายการใหม่ควรเป็น Status = 'N'
+
+5. ถ้าข้อมูลถูกต้อง ให้เริ่ม Worker และตรวจจนเป็น S หรือ E:
+
+Start-Service -Name 'OdooSyncWorker'
+Get-Service -Name 'OdooSyncWorker'
+
+SELECT TOP (100)
+    QueueId,
+    ObjectType,
+    ObjectKey,
+    ActionType,
+    SiteId,
+    CompanyName,
+    SapDatabaseName,
+    Status,
+    RetryCount,
+    ErrorMessage,
+    ResponseJson
+FROM TEMP_API.dbo.INT_OdooQueue
+ORDER BY QueueId DESC;
+
+
+9. Runbook หยุดและเปิดระบบทั้งหมด
+----------------------------------
+
+หยุดระบบทั้งหมดโดยไม่ให้ Worker ส่งต่อ:
+
+1. Stop-Service -Name 'OdooSyncWorker'
+2. Get-Service -Name 'OdooSyncWorker' และยืนยัน Status = Stopped
+3. รัน DISABLE trigger เฉพาะ environment ที่ต้องการ
+4. รัน query หัวข้อ 3 และยืนยัน trigger เป็น DISABLED
+5. รัน query หัวข้อ 7 และจด queue N/P/E ก่อน maintenance
+
+เปิดระบบทั้งหมด:
+
+1. รัน ENABLE trigger เฉพาะ environment ที่ต้องการ
+2. รัน query หัวข้อ 3 และยืนยัน trigger ที่ใช้งานเป็น ENABLED
+3. ยืนยัน TRG_ORDR_ToOdooQueue และ TRG_OITM_ToOdooQueue ยัง DISABLED ถ้ามี
+4. Start-Service -Name 'OdooSyncWorker'
+5. Get-Service -Name 'OdooSyncWorker' และยืนยัน Status = Running
+6. ตรวจ TEMP_API.dbo.INT_OdooQueue จน backlog เปลี่ยนจาก N เป็น S หรือ E
+
+ถ้า maintenance ไม่จำเป็นต้องหยุดการสร้าง queue ให้ใช้ Stop/Start Service อย่างเดียว
+เพื่อไม่ให้ SAP event ที่เกิดระหว่าง maintenance หายจาก queue
+
+
+10. ไฟล์อ้างอิงในโปรเจกต์
+--------------------------
+
+ติดตั้งหรือแก้ definition ของ trigger:
+Scripts\OdooQueue_Triggers_TEST_PRD.txt
+
+ติดตั้งและตรวจ queue table:
+Scripts\INT_OdooQueue_Setup.txt
+
+ติดตั้งและ update Windows Service:
+Scripts\WindowsService_Deploy_Guide.txt

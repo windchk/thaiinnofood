@@ -62,6 +62,8 @@ Rules
 - For bin-managed warehouses, send sourceBins and targetBins under each batch.
 - Serial-managed items are rejected by this version.
 - The API reads the actual Goods Issue StockPrice and uses it as the STL Goods Receipt UnitPrice.
+- Goods Issue and Goods Receipt lines use the fixed AccountCode 91010114.
+- AccountCode 91010114 must exist and be postable in both source and target companies.
 - The API creates Goods Issue first. If STL fails, retry the identical request and transferId;
   the API recovers the existing Goods Issue and continues the Goods Receipt.
 

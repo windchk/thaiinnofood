@@ -333,7 +333,8 @@ Bin availability without batch = OIBQ + OBIN
 ProductionOrder line batch/bin:
 batches:
   Available batches for the component item in that line warehouse.
-  Use this when Odoo sends Issue From Production back with batch-managed items.
+  For Item Group 109/110, use this list when Odoo sends Issue From Production back.
+  For other item groups, Odoo can omit batch selection because OdooSapApi auto-selects it.
 
 batches[].bins:
   Available bin quantities for that batch.
