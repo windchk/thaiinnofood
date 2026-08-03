@@ -8,6 +8,25 @@ namespace OdooSapApi.Services;
 
 public class SapDiApiProductionService : ISapProductionService
 {
+    internal const int ProductionOrderItemLineType = 4;
+    internal const int ProductionOrderResourceLineType = 290;
+    internal const string ProductionIssueLineLookupSql = """
+        SELECT TOP 1
+            L.ItemCode,
+            L.ItemType,
+            I.ItmsGrpCod,
+            I.ManBtchNum,
+            W.BinActivat
+        FROM dbo.WOR1 L
+        LEFT JOIN dbo.OITM I
+            ON L.ItemType = 4
+           AND I.ItemCode = L.ItemCode
+        INNER JOIN dbo.OWHS W
+            ON W.WhsCode = @Warehouse
+        WHERE L.DocEntry = @DocEntry
+          AND L.LineNum = @LineNum;
+        """;
+
     private readonly SapCompanyOptions _options;
     private readonly ILogger<SapDiApiProductionService> _logger;
     private readonly SapCompanyResolver _companyResolver;
@@ -115,6 +134,13 @@ public class SapDiApiProductionService : ISapProductionService
                 companyDb,
                 request.DocEntry,
                 line);
+
+            if (itemInfo.IsResource)
+            {
+                ValidateResourceIssueLine(line);
+                continue;
+            }
+
             IReadOnlyCollection<AvailableProductionBatch> availableBatches = [];
 
             if (itemInfo.BatchManaged && !UsesJsonBatchSelection(itemInfo.ItemGroupCode))
@@ -156,20 +182,7 @@ public class SapDiApiProductionService : ISapProductionService
         ProductionIssueLineRequest line)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT TOP 1
-                L.ItemCode,
-                I.ItmsGrpCod,
-                I.ManBtchNum,
-                W.BinActivat
-            FROM dbo.WOR1 L
-            INNER JOIN dbo.OITM I
-                ON I.ItemCode = L.ItemCode
-            INNER JOIN dbo.OWHS W
-                ON W.WhsCode = @Warehouse
-            WHERE L.DocEntry = @DocEntry
-              AND L.LineNum = @LineNum;
-            """;
+        command.CommandText = ProductionIssueLineLookupSql;
         command.Parameters.AddWithValue("@Warehouse", line.Warehouse);
         command.Parameters.AddWithValue("@DocEntry", productionOrderDocEntry);
         command.Parameters.AddWithValue("@LineNum", line.LineNum);
@@ -179,22 +192,46 @@ public class SapDiApiProductionService : ISapProductionService
         if (!reader.Read())
         {
             throw new ArgumentException(
-                $"Production order item or warehouse not found. companyName={companyDb}, docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, warehouse={line.Warehouse}");
+                $"Production order line or warehouse not found. companyName={companyDb}, docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, warehouse={line.Warehouse}");
         }
 
-        var productionOrderItemCode = Convert.ToString(reader["ItemCode"])?.Trim() ?? "";
+        var productionOrderLineCode = Convert.ToString(reader["ItemCode"])?.Trim() ?? "";
 
         if (!string.Equals(
-                productionOrderItemCode,
+                productionOrderLineCode,
                 line.ItemCode.Trim(),
                 StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(
-                $"issueLines[].itemCode does not match the Production Order line. docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, expectedItemCode={productionOrderItemCode}, itemCode={line.ItemCode}");
+                $"issueLines[].itemCode does not match the Production Order line. docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, expectedItemCode={productionOrderLineCode}, itemCode={line.ItemCode}");
+        }
+
+        var lineType = Convert.ToInt32(reader["ItemType"]);
+
+        if (lineType == ProductionOrderResourceLineType)
+        {
+            return new ProductionIssueItemInfo(
+                productionOrderLineCode,
+                ItemGroupCode: 0,
+                BatchManaged: false,
+                BinManaged: false,
+                IsResource: true);
+        }
+
+        if (lineType != ProductionOrderItemLineType)
+        {
+            throw new ArgumentException(
+                $"Production order line type is not supported for Issue From Production. docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, itemType={lineType}");
+        }
+
+        if (reader.IsDBNull(reader.GetOrdinal("ItmsGrpCod")))
+        {
+            throw new ArgumentException(
+                $"Production order item was not found in item master data. companyName={companyDb}, docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, itemCode={productionOrderLineCode}");
         }
 
         return new ProductionIssueItemInfo(
-            productionOrderItemCode,
+            productionOrderLineCode,
             Convert.ToInt32(reader["ItmsGrpCod"]),
             string.Equals(
                 Convert.ToString(reader["ManBtchNum"]),
@@ -204,6 +241,17 @@ public class SapDiApiProductionService : ISapProductionService
                 Convert.ToString(reader["BinActivat"]),
                 "Y",
                 StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static void ValidateResourceIssueLine(ProductionIssueLineRequest line)
+    {
+        if (!string.IsNullOrWhiteSpace(line.BatchNumber)
+            || line.Batches.Count > 0
+            || line.Bins.Count > 0)
+        {
+            throw new ArgumentException(
+                $"batchNumber, batches and bins must be empty for resource line. lineNum={line.LineNum}, resourceCode={line.ItemCode}");
+        }
     }
 
     private static List<AvailableProductionBatch> ReadAvailableProductionBatches(
@@ -984,7 +1032,8 @@ internal sealed record ProductionIssueItemInfo(
     string ItemCode,
     int ItemGroupCode,
     bool BatchManaged,
-    bool BinManaged);
+    bool BinManaged,
+    bool IsResource = false);
 
 internal sealed class AvailableProductionBatch(
     int batchAbsEntry,

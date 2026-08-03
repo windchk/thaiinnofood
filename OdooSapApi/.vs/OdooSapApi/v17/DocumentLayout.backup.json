@@ -3,8 +3,24 @@
   "WorkspaceRootPath": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\scripts\\goodsissue_goodsreceipt_request_and_deploy.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:scripts\\goodsissue_goodsreceipt_request_and_deploy.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\scripts\\odoosapapi_jsonbodies.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:scripts\\odoosapapi_jsonbodies.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\services\\sapdiapiproductionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:services\\sapdiapiproductionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\controllers\\productionorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:controllers\\productionorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\controllers\\sapconnectioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -19,10 +35,6 @@
       "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\services\\sapdiapiproductionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:services\\sapdiapiproductionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|c:\\users\\user\\documents\\github\\thaiinnofood\\odoosapapi\\models\\deliverylinerequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{541C53E7-B145-4043-8F99-B67E848EC0C5}|OdooSapApi.csproj|solutionrelative:models\\deliverylinerequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -34,11 +46,50 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GoodsIssue_GoodsReceipt_Request_And_Deploy.txt",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Scripts\\GoodsIssue_GoodsReceipt_Request_And_Deploy.txt",
+              "RelativeDocumentMoniker": "Scripts\\GoodsIssue_GoodsReceipt_Request_And_Deploy.txt",
+              "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Scripts\\GoodsIssue_GoodsReceipt_Request_And_Deploy.txt",
+              "RelativeToolTip": "Scripts\\GoodsIssue_GoodsReceipt_Request_And_Deploy.txt",
+              "ViewState": "AgIAAGMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-08-01T06:46:39.39Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "OdooSapApi_JsonBodies.txt",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Scripts\\OdooSapApi_JsonBodies.txt",
+              "RelativeDocumentMoniker": "Scripts\\OdooSapApi_JsonBodies.txt",
+              "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Scripts\\OdooSapApi_JsonBodies.txt",
+              "RelativeToolTip": "Scripts\\OdooSapApi_JsonBodies.txt",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-08-01T06:46:16.726Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ProductionOrdersController.cs",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Controllers\\ProductionOrdersController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ProductionOrdersController.cs",
+              "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Controllers\\ProductionOrdersController.cs",
+              "RelativeToolTip": "Controllers\\ProductionOrdersController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-01T05:43:06.399Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "SapConnectionController.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Controllers\\SapConnectionController.cs",
               "RelativeDocumentMoniker": "Controllers\\SapConnectionController.cs",
@@ -50,7 +101,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "GoodsIssueGoodsReceiptController.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Controllers\\GoodsIssueGoodsReceiptController.cs",
               "RelativeDocumentMoniker": "Controllers\\GoodsIssueGoodsReceiptController.cs",
@@ -62,19 +113,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "SapDiApiProductionService.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Services\\SapDiApiProductionService.cs",
               "RelativeDocumentMoniker": "Services\\SapDiApiProductionService.cs",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Services\\SapDiApiProductionService.cs",
               "RelativeToolTip": "Services\\SapDiApiProductionService.cs",
-              "ViewState": "AgIAAPIBAAAAAAAAAAAiwPMBAAATAAAAAAAAAA==",
+              "ViewState": "AgIAAM4DAAAAAAAAAAAAAPMBAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T17:23:37.343Z"
+              "WhenOpened": "2026-07-22T17:23:37.343Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "DeliveryLineRequest.cs",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\Models\\DeliveryLineRequest.cs",
               "RelativeDocumentMoniker": "Models\\DeliveryLineRequest.cs",
@@ -86,7 +138,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\appsettings.Development.json",
               "RelativeDocumentMoniker": "appsettings.Development.json",
@@ -98,13 +150,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
               "ToolTip": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSapApi\\appsettings.json",
               "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAgAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAABUAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-07-22T15:43:24.845Z",
               "EditorCaption": ""

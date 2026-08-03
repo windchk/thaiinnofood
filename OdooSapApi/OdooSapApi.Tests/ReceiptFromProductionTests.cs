@@ -105,6 +105,67 @@ public class ReceiptFromProductionTests
         Assert.Equal(1, documentLine.BinAllocations.AddCount);
     }
 
+    [Fact]
+    public void ConfigureIssueLine_ResourceUsesProductionOrderBaseWithoutInventoryAllocations()
+    {
+        var service = CreateService();
+        var documentLine = new FakeDocumentLine();
+        var requestLine = new ProductionIssueLineRequest
+        {
+            LineNum = 0,
+            ItemCode = "LB-505",
+            Quantity = 0.1m,
+            Warehouse = "WH-PD"
+        };
+
+        service.ConfigureIssueLine("TEST_DB", documentLine, 48900, requestLine);
+
+        Assert.Equal(202, documentLine.BaseType);
+        Assert.Equal(48900, documentLine.BaseEntry);
+        Assert.Equal(0, documentLine.BaseLine);
+        Assert.Equal(0, documentLine.ItemCodeSetCount);
+        Assert.Equal(0.1d, documentLine.Quantity);
+        Assert.Equal("WH-PD", documentLine.WarehouseCode);
+        Assert.Equal(0, documentLine.BatchNumbers.AddCount);
+        Assert.Equal(0, documentLine.BinAllocations.AddCount);
+    }
+
+    [Fact]
+    public void ProductionIssueLineLookup_UsesWor1TypeAndDoesNotRequireOitmForResource()
+    {
+        Assert.Contains(
+            "L.ItemType",
+            SapDiApiProductionService.ProductionIssueLineLookupSql,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "LEFT JOIN dbo.OITM",
+            SapDiApiProductionService.ProductionIssueLineLookupSql,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "INNER JOIN dbo.OITM",
+            SapDiApiProductionService.ProductionIssueLineLookupSql,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ValidateResourceIssueLine_RejectsInventoryBatchOrBinSelection()
+    {
+        var line = new ProductionIssueLineRequest
+        {
+            LineNum = 0,
+            ItemCode = "LB-505",
+            Quantity = 0.1m,
+            Warehouse = "WH-PD",
+            BatchNumber = "INVALID-RESOURCE-BATCH"
+        };
+
+        var exception = Assert.Throws<ArgumentException>(
+            () => SapDiApiProductionService.ValidateResourceIssueLine(line));
+
+        Assert.Contains("must be empty for resource line", exception.Message);
+        Assert.Contains("LB-505", exception.Message);
+    }
+
     [Theory]
     [InlineData(109, true)]
     [InlineData(110, true)]

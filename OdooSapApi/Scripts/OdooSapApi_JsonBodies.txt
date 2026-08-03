@@ -73,6 +73,11 @@ POST /api/sap/production/issue
 - ถ้า batch stock ไม่พอ API จะไม่สร้าง Issue From Production และตอบ error พร้อม itemCode, warehouse, required และ available
 - issueLines[].itemCode ต้องตรงกับ item ของ Production Order line ตาม docEntry + lineNum
 
+กฎสำหรับ Resource line
+- API ตรวจจาก WOR1.ItemType = 290 โดยใช้ payload เดิม: lineNum, itemCode, quantity และ warehouse
+- Resource line ไม่เข้า OITM, Item Group, Batch หรือ Bin selection
+- ห้ามส่ง batchNumber, batches[] หรือ bins[] สำหรับ Resource line
+
 Issue: ไม่มี batch และไม่มี bin
 -------------------------------
 {
@@ -221,6 +226,7 @@ Issue mapping เข้า SAP DI API
 - issueLines[].batches[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
 - issueLines[].batches[].bins[].quantity -> document.Lines.BinAllocations.Quantity
 - API ใส่ document.Lines.BaseType = 202 เอง
+- Resource line (WOR1.ItemType = 290) ใช้ BaseType/BaseEntry/BaseLine/Quantity/Warehouse เหมือนเดิม แต่ไม่กำหนด Batch หรือ Bin
 
 
 2. Receipt From Production
