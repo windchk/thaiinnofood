@@ -10,8 +10,8 @@ Endpoint
 POST /api/sap/delivery
 Content-Type: application/json
 
-Request example: batch without bin
-----------------------------------
+Request example (batch/bin can be omitted)
+------------------------------------------
 {
   "siteId": "TEST-TIF",
   "companyName": "TEST_INTERFACE",
@@ -22,23 +22,13 @@ Request example: batch without bin
     {
       "lineNum": 0,
       "quantity": 10,
-      "warehouse": "WH-FG",
-      "batches": [
-        {
-          "batchNumber": "FG-BATCH-001",
-          "quantity": 4
-        },
-        {
-          "batchNumber": "FG-BATCH-002",
-          "quantity": 6
-        }
-      ]
+      "warehouse": "WH-FG"
     }
   ]
 }
 
-Request example: batch with bin
--------------------------------
+Compatibility example (caller batch/bin values are ignored)
+-----------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "companyName": "TIF_GOLIVE",
@@ -73,8 +63,13 @@ Field mapping
 - SAP Delivery object type is 15.
 - SAP base document type is 13 (A/R Invoice / A/R Reserve Invoice).
 - ItemCode is not accepted in the request. SAP derives it from BaseEntry/BaseLine.
-- The sum of batches[].quantity must equal the delivery line quantity.
-- When a batch uses bins, use batches[].bins. Do not send line-level bins.
+- The batchNumber, batches[] and bins[] fields remain in the JSON contract, but
+  caller values are ignored.
+- For batch-managed items, the API first uses batches allocated on the A/R Reserve
+  Invoice. If the allocation is incomplete, it selects the remaining quantity by
+  Batch Number ascending, matching the default SAP Auto Select sort.
+- The API sends no explicit BinAllocations. SAP applies the warehouse's automatic
+  issue allocation rule.
 - A duplicate lineNum in the same request is rejected.
 
 Database mapping

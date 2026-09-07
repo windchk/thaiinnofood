@@ -158,130 +158,16 @@ public static class IntercompanyTransferValidator
             throw new ArgumentException("lines[].targetWarehouse must not exceed 8 characters.");
         }
 
-        if (line.Batches is null || line.SourceBins is null || line.TargetBins is null)
-        {
-            throw new ArgumentException(
-                "lines[].batches, lines[].sourceBins and lines[].targetBins cannot be null.");
-        }
-
-        if (line.Batches.Count > 0)
-        {
-            if (line.SourceBins.Count > 0 || line.TargetBins.Count > 0)
-            {
-                throw new ArgumentException(
-                    "Use batches[].sourceBins/targetBins when batches is sent.");
-            }
-
-            if (line.Batches.Sum(x => x.Quantity) != line.Quantity)
-            {
-                throw new ArgumentException(
-                    "Sum of lines[].batches[].quantity must equal line quantity.");
-            }
-
-            var duplicateBatch = line.Batches
-                .Where(x => !string.IsNullOrWhiteSpace(x.BatchNumber))
-                .GroupBy(x => x.BatchNumber.Trim(), StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault(x => x.Count() > 1);
-
-            if (duplicateBatch is not null)
-            {
-                throw new ArgumentException(
-                    $"Batch number must be unique within a line. Duplicate batchNumber={duplicateBatch.Key}.");
-            }
-
-            foreach (var batch in line.Batches)
-            {
-                ValidateBatch(batch);
-            }
-
-            return;
-        }
-
-        ValidateBins(line.SourceBins, line.Quantity, "lines[].sourceBins");
-        ValidateBins(line.TargetBins, line.Quantity, "lines[].targetBins");
+        ClearCallerInventoryAllocations(line);
     }
 
-    private static void ValidateBatch(IntercompanyTransferBatchRequest batch)
+    internal static void ClearCallerInventoryAllocations(
+        IntercompanyTransferLineRequest line)
     {
-        batch.BatchNumber = batch.BatchNumber?.Trim() ?? "";
-
-        if (string.IsNullOrWhiteSpace(batch.BatchNumber))
-        {
-            throw new ArgumentException("lines[].batches[].batchNumber is required.");
-        }
-
-        if (batch.BatchNumber.Length > 32)
-        {
-            throw new ArgumentException(
-                "lines[].batches[].batchNumber must not exceed 32 characters.");
-        }
-
-        if (batch.Quantity <= 0)
-        {
-            throw new ArgumentException("lines[].batches[].quantity must be greater than 0.");
-        }
-
-        if (batch.SourceBins is null || batch.TargetBins is null)
-        {
-            throw new ArgumentException(
-                "lines[].batches[].sourceBins and targetBins cannot be null.");
-        }
-
-        if (batch.ExpiryDate.HasValue
-            && batch.ManufacturingDate.HasValue
-            && batch.ExpiryDate.Value.Date < batch.ManufacturingDate.Value.Date)
-        {
-            throw new ArgumentException(
-                "Batch expiryDate cannot be earlier than manufacturingDate.");
-        }
-
-        ValidateBins(batch.SourceBins, batch.Quantity, "lines[].batches[].sourceBins");
-        ValidateBins(batch.TargetBins, batch.Quantity, "lines[].batches[].targetBins");
-    }
-
-    private static void ValidateBins(
-        List<ProductionBinAllocationRequest> bins,
-        decimal expectedQuantity,
-        string fieldName)
-    {
-        if (bins.Count == 0)
-        {
-            return;
-        }
-
-        if (bins.Sum(x => x.Quantity) != expectedQuantity)
-        {
-            throw new ArgumentException(
-                $"Sum of {fieldName}[].quantity must equal related quantity.");
-        }
-
-        foreach (var bin in bins)
-        {
-            bin.BinCode = bin.BinCode?.Trim() ?? "";
-
-            if (bin.Quantity <= 0)
-            {
-                throw new ArgumentException(
-                    $"{fieldName}[].quantity must be greater than 0.");
-            }
-
-            if (!bin.BinAbsEntry.HasValue && string.IsNullOrWhiteSpace(bin.BinCode))
-            {
-                throw new ArgumentException(
-                    $"{fieldName}[].binAbsEntry or binCode is required.");
-            }
-
-            if (bin.BinAbsEntry.HasValue && bin.BinAbsEntry.Value <= 0)
-            {
-                throw new ArgumentException(
-                    $"{fieldName}[].binAbsEntry must be greater than 0.");
-            }
-
-            if (bin.BinCode.Length > 228)
-            {
-                throw new ArgumentException(
-                    $"{fieldName}[].binCode must not exceed 228 characters.");
-            }
-        }
+        // Batch and bin fields remain in the payload contract, but SAP-side
+        // automatic selection is authoritative for this process.
+        line.Batches = [];
+        line.SourceBins = [];
+        line.TargetBins = [];
     }
 }

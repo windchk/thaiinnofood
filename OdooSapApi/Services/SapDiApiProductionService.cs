@@ -26,6 +26,21 @@ public class SapDiApiProductionService : ISapProductionService
         WHERE L.DocEntry = @DocEntry
           AND L.LineNum = @LineNum;
         """;
+    internal const string AvailableBatchLookupSql = """
+        SELECT
+            B.AbsEntry AS BatchAbsEntry,
+            B.DistNumber AS BatchNumber,
+            CAST(Q.Quantity - ISNULL(Q.CommitQty, 0) AS DECIMAL(19,6)) AS Quantity
+        FROM dbo.OBTQ Q
+        INNER JOIN dbo.OBTN B
+            ON B.ItemCode = Q.ItemCode
+           AND B.SysNumber = Q.SysNumber
+        WHERE Q.ItemCode = @ItemCode
+          AND Q.WhsCode = @Warehouse
+          AND Q.Quantity - ISNULL(Q.CommitQty, 0) > 0
+          AND (@ReleasedOnly = 0 OR B.Status = '0')
+        ORDER BY B.DistNumber, B.SysNumber;
+        """;
 
     private readonly SapCompanyOptions _options;
     private readonly ILogger<SapDiApiProductionService> _logger;
@@ -92,8 +107,8 @@ public class SapDiApiProductionService : ISapProductionService
         try
         {
             var companyDb = _companyResolver.ResolveCompanyDb(request.SiteId);
-            PrepareIssueBatchSelections(companyDb, request);
             company = ConnectCompany(companyDb);
+            PrepareIssueBatchSelections(company, companyDb, request);
 
             return Task.FromResult(CreateIssueFromProduction(company, companyDb, request));
         }
@@ -110,6 +125,7 @@ public class SapDiApiProductionService : ISapProductionService
         try
         {
             var companyDb = _companyResolver.ResolveCompanyDb(request.SiteId);
+            PrepareReceiptBatchSelections(companyDb, request);
             company = ConnectCompany(companyDb);
 
             return Task.FromResult(CreateReceiptFromProduction(company, companyDb, request));
@@ -120,57 +136,93 @@ public class SapDiApiProductionService : ISapProductionService
         }
     }
 
-    private void PrepareIssueBatchSelections(string companyDb, ProductionIssueRequest request)
+    private void PrepareIssueBatchSelections(
+        dynamic company,
+        string companyDb,
+        ProductionIssueRequest request)
     {
         using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
         connection.Open();
         var automaticBatchAvailability = new Dictionary<string, List<AvailableProductionBatch>>(
             StringComparer.OrdinalIgnoreCase);
+        dynamic? productionOrder = null;
 
-        foreach (var line in request.IssueLines)
+        try
         {
-            var itemInfo = ReadProductionIssueItemInfo(
-                connection,
-                companyDb,
-                request.DocEntry,
-                line);
+            productionOrder = company.GetBusinessObject(_options.ProductionOrderObjectType);
 
-            if (itemInfo.IsResource)
+            if (!productionOrder.GetByKey(request.DocEntry))
             {
-                ValidateResourceIssueLine(line);
-                continue;
+                throw new ArgumentException(
+                    $"Production Order not found. DocEntry={request.DocEntry}");
             }
 
-            IReadOnlyCollection<AvailableProductionBatch> availableBatches = [];
-
-            if (itemInfo.BatchManaged && !UsesJsonBatchSelection(itemInfo.ItemGroupCode))
+            foreach (var line in request.IssueLines)
             {
-                var availabilityKey = $"{line.ItemCode.Trim()}\u001F{line.Warehouse.Trim()}";
+                var itemInfo = ReadProductionIssueItemInfo(
+                    connection,
+                    companyDb,
+                    request.DocEntry,
+                    line);
 
-                if (!automaticBatchAvailability.TryGetValue(availabilityKey, out var cachedBatches))
+                if (itemInfo.IsResource)
                 {
-                    cachedBatches = ReadAvailableProductionBatches(
-                        connection,
-                        line.ItemCode,
-                        line.Warehouse,
-                        itemInfo.BinManaged);
-                    automaticBatchAvailability.Add(availabilityKey, cachedBatches);
+                    ValidateResourceIssueLine(line);
+                    continue;
                 }
 
-                availableBatches = cachedBatches;
+                IReadOnlyCollection<ProductionBatchRequest> productionOrderBatches = [];
+                IReadOnlyCollection<AvailableProductionBatch> availableBatches = [];
+
+                if (itemInfo.BatchManaged)
+                {
+                    productionOrderBatches = ReadDocumentLineBatches(
+                        (object)productionOrder.Lines,
+                        line.LineNum);
+                    var productionOrderBatchQuantity = productionOrderBatches.Sum(x => x.Quantity);
+
+                    if (productionOrderBatchQuantity < line.Quantity)
+                    {
+                        var availabilityKey = $"{line.ItemCode.Trim()}\u001F{line.Warehouse.Trim()}";
+
+                        if (!automaticBatchAvailability.TryGetValue(
+                                availabilityKey,
+                                out var cachedBatches))
+                        {
+                            cachedBatches = ReadAvailableProductionBatches(
+                                connection,
+                                line.ItemCode,
+                                line.Warehouse);
+                            automaticBatchAvailability.Add(availabilityKey, cachedBatches);
+                        }
+
+                        availableBatches = cachedBatches;
+                    }
+                }
+
+                ApplyIssueBatchSelectionPolicy(
+                    line,
+                    itemInfo,
+                    productionOrderBatches,
+                    availableBatches);
+
+                if (itemInfo.BatchManaged)
+                {
+                    _logger.LogInformation(
+                        "Selected Issue From Production batches. ItemCode={ItemCode}, Warehouse={Warehouse}, Batches={Batches}",
+                        line.ItemCode,
+                        line.Warehouse,
+                        string.Join(
+                            ", ",
+                            line.Batches.Select(batch => $"{batch.BatchNumber}:{batch.Quantity}")));
+                }
             }
-
-            ApplyIssueBatchSelectionPolicy(line, itemInfo, availableBatches);
-
-            if (itemInfo.BatchManaged && !UsesJsonBatchSelection(itemInfo.ItemGroupCode))
+        }
+        finally
+        {
+            if (productionOrder is not null)
             {
-                _logger.LogInformation(
-                    "Auto-selected Issue From Production batches. ItemCode={ItemCode}, Warehouse={Warehouse}, Batches={Batches}",
-                    line.ItemCode,
-                    line.Warehouse,
-                    string.Join(
-                        ", ",
-                        line.Batches.Select(batch => $"{batch.BatchNumber}:{batch.Quantity}")));
+                Marshal.FinalReleaseComObject(productionOrder);
             }
         }
     }
@@ -245,41 +297,23 @@ public class SapDiApiProductionService : ISapProductionService
 
     internal static void ValidateResourceIssueLine(ProductionIssueLineRequest line)
     {
-        if (!string.IsNullOrWhiteSpace(line.BatchNumber)
-            || line.Batches.Count > 0
-            || line.Bins.Count > 0)
-        {
-            throw new ArgumentException(
-                $"batchNumber, batches and bins must be empty for resource line. lineNum={line.LineNum}, resourceCode={line.ItemCode}");
-        }
+        ClearInventoryAllocations(line);
     }
 
-    private static List<AvailableProductionBatch> ReadAvailableProductionBatches(
+    internal static List<AvailableProductionBatch> ReadAvailableProductionBatches(
         SqlConnection connection,
         string itemCode,
         string warehouse,
-        bool binManaged)
+        bool releasedOnly = false)
     {
         var batches = new List<AvailableProductionBatch>();
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = """
-                SELECT
-                    B.AbsEntry AS BatchAbsEntry,
-                    B.DistNumber AS BatchNumber,
-                    CAST(Q.Quantity AS DECIMAL(19,6)) AS Quantity
-                FROM dbo.OBTQ Q
-                INNER JOIN dbo.OBTN B
-                    ON B.ItemCode = Q.ItemCode
-                   AND B.SysNumber = Q.SysNumber
-                WHERE Q.ItemCode = @ItemCode
-                  AND Q.WhsCode = @Warehouse
-                  AND Q.Quantity > 0
-                ORDER BY B.DistNumber, B.SysNumber;
-                """;
+            command.CommandText = AvailableBatchLookupSql;
             command.Parameters.AddWithValue("@ItemCode", itemCode);
             command.Parameters.AddWithValue("@Warehouse", warehouse);
+            command.Parameters.AddWithValue("@ReleasedOnly", releasedOnly ? 1 : 0);
 
             using var reader = command.ExecuteReader();
 
@@ -288,53 +322,6 @@ public class SapDiApiProductionService : ISapProductionService
                 batches.Add(new AvailableProductionBatch(
                     Convert.ToInt32(reader["BatchAbsEntry"]),
                     Convert.ToString(reader["BatchNumber"])?.Trim() ?? "",
-                    Convert.ToDecimal(reader["Quantity"]),
-                    []));
-            }
-        }
-
-        if (!binManaged || batches.Count == 0)
-        {
-            return batches;
-        }
-
-        var batchesByAbsEntry = batches.ToDictionary(batch => batch.BatchAbsEntry);
-
-        using (var command = connection.CreateCommand())
-        {
-            command.CommandText = """
-                SELECT
-                    B.AbsEntry AS BatchAbsEntry,
-                    BIN.AbsEntry AS BinAbsEntry,
-                    BIN.BinCode,
-                    CAST(Q.OnHandQty AS DECIMAL(19,6)) AS Quantity
-                FROM dbo.OBBQ Q
-                INNER JOIN dbo.OBTN B
-                    ON B.AbsEntry = Q.SnBMDAbs
-                INNER JOIN dbo.OBIN BIN
-                    ON BIN.AbsEntry = Q.BinAbs
-                WHERE Q.ItemCode = @ItemCode
-                  AND BIN.WhsCode = @Warehouse
-                  AND Q.OnHandQty > 0
-                ORDER BY B.DistNumber, B.SysNumber, BIN.BinCode, BIN.AbsEntry;
-                """;
-            command.Parameters.AddWithValue("@ItemCode", itemCode);
-            command.Parameters.AddWithValue("@Warehouse", warehouse);
-
-            using var reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                var batchAbsEntry = Convert.ToInt32(reader["BatchAbsEntry"]);
-
-                if (!batchesByAbsEntry.TryGetValue(batchAbsEntry, out var batch))
-                {
-                    continue;
-                }
-
-                batch.Bins.Add(new AvailableProductionBatchBin(
-                    Convert.ToInt32(reader["BinAbsEntry"]),
-                    Convert.ToString(reader["BinCode"])?.Trim() ?? "",
                     Convert.ToDecimal(reader["Quantity"])));
             }
         }
@@ -342,47 +329,94 @@ public class SapDiApiProductionService : ISapProductionService
         return batches;
     }
 
-    internal static bool UsesJsonBatchSelection(int itemGroupCode)
-    {
-        return itemGroupCode is 109 or 110;
-    }
-
     internal static void ApplyIssueBatchSelectionPolicy(
         ProductionIssueLineRequest line,
         ProductionIssueItemInfo itemInfo,
+        IReadOnlyCollection<ProductionBatchRequest> productionOrderBatches,
         IReadOnlyCollection<AvailableProductionBatch> availableBatches)
     {
+        ClearInventoryAllocations(line);
+
         if (!itemInfo.BatchManaged)
         {
             return;
         }
 
-        if (UsesJsonBatchSelection(itemInfo.ItemGroupCode))
-        {
-            if (line.Batches.Count == 0 && string.IsNullOrWhiteSpace(line.BatchNumber))
-            {
-                throw new ArgumentException(
-                    $"Batch selection is required in JSON for item group {itemInfo.ItemGroupCode}. itemCode={line.ItemCode}");
-            }
-
-            return;
-        }
-
-        line.BatchNumber = null;
-        line.Batches = AllocateAutomaticBatches(
+        line.Batches = SelectAllocatedThenAutomaticBatches(
             line.ItemCode,
             line.Warehouse,
             line.Quantity,
-            itemInfo.BinManaged,
+            productionOrderBatches,
             availableBatches);
-        line.Bins = [];
+    }
+
+    internal static List<ProductionBatchRequest> SelectAllocatedThenAutomaticBatches(
+        string itemCode,
+        string warehouse,
+        decimal requiredQuantity,
+        IReadOnlyCollection<ProductionBatchRequest> allocatedBatches,
+        IReadOnlyCollection<AvailableProductionBatch> availableBatches)
+    {
+        var selectedBatches = new List<ProductionBatchRequest>();
+        var remainingQuantity = requiredQuantity;
+
+        foreach (var allocatedBatch in allocatedBatches)
+        {
+            if (remainingQuantity <= 0)
+            {
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(allocatedBatch.BatchNumber)
+                || allocatedBatch.Quantity <= 0)
+            {
+                continue;
+            }
+
+            var selectedQuantity = Math.Min(remainingQuantity, allocatedBatch.Quantity);
+            selectedBatches.Add(new ProductionBatchRequest
+            {
+                BatchNumber = allocatedBatch.BatchNumber,
+                Quantity = selectedQuantity
+            });
+            remainingQuantity -= selectedQuantity;
+        }
+
+        if (remainingQuantity <= 0)
+        {
+            return selectedBatches;
+        }
+
+        var automaticallySelected = AllocateAutomaticBatches(
+            itemCode,
+            warehouse,
+            remainingQuantity,
+            availableBatches);
+
+        foreach (var batch in automaticallySelected)
+        {
+            var existing = selectedBatches.FirstOrDefault(x => string.Equals(
+                x.BatchNumber,
+                batch.BatchNumber,
+                StringComparison.OrdinalIgnoreCase));
+
+            if (existing is null)
+            {
+                selectedBatches.Add(batch);
+            }
+            else
+            {
+                existing.Quantity += batch.Quantity;
+            }
+        }
+
+        return selectedBatches;
     }
 
     internal static List<ProductionBatchRequest> AllocateAutomaticBatches(
         string itemCode,
         string warehouse,
         decimal requiredQuantity,
-        bool binManaged,
         IReadOnlyCollection<AvailableProductionBatch> availableBatches)
     {
         var remainingQuantity = requiredQuantity;
@@ -403,15 +437,6 @@ public class SapDiApiProductionService : ISapProductionService
 
             var availableQuantity = availableBatch.Quantity;
 
-            if (binManaged)
-            {
-                availableQuantity = Math.Min(
-                    availableQuantity,
-                    availableBatch.Bins
-                        .Where(bin => bin.Quantity > 0)
-                        .Sum(bin => bin.Quantity));
-            }
-
             if (availableQuantity <= 0)
             {
                 continue;
@@ -423,34 +448,6 @@ public class SapDiApiProductionService : ISapProductionService
                 BatchNumber = availableBatch.BatchNumber,
                 Quantity = selectedQuantity
             };
-
-            if (binManaged)
-            {
-                var remainingBatchQuantity = selectedQuantity;
-
-                foreach (var availableBin in availableBatch.Bins
-                    .Where(bin => bin.Quantity > 0)
-                    .OrderBy(bin => bin.BinCode, StringComparer.OrdinalIgnoreCase)
-                    .ThenBy(bin => bin.BinCode, StringComparer.Ordinal)
-                    .ThenBy(bin => bin.BinAbsEntry))
-                {
-                    if (remainingBatchQuantity <= 0)
-                    {
-                        break;
-                    }
-
-                    var selectedBinQuantity = Math.Min(
-                        remainingBatchQuantity,
-                        availableBin.Quantity);
-                    selectedBatch.Bins.Add(new ProductionBinAllocationRequest
-                    {
-                        BinAbsEntry = availableBin.BinAbsEntry,
-                        Quantity = selectedBinQuantity
-                    });
-                    remainingBatchQuantity -= selectedBinQuantity;
-                    availableBin.Quantity -= selectedBinQuantity;
-                }
-            }
 
             selectedBatches.Add(selectedBatch);
             remainingQuantity -= selectedQuantity;
@@ -467,6 +464,337 @@ public class SapDiApiProductionService : ISapProductionService
         return selectedBatches;
     }
 
+    private void PrepareReceiptBatchSelections(
+        string companyDb,
+        ProductionReceiptRequest request)
+    {
+        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
+        connection.Open();
+        var receiptBatchNumber = FormatReceiptBatchNumber(DateTime.Now);
+
+        foreach (var line in request.ReceiptLines)
+        {
+            var itemInfo = ReadProductionReceiptItemInfo(
+                connection,
+                companyDb,
+                request.DocEntry,
+                line);
+
+            ApplyReceiptBatchSelectionPolicy(
+                line,
+                itemInfo.BatchManaged,
+                receiptBatchNumber);
+
+            if (itemInfo.BatchManaged)
+            {
+                _logger.LogInformation(
+                    "Generated Receipt From Production batch. ItemCode={ItemCode}, Warehouse={Warehouse}, BatchNumber={BatchNumber}",
+                    itemInfo.ItemCode,
+                    line.Warehouse,
+                    receiptBatchNumber);
+            }
+        }
+    }
+
+    private static ProductionReceiptItemInfo ReadProductionReceiptItemInfo(
+        SqlConnection connection,
+        string companyDb,
+        int productionOrderDocEntry,
+        ProductionReceiptLineRequest line)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = line.LineNum.HasValue
+            ? """
+                SELECT TOP 1 L.ItemCode, I.ManBtchNum
+                FROM dbo.WOR1 L
+                INNER JOIN dbo.OITM I
+                    ON I.ItemCode = L.ItemCode
+                   AND L.ItemType = 4
+                INNER JOIN dbo.OWHS W
+                    ON W.WhsCode = @Warehouse
+                WHERE L.DocEntry = @DocEntry
+                  AND L.LineNum = @LineNum;
+                """
+            : """
+                SELECT TOP 1 P.ItemCode, I.ManBtchNum
+                FROM dbo.OWOR P
+                INNER JOIN dbo.OITM I
+                    ON I.ItemCode = P.ItemCode
+                INNER JOIN dbo.OWHS W
+                    ON W.WhsCode = @Warehouse
+                WHERE P.DocEntry = @DocEntry;
+                """;
+        command.Parameters.AddWithValue("@Warehouse", line.Warehouse);
+        command.Parameters.AddWithValue("@DocEntry", productionOrderDocEntry);
+
+        if (line.LineNum.HasValue)
+        {
+            command.Parameters.AddWithValue("@LineNum", line.LineNum.Value);
+        }
+
+        using var reader = command.ExecuteReader();
+
+        if (!reader.Read())
+        {
+            throw new ArgumentException(
+                $"Production order receipt item or warehouse not found. companyName={companyDb}, docEntry={productionOrderDocEntry}, lineNum={line.LineNum}, warehouse={line.Warehouse}");
+        }
+
+        return new ProductionReceiptItemInfo(
+            Convert.ToString(reader["ItemCode"])?.Trim() ?? "",
+            string.Equals(
+                Convert.ToString(reader["ManBtchNum"]),
+                "Y",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static void ApplyReceiptBatchSelectionPolicy(
+        ProductionReceiptLineRequest line,
+        bool batchManaged,
+        string receiptBatchNumber)
+    {
+        ClearInventoryAllocations(line);
+
+        if (!batchManaged)
+        {
+            return;
+        }
+
+        line.Batches =
+        [
+            new ProductionBatchRequest
+            {
+                BatchNumber = receiptBatchNumber,
+                Quantity = line.Quantity
+            }
+        ];
+    }
+
+    internal static string FormatReceiptBatchNumber(DateTime localDateTime)
+        => localDateTime.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+
+    private void PrepareDeliveryBatchSelections(
+        dynamic company,
+        string companyDb,
+        DeliveryRequest request)
+    {
+        dynamic? reserveInvoice = null;
+
+        try
+        {
+            reserveInvoice = company.GetBusinessObject(_options.ARInvoiceObjectType);
+
+            if (!reserveInvoice.GetByKey(request.DocEntry))
+            {
+                throw new ArgumentException(
+                    $"Active A/R Reserve Invoice not found. DocEntry={request.DocEntry}");
+            }
+
+            using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
+            connection.Open();
+            var automaticBatchAvailability = new Dictionary<string, List<AvailableProductionBatch>>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var line in request.DeliveryLines)
+            {
+                var itemInfo = ReadDeliveryItemInfo(
+                    connection,
+                    companyDb,
+                    request.DocEntry,
+                    line);
+                IReadOnlyCollection<ProductionBatchRequest> reserveInvoiceBatches = [];
+                IReadOnlyCollection<AvailableProductionBatch> availableBatches = [];
+
+                if (itemInfo.BatchManaged)
+                {
+                    reserveInvoiceBatches = ReadDocumentLineBatches(
+                        (object)reserveInvoice.Lines,
+                        line.LineNum!.Value);
+                    var availabilityKey = $"{itemInfo.ItemCode}\u001F{line.Warehouse.Trim()}";
+
+                    var reserveInvoiceQuantity = reserveInvoiceBatches.Sum(x => x.Quantity);
+
+                    if (reserveInvoiceQuantity < line.Quantity
+                        && !automaticBatchAvailability.TryGetValue(
+                            availabilityKey,
+                            out var cachedBatches))
+                    {
+                        cachedBatches = ReadAvailableProductionBatches(
+                            connection,
+                            itemInfo.ItemCode,
+                            line.Warehouse,
+                            releasedOnly: true);
+                        automaticBatchAvailability.Add(availabilityKey, cachedBatches);
+                    }
+
+                    if (reserveInvoiceQuantity < line.Quantity)
+                    {
+                        availableBatches = automaticBatchAvailability[availabilityKey];
+                    }
+                }
+
+                ApplyDeliveryBatchSelectionPolicy(
+                    line,
+                    itemInfo,
+                    reserveInvoiceBatches,
+                    availableBatches);
+
+                if (itemInfo.BatchManaged)
+                {
+                    _logger.LogInformation(
+                        "Selected Delivery batches. ReserveInvoiceDocEntry={DocEntry}, LineNum={LineNum}, ItemCode={ItemCode}, Warehouse={Warehouse}, Batches={Batches}",
+                        request.DocEntry,
+                        line.LineNum,
+                        itemInfo.ItemCode,
+                        line.Warehouse,
+                        string.Join(
+                            ", ",
+                            line.Batches.Select(batch => $"{batch.BatchNumber}:{batch.Quantity}")));
+                }
+            }
+        }
+        finally
+        {
+            if (reserveInvoice is not null)
+            {
+                Marshal.FinalReleaseComObject(reserveInvoice);
+            }
+        }
+    }
+
+    private static DeliveryItemInfo ReadDeliveryItemInfo(
+        SqlConnection connection,
+        string companyDb,
+        int reserveInvoiceDocEntry,
+        DeliveryLineRequest line)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 1 L.ItemCode, I.ManBtchNum
+            FROM dbo.OINV H
+            INNER JOIN dbo.INV1 L
+                ON L.DocEntry = H.DocEntry
+            INNER JOIN dbo.OITM I
+                ON I.ItemCode = L.ItemCode
+            INNER JOIN dbo.OWHS W
+                ON W.WhsCode = @Warehouse
+            WHERE H.DocEntry = @DocEntry
+              AND H.isIns = 'Y'
+              AND H.CANCELED = 'N'
+              AND L.LineNum = @LineNum;
+            """;
+        command.Parameters.AddWithValue("@Warehouse", line.Warehouse);
+        command.Parameters.AddWithValue("@DocEntry", reserveInvoiceDocEntry);
+        command.Parameters.AddWithValue("@LineNum", line.LineNum!.Value);
+
+        using var reader = command.ExecuteReader();
+
+        if (!reader.Read())
+        {
+            throw new ArgumentException(
+                $"Active A/R Reserve Invoice line or warehouse not found. companyName={companyDb}, docEntry={reserveInvoiceDocEntry}, lineNum={line.LineNum}, warehouse={line.Warehouse}");
+        }
+
+        return new DeliveryItemInfo(
+            Convert.ToString(reader["ItemCode"])?.Trim() ?? "",
+            string.Equals(
+                Convert.ToString(reader["ManBtchNum"]),
+                "Y",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static void ApplyDeliveryBatchSelectionPolicy(
+        DeliveryLineRequest line,
+        DeliveryItemInfo itemInfo,
+        IReadOnlyCollection<ProductionBatchRequest> reserveInvoiceBatches,
+        IReadOnlyCollection<AvailableProductionBatch> availableBatches)
+    {
+        ClearInventoryAllocations(line);
+
+        if (!itemInfo.BatchManaged)
+        {
+            return;
+        }
+
+        line.Batches = SelectAllocatedThenAutomaticBatches(
+            itemInfo.ItemCode,
+            line.Warehouse,
+            line.Quantity,
+            reserveInvoiceBatches,
+            availableBatches);
+    }
+
+    internal static List<ProductionBatchRequest> ReadDocumentLineBatches(
+        dynamic documentLines,
+        int lineIndex)
+    {
+        documentLines.SetCurrentLine(lineIndex);
+        var batches = new List<ProductionBatchRequest>();
+        var batchCount = Convert.ToInt32(documentLines.BatchNumbers.Count);
+
+        for (var batchIndex = 0; batchIndex < batchCount; batchIndex++)
+        {
+            documentLines.BatchNumbers.SetCurrentLine(batchIndex);
+            var batchNumber = Convert.ToString(
+                documentLines.BatchNumbers.BatchNumber)?.Trim() ?? "";
+            var quantity = Math.Abs(Convert.ToDecimal(
+                documentLines.BatchNumbers.Quantity,
+                CultureInfo.InvariantCulture));
+
+            if (string.IsNullOrWhiteSpace(batchNumber) || quantity <= 0)
+            {
+                continue;
+            }
+
+            var existing = batches.FirstOrDefault(x => string.Equals(
+                x.BatchNumber,
+                batchNumber,
+                StringComparison.OrdinalIgnoreCase));
+
+            if (existing is null)
+            {
+                batches.Add(new ProductionBatchRequest
+                {
+                    BatchNumber = batchNumber,
+                    Quantity = quantity
+                });
+            }
+            else
+            {
+                existing.Quantity += quantity;
+            }
+        }
+
+        return batches;
+    }
+
+    internal static void ClearInventoryAllocations(ProductionIssueLineRequest line)
+    {
+        line.BatchNumber = null;
+        line.Batches = [];
+        // No BinAllocations are sent so SAP applies the warehouse's automatic
+        // issue rule (including its default/system bin when configured).
+        line.Bins = [];
+    }
+
+    internal static void ClearInventoryAllocations(ProductionReceiptLineRequest line)
+    {
+        line.BatchNumber = null;
+        line.Batches = [];
+        // Receipt bin allocation is intentionally delegated to SAP's
+        // Default/System Bin configuration.
+        line.Bins = [];
+    }
+
+    internal static void ClearInventoryAllocations(DeliveryLineRequest line)
+    {
+        line.BatchNumber = null;
+        line.Batches = [];
+        // Delivery bin allocation is handled by SAP after the batch selection
+        // from the A/R Reserve Invoice (or automatic fallback) is applied.
+        line.Bins = [];
+    }
+
     public Task<SapDocumentResult> DeliveryAsync(DeliveryRequest request)
     {
         dynamic? company = null;
@@ -477,6 +805,7 @@ public class SapDiApiProductionService : ISapProductionService
                 request.SiteId,
                 request.CompanyName);
             company = ConnectCompany(companyDb);
+            PrepareDeliveryBatchSelections(company, companyDb, request);
 
             return Task.FromResult(CreateDelivery(company, companyDb, request));
         }
@@ -1035,24 +1364,20 @@ internal sealed record ProductionIssueItemInfo(
     bool BinManaged,
     bool IsResource = false);
 
+internal sealed record ProductionReceiptItemInfo(
+    string ItemCode,
+    bool BatchManaged);
+
+internal sealed record DeliveryItemInfo(
+    string ItemCode,
+    bool BatchManaged);
+
 internal sealed class AvailableProductionBatch(
     int batchAbsEntry,
     string batchNumber,
-    decimal quantity,
-    List<AvailableProductionBatchBin> bins)
+    decimal quantity)
 {
     public int BatchAbsEntry { get; } = batchAbsEntry;
     public string BatchNumber { get; } = batchNumber;
-    public decimal Quantity { get; set; } = quantity;
-    public List<AvailableProductionBatchBin> Bins { get; } = bins;
-}
-
-internal sealed class AvailableProductionBatchBin(
-    int binAbsEntry,
-    string binCode,
-    decimal quantity)
-{
-    public int BinAbsEntry { get; } = binAbsEntry;
-    public string BinCode { get; } = binCode;
     public decimal Quantity { get; set; } = quantity;
 }

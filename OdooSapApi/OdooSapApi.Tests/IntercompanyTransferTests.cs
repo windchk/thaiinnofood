@@ -48,21 +48,76 @@ public class IntercompanyTransferTests
         Assert.Equal("TEST_INTERFACE", request.SourceCompanyName);
         Assert.Equal("TEST_STL_ODOO", request.TargetCompanyName);
         Assert.Equal("FG08006", request.Lines[0].ItemCode);
-        Assert.Equal("BATCH-001", request.Lines[0].Batches[0].BatchNumber);
+        Assert.Empty(request.Lines[0].Batches);
     }
 
     [Fact]
-    public void Validator_RejectsBatchQuantityMismatch()
+    public void Validator_IgnoresCallerBatchAndBinAllocation()
     {
         var request = NewRequest();
         request.Lines[0].Batches[0].Quantity = 9;
+        request.Lines[0].SourceBins =
+        [
+            new ProductionBinAllocationRequest
+            {
+                BinCode = "CALLER-SOURCE-BIN",
+                Quantity = -1
+            }
+        ];
+        request.Lines[0].TargetBins =
+        [
+            new ProductionBinAllocationRequest
+            {
+                BinCode = "CALLER-TARGET-BIN",
+                Quantity = -1
+            }
+        ];
 
-        var exception = Assert.Throws<ArgumentException>(
-            () => IntercompanyTransferValidator.Validate(request));
+        IntercompanyTransferValidator.Validate(request);
 
+        Assert.Empty(request.Lines[0].Batches);
+        Assert.Empty(request.Lines[0].SourceBins);
+        Assert.Empty(request.Lines[0].TargetBins);
+    }
+
+    [Fact]
+    public void IgnoredBatchValues_DoNotChangeCanonicalTransferRequest()
+    {
+        var first = NewRequest();
+        var second = NewRequest();
+        second.Lines[0].Batches[0].BatchNumber = "DIFFERENT-CALLER-BATCH";
+        second.Lines[0].Batches[0].Quantity = 1;
+
+        IntercompanyTransferValidator.Validate(first);
+        IntercompanyTransferValidator.Validate(second);
+
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         Assert.Equal(
-            "Sum of lines[].batches[].quantity must equal line quantity.",
-            exception.Message);
+            JsonSerializer.Serialize(first, jsonOptions),
+            JsonSerializer.Serialize(second, jsonOptions));
+    }
+
+    [Fact]
+    public void PostedBatchComparison_IgnoresOrderingButRequiresSameQuantities()
+    {
+        var expected = new List<IntercompanyTransferBatchRequest>
+        {
+            new() { BatchNumber = "BATCH-001", Quantity = 4 },
+            new() { BatchNumber = "BATCH-002", Quantity = 6 }
+        };
+        var same = new List<IntercompanyTransferBatchRequest>
+        {
+            new() { BatchNumber = "batch-002", Quantity = 6 },
+            new() { BatchNumber = "BATCH-001", Quantity = 4 }
+        };
+        var changed = new List<IntercompanyTransferBatchRequest>
+        {
+            new() { BatchNumber = "BATCH-001", Quantity = 5 },
+            new() { BatchNumber = "BATCH-002", Quantity = 5 }
+        };
+
+        Assert.True(SapDiApiIntercompanyService.BatchSelectionsEqual(expected, same));
+        Assert.False(SapDiApiIntercompanyService.BatchSelectionsEqual(expected, changed));
     }
 
     [Fact]

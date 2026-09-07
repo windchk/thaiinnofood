@@ -25,31 +25,14 @@
 - ข้อมูล connection SAP: อ่านจาก appsettings.json
 
 
-รูปแบบ batch/bin ที่รองรับ
-=========================
+รูปแบบ batch/bin ใน payload
+==========================
 
-API รองรับทุกกรณีนี้:
-1. ไม่มี batch และไม่มี bin
-2. มี batch แต่ไม่มี bin
-3. ไม่มี batch แต่มี bin
-4. มี batch และมี bin
-5. 1 item มีหลาย batch
-6. 1 batch มีหลาย bin
-7. 1 item ไม่มี batch แต่กระจายหลาย bin
-
-field สำหรับ batch/bin:
-- batchNumber: format เดิม รองรับ 1 batch ต่อ 1 line
-- batches: format ใหม่ ใช้เมื่อ 1 item มีหลาย batch หรือ batch มี bin
-- bins: ใช้เมื่อ item ไม่มี batch แต่มี bin
-- binAbsEntry: AbsEntry ของ bin location ใน SAP
-- binCode: รหัส bin location ถ้าไม่รู้ binAbsEntry; API จะ lookup OBIN.AbsEntry จาก database ตาม siteId
-
-กฎการส่ง batch/bin:
-- ถ้าส่ง batches แล้ว ห้ามส่ง batchNumber พร้อมกัน
-- ถ้าส่ง batches แล้ว และต้องใช้ bin ให้ใส่ bins ไว้ใต้ batches[].bins
-- ถ้าไม่มี batch แต่มี bin ให้ใส่ bins ไว้ใต้ line
-- ผลรวม batches[].quantity ต้องเท่ากับ quantity ของ line
-- ผลรวม bins[].quantity ต้องเท่ากับ quantity ที่เกี่ยวข้อง
+- ชื่อ field เดิม batchNumber, batches และ bins ยังอยู่ เพื่อไม่ให้ payload contract เปลี่ยน
+- Odoo ไม่ต้องส่งค่าใน field เหล่านี้; ถ้าส่งมา API จะไม่ใช้ค่าจาก caller
+- Issue From Production และ Delivery: API เลือก Batch อัตโนมัติแบบ SAP Auto Select
+- Receipt From Production: API สร้าง Batch ใหม่รูปแบบ yyyyMMdd-HHmmss จากเวลาท้องถิ่นของ API server
+- API ไม่ส่ง BinAllocations ที่ caller ระบุ และให้ SAP ใช้ Auto Allocation / Default / System Bin ตามการตั้งค่าคลัง
 
 
 1. Issue From Production
@@ -67,16 +50,17 @@ POST /api/sap/production/issue
 - issueLines[].warehouse: ค่าเดียวกับ ProductionOrder.data.lines[].warehouse ใช้เป็น warehouse ที่ตัดของ
 
 กฎเลือก Batch สำหรับ Issue From Production
-- Item Group 109 (สินค้าระหว่างผลิต) และ 110 (สินค้าสำเร็จรูป): ถ้า item จัดการด้วย batch ต้องส่ง batchNumber หรือ batches[] ใน JSON เท่านั้น ระบบจะไม่เปลี่ยน batch ที่ส่งมา
-- Item Group อื่นที่จัดการด้วย batch: ไม่ต้องส่ง batch ใน JSON เพราะ API จะเลือก batch อัตโนมัติตาม Batch Number จากน้อยไปมากจนเต็ม quantity
-- ถ้า warehouse จัดการด้วย bin: auto-select จะเลือก bin ภายใน batch ตาม BinCode จากน้อยไปมาก
+- Item ที่จัดการด้วย Batch ทุกกลุ่ม รวม Item Group 109 และ 110 ใช้ Auto Select
+- API ใช้ Batch ที่ผูกไว้กับ Production Order line ก่อน ถ้าไม่ครบจึงเลือก Batch Number จากน้อยไปมากจนเต็ม quantity
+- ค่า batchNumber, batches[] และ bins[] ที่ caller ส่งมาจะถูกข้าม
+- ถ้า warehouse จัดการด้วย bin: API ไม่กำหนด Bin เอง และให้ SAP ใช้กฎ Auto Allocation on Issue ของ warehouse
 - ถ้า batch stock ไม่พอ API จะไม่สร้าง Issue From Production และตอบ error พร้อม itemCode, warehouse, required และ available
 - issueLines[].itemCode ต้องตรงกับ item ของ Production Order line ตาม docEntry + lineNum
 
 กฎสำหรับ Resource line
 - API ตรวจจาก WOR1.ItemType = 290 โดยใช้ payload เดิม: lineNum, itemCode, quantity และ warehouse
 - Resource line ไม่เข้า OITM, Item Group, Batch หรือ Bin selection
-- ห้ามส่ง batchNumber, batches[] หรือ bins[] สำหรับ Resource line
+- ถ้าส่ง batchNumber, batches[] หรือ bins[] สำหรับ Resource line ค่าเหล่านี้จะถูกข้าม
 
 Issue: ไม่มี batch และไม่มี bin
 -------------------------------
@@ -94,8 +78,8 @@ Issue: ไม่มี batch และไม่มี bin
   ]
 }
 
-Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 แต่ไม่มี bin
------------------------------------------------------------
+Issue: payload เดิมที่มี batch (API จะข้ามค่าที่ส่งมาและ Auto Select ใหม่)
+-----------------------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -120,8 +104,8 @@ Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 แต�
   ]
 }
 
-Issue: ไม่มี batch แต่มี bin
-----------------------------
+Issue: payload เดิมที่มี bin (API จะข้ามค่าที่ส่งมา)
+--------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -148,8 +132,8 @@ Issue: ไม่มี batch แต่มี bin
   ]
 }
 
-Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 และมี bin
---------------------------------------------------------
+Issue: payload เดิมที่มี batch/bin (API จะข้ามค่าที่ส่งมา)
+---------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -193,8 +177,8 @@ Issue: ส่ง batch ใน JSON สำหรับ Item Group 109/110 แล�
   ]
 }
 
-Issue: format เดิม 1 batch ต่อ 1 line สำหรับ Item Group 109/110
--------------------------------------------------------------
+Issue: payload เดิมที่มี batchNumber (API จะข้ามค่าที่ส่งมา)
+-----------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -218,13 +202,9 @@ Issue mapping เข้า SAP DI API
 - issueLines[].itemCode -> ใช้ตรวจสอบกับ Production Order line; ไม่กำหนด document.Lines.ItemCode เมื่ออ้าง BaseType/BaseEntry/BaseLine
 - issueLines[].quantity -> document.Lines.Quantity
 - issueLines[].warehouse -> document.Lines.WarehouseCode
-- issueLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
-- issueLines[].batches[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
-- issueLines[].batches[].quantity -> document.Lines.BatchNumbers.Quantity
-- issueLines[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
-- issueLines[].bins[].quantity -> document.Lines.BinAllocations.Quantity
-- issueLines[].batches[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
-- issueLines[].batches[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- issueLines[].batchNumber / batches[] / bins[] -> คง field ไว้เพื่อ compatibility แต่ API ไม่ใช้ค่าที่ส่งมา
+- Batch ที่ API เลือก -> document.Lines.BatchNumbers
+- Bin -> SAP Auto Allocation on Issue; API ไม่กำหนด document.Lines.BinAllocations
 - API ใส่ document.Lines.BaseType = 202 เอง
 - Resource line (WOR1.ItemType = 290) ใช้ BaseType/BaseEntry/BaseLine/Quantity/Warehouse เหมือนเดิม แต่ไม่กำหนด Batch หรือ Bin
 
@@ -242,6 +222,9 @@ POST /api/sap/production/receipt
 - receiptLines[].warehouse: ปกติใช้ค่าเดียวกับ ProductionOrder.data.warehouse เป็น warehouse ที่รับของเข้า
 - receiptLines[].lineNum: optional; ไม่ต้องส่งสำหรับ Finished Good หลัก ส่งเฉพาะเมื่อต้องอ้างบรรทัดของ Production Order เช่น by-product โดยใช้ ProductionOrder.data.lines[].lineNum
 - ห้ามส่ง receiptLines[].itemCode: เมื่ออ้าง Production Order ด้วย docEntry SAP จะหา ItemCode จาก BaseEntry/BaseLine เอง และไม่อนุญาตให้ DI API กำหนด ItemCode ซ้ำ
+- ถ้า Item จัดการด้วย Batch API สร้าง Batch ใหม่เต็มจำนวนในรูปแบบ yyyyMMdd-HHmmss เช่น 20260907-212022
+- ค่า batchNumber, batches[] และ bins[] ที่ caller ส่งมาจะถูกข้าม
+- Bin ปลายทางใช้ Default/System Bin ตามการตั้งค่า SAP; API ไม่กำหนด BinAllocations เอง
 
 Receipt: ไม่มี batch และไม่มี bin
 ---------------------------------
@@ -257,8 +240,8 @@ Receipt: ไม่มี batch และไม่มี bin
   ]
 }
 
-Receipt: มี batch แต่ไม่มี bin
-------------------------------
+Receipt: payload เดิมที่มี batch (API จะข้ามและสร้าง Batch ใหม่)
+------------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -281,8 +264,8 @@ Receipt: มี batch แต่ไม่มี bin
   ]
 }
 
-Receipt: ไม่มี batch แต่มี bin
-------------------------------
+Receipt: payload เดิมที่มี bin (API จะข้ามและใช้ Default/System Bin)
+----------------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -302,8 +285,8 @@ Receipt: ไม่มี batch แต่มี bin
   ]
 }
 
-Receipt: มี batch และมี bin
----------------------------
+Receipt: payload เดิมที่มี batch/bin (API จะข้ามค่าที่ส่งมา)
+---------------------------------------------------------
 {
   "siteId": "PRD-TIF",
   "docEntry": 49123,
@@ -348,13 +331,9 @@ Receipt mapping เข้า SAP DI API
 - API ไม่กำหนด document.Lines.ItemCode; SAP ดึง ItemCode จาก Production Order ที่อ้างด้วย BaseEntry/BaseLine
 - receiptLines[].quantity -> document.Lines.Quantity
 - receiptLines[].warehouse -> document.Lines.WarehouseCode
-- receiptLines[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
-- receiptLines[].batches[].batchNumber -> document.Lines.BatchNumbers.BatchNumber
-- receiptLines[].batches[].quantity -> document.Lines.BatchNumbers.Quantity
-- receiptLines[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
-- receiptLines[].bins[].quantity -> document.Lines.BinAllocations.Quantity
-- receiptLines[].batches[].bins[].binAbsEntry/binCode -> document.Lines.BinAllocations.BinAbsEntry
-- receiptLines[].batches[].bins[].quantity -> document.Lines.BinAllocations.Quantity
+- receiptLines[].batchNumber / batches[] / bins[] -> คง field ไว้เพื่อ compatibility แต่ API ไม่ใช้ค่าที่ส่งมา
+- Batch ที่ API สร้างรูปแบบ yyyyMMdd-HHmmss -> document.Lines.BatchNumbers
+- Bin -> SAP Default/System Bin; API ไม่กำหนด document.Lines.BinAllocations
 - API ใส่ document.Lines.BaseType = 202 เอง
 
 

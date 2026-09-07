@@ -67,11 +67,17 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                             existingGoodsReceipt);
                     }
 
+                    ReplaceBatchSelectionsFromDocument(
+                        request.SourceCompanyName,
+                        _transferOptions.GoodsIssueObjectType,
+                        existingGoodsIssue.DocumentEntry,
+                        request.Lines,
+                        "Goods Issue");
                     var preparation = ValidateMasterDataAndEnrichBatches(
                         request,
                         siteOptions,
-                        prepareSourceDocument: false,
-                        prepareTargetDocument: true);
+                        prepareTargetDocument: true,
+                        autoSelectSourceBatches: false);
                     ValidateLineCosts(request, lineCosts);
                     var goodsReceipt = CreateGoodsReceipt(
                         request,
@@ -98,11 +104,22 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 request.TargetCompanyName,
                 "OIGN",
                 request.TransferId);
+
+            if (existingOrphanGoodsReceipt is not null)
+            {
+                ReplaceBatchSelectionsFromDocument(
+                    request.TargetCompanyName,
+                    _transferOptions.GoodsReceiptObjectType,
+                    existingOrphanGoodsReceipt.DocumentEntry,
+                    request.Lines,
+                    "Goods Receipt");
+            }
+
             var newTransferPreparation = ValidateMasterDataAndEnrichBatches(
                 request,
                 siteOptions,
-                prepareSourceDocument: true,
-                prepareTargetDocument: existingOrphanGoodsReceipt is null);
+                prepareTargetDocument: existingOrphanGoodsReceipt is null,
+                autoSelectSourceBatches: existingOrphanGoodsReceipt is null);
 
             return CreateNewTransferWithSourceRollback(
                 request,
@@ -144,8 +161,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
             var preparation = ValidateMasterDataAndEnrichBatches(
                 request,
                 siteOptions,
-                prepareSourceDocument: true,
-                prepareTargetDocument: false);
+                prepareTargetDocument: false,
+                autoSelectSourceBatches: true);
             return CreateGoodsIssue(request, siteOptions, preparation);
         }
         finally
@@ -173,13 +190,26 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 return existing;
             }
 
-            // Revalidate both companies on a GR retry and repopulate batch dates
-            // from the source company when the request did not provide them.
+            var sourceGoodsIssue = FindDocument(
+                request.SourceCompanyName,
+                "OIGE",
+                request.TransferId)
+                ?? throw new InvalidOperationException(
+                    $"Goods Issue not found for Goods Receipt retry. transferId={request.TransferId}");
+            ReplaceBatchSelectionsFromDocument(
+                request.SourceCompanyName,
+                _transferOptions.GoodsIssueObjectType,
+                sourceGoodsIssue.DocumentEntry,
+                request.Lines,
+                "Goods Issue");
+
+            // Revalidate both companies on a GR retry and use the batches that
+            // were actually posted by the source Goods Issue.
             var preparation = ValidateMasterDataAndEnrichBatches(
                 request,
                 siteOptions,
-                prepareSourceDocument: false,
-                prepareTargetDocument: true);
+                prepareTargetDocument: true,
+                autoSelectSourceBatches: false);
             ValidateLineCosts(request, lineCosts);
             return CreateGoodsReceipt(request, siteOptions, lineCosts, preparation);
         }
@@ -308,6 +338,12 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                             request.SourceCompanyName,
                             goodsIssueEntry,
                             request.Lines);
+                        VerifyBatchSelectionsFromDocument(
+                            sourceCompany,
+                            _transferOptions.GoodsIssueObjectType,
+                            goodsIssueEntry,
+                            request.Lines,
+                            "Goods Issue");
 
                         if (existingGoodsReceipt is not null)
                         {
@@ -616,10 +652,9 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                     document.Lines.AccountCode = siteOptions.GoodsIssueAccountCode;
                 }
 
-                ApplyBatchesAndBins(
+                ApplyBatches(
                     (object)document.Lines,
                     line,
-                    true,
                     false,
                     preparation);
             }
@@ -670,10 +705,9 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                     document.Lines.AccountCode = siteOptions.GoodsReceiptAccountCode;
                 }
 
-                ApplyBatchesAndBins(
+                ApplyBatches(
                     (object)document.Lines,
                     line,
-                    false,
                     true,
                     preparation);
             }
@@ -706,55 +740,27 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
     internal static void SetTransferIdUserField(dynamic document, string transferId)
         => document.UserFields.Fields.Item(TransferIdUserFieldName).Value = transferId;
 
-    private void ApplyBatchesAndBins(
+    private void ApplyBatches(
         dynamic documentLine,
         IntercompanyTransferLineRequest line,
-        bool useSourceBins,
         bool setInboundBatchMetadata,
         IntercompanyPostingPreparation preparation)
     {
-        if (line.Batches.Count > 0)
+        for (var batchIndex = 0; batchIndex < line.Batches.Count; batchIndex++)
         {
-            for (var batchIndex = 0; batchIndex < line.Batches.Count; batchIndex++)
+            var batch = line.Batches[batchIndex];
+            documentLine.BatchNumbers.BatchNumber = batch.BatchNumber;
+            documentLine.BatchNumbers.Quantity = Convert.ToDouble(batch.Quantity);
+
+            if (setInboundBatchMetadata
+                && !preparation.TargetBatchExists[batch])
             {
-                var batch = line.Batches[batchIndex];
-                documentLine.BatchNumbers.BatchNumber = batch.BatchNumber;
-                documentLine.BatchNumbers.Quantity = Convert.ToDouble(batch.Quantity);
-
-                if (setInboundBatchMetadata
-                    && !preparation.TargetBatchExists[batch])
-                {
-                    ConfigureInboundBatchMetadata(
-                        documentLine.BatchNumbers,
-                        batch);
-                }
-
-                documentLine.BatchNumbers.Add();
-
-                var bins = useSourceBins ? batch.SourceBins : batch.TargetBins;
-                foreach (var bin in bins)
-                {
-                    AddBinAllocation(
-                        documentLine,
-                        bin,
-                        batchIndex,
-                        useSourceBins,
-                        preparation);
-                }
+                ConfigureInboundBatchMetadata(
+                    documentLine.BatchNumbers,
+                    batch);
             }
 
-            return;
-        }
-
-        var lineBins = useSourceBins ? line.SourceBins : line.TargetBins;
-        foreach (var bin in lineBins)
-        {
-            AddBinAllocation(
-                documentLine,
-                bin,
-                null,
-                useSourceBins,
-                preparation);
+            documentLine.BatchNumbers.Add();
         }
     }
 
@@ -780,58 +786,62 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
     }
 
-    private void AddBinAllocation(
-        dynamic documentLine,
-        ProductionBinAllocationRequest bin,
-        int? batchIndex,
-        bool useSourceBins,
-        IntercompanyPostingPreparation preparation)
-    {
-        var binAbsEntries = useSourceBins
-            ? preparation.SourceBinAbsEntries
-            : preparation.TargetBinAbsEntries;
-        documentLine.BinAllocations.BinAbsEntry = binAbsEntries[bin];
-        documentLine.BinAllocations.Quantity = Convert.ToDouble(bin.Quantity);
-
-        if (batchIndex.HasValue)
-        {
-            documentLine.BinAllocations.SerialAndBatchNumbersBaseLine = batchIndex.Value;
-        }
-
-        documentLine.BinAllocations.Add();
-    }
-
     private IntercompanyPostingPreparation ValidateMasterDataAndEnrichBatches(
         IntercompanyTransferRequest request,
         IntercompanyTransferSiteOptions siteOptions,
-        bool prepareSourceDocument,
-        bool prepareTargetDocument)
+        bool prepareTargetDocument,
+        bool autoSelectSourceBatches)
     {
+        using var sourceConnection = new SqlConnection(
+            BuildSqlConnectionString(request.SourceCompanyName));
+        using var targetConnection = new SqlConnection(
+            BuildSqlConnectionString(request.TargetCompanyName));
+        sourceConnection.Open();
+        targetConnection.Open();
+
         var preparation = new IntercompanyPostingPreparation
         {
             GoodsIssueSeries = ResolveSeries(
+                sourceConnection,
                 request.SourceCompanyName,
                 Convert.ToString(_transferOptions.GoodsIssueObjectType),
                 siteOptions.GoodsIssueSeriesBeginStr,
                 request.PostingDate!.Value),
             GoodsReceiptSeries = ResolveSeries(
+                targetConnection,
                 request.TargetCompanyName,
                 Convert.ToString(_transferOptions.GoodsReceiptObjectType),
                 siteOptions.GoodsReceiptSeriesBeginStr,
                 request.PostingDate.Value)
         };
 
-        ValidateLocalCurrencies(request.SourceCompanyName, request.TargetCompanyName);
-        ValidateAccount(request.SourceCompanyName, siteOptions.GoodsIssueAccountCode, "Goods Issue");
-        ValidateAccount(request.TargetCompanyName, siteOptions.GoodsReceiptAccountCode, "Goods Receipt");
+        ValidateLocalCurrencies(
+            sourceConnection,
+            request.SourceCompanyName,
+            targetConnection,
+            request.TargetCompanyName);
+        ValidateAccount(
+            sourceConnection,
+            request.SourceCompanyName,
+            siteOptions.GoodsIssueAccountCode,
+            "Goods Issue");
+        ValidateAccount(
+            targetConnection,
+            request.TargetCompanyName,
+            siteOptions.GoodsReceiptAccountCode,
+            "Goods Receipt");
+        var automaticBatchAvailability = new Dictionary<string, List<AvailableProductionBatch>>(
+            StringComparer.OrdinalIgnoreCase);
 
         foreach (var line in request.Lines)
         {
             var sourceItem = ReadItemInfo(
+                sourceConnection,
                 request.SourceCompanyName,
                 line.ItemCode,
                 line.SourceWarehouse);
             var targetItem = ReadItemInfo(
+                targetConnection,
                 request.TargetCompanyName,
                 line.ItemCode,
                 line.TargetWarehouse);
@@ -848,16 +858,52 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                     $"Batch management differs between source and target. itemCode={line.ItemCode}");
             }
 
-            if (sourceItem.BatchManaged && line.Batches.Count == 0)
+            ClearBinAllocations(line);
+
+            if (sourceItem.BatchManaged && autoSelectSourceBatches)
             {
-                throw new ArgumentException(
-                    $"batches is required for batch-managed item. itemCode={line.ItemCode}");
+                var availabilityKey = $"{line.ItemCode}\u001F{line.SourceWarehouse}";
+
+                if (!automaticBatchAvailability.TryGetValue(
+                        availabilityKey,
+                        out var availableBatches))
+                {
+                    availableBatches = SapDiApiProductionService.ReadAvailableProductionBatches(
+                        sourceConnection,
+                        line.ItemCode,
+                        line.SourceWarehouse);
+                    automaticBatchAvailability.Add(availabilityKey, availableBatches);
+                }
+
+                line.Batches = SapDiApiProductionService.AllocateAutomaticBatches(
+                        line.ItemCode,
+                        line.SourceWarehouse,
+                        line.Quantity,
+                        availableBatches)
+                    .Select(batch => new IntercompanyTransferBatchRequest
+                    {
+                        BatchNumber = batch.BatchNumber,
+                        Quantity = batch.Quantity
+                    })
+                    .ToList();
+
+                _logger.LogInformation(
+                    "Auto-selected Goods Issue batches for intercompany transfer. TransferId={TransferId}, ItemCode={ItemCode}, Warehouse={Warehouse}, Batches={Batches}",
+                    request.TransferId,
+                    line.ItemCode,
+                    line.SourceWarehouse,
+                    string.Join(
+                        ", ",
+                        line.Batches.Select(batch => $"{batch.BatchNumber}:{batch.Quantity}")));
             }
 
-            if (!sourceItem.BatchManaged && line.Batches.Count > 0)
+            if (sourceItem.BatchManaged)
             {
-                throw new ArgumentException(
-                    $"batches must be empty for non-batch item. itemCode={line.ItemCode}");
+                ValidatePreparedBatchSelection(line);
+            }
+            else
+            {
+                line.Batches = [];
             }
 
             if (!string.Equals(
@@ -869,110 +915,259 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                     $"Inventory UoM differs between source and target. itemCode={line.ItemCode}, source={sourceItem.InventoryUom}, target={targetItem.InventoryUom}");
             }
 
-            ValidateBinRequirement(
-                line,
-                sourceItem.BinManaged,
-                useSourceBins: true);
-            ValidateBinRequirement(
-                line,
-                targetItem.BinManaged,
-                useSourceBins: false);
-
             foreach (var batch in line.Batches)
             {
                 EnrichBatchMetadata(
-                    request.SourceCompanyName,
+                    sourceConnection,
                     line.ItemCode,
                     batch);
                 if (prepareTargetDocument)
                 {
                     preparation.TargetBatchExists[batch] = BatchExists(
-                        request.TargetCompanyName,
+                        targetConnection,
                         line.ItemCode,
                         batch.BatchNumber);
                 }
-            }
-
-            if (prepareSourceDocument)
-            {
-                PrepareBinAllocations(
-                    preparation.SourceBinAbsEntries,
-                    request.SourceCompanyName,
-                    line.SourceWarehouse,
-                    line.Batches.Count > 0
-                        ? line.Batches.SelectMany(x => x.SourceBins)
-                        : line.SourceBins);
-            }
-
-            if (prepareTargetDocument)
-            {
-                PrepareBinAllocations(
-                    preparation.TargetBinAbsEntries,
-                    request.TargetCompanyName,
-                    line.TargetWarehouse,
-                    line.Batches.Count > 0
-                        ? line.Batches.SelectMany(x => x.TargetBins)
-                        : line.TargetBins);
             }
         }
 
         return preparation;
     }
 
-    private void PrepareBinAllocations(
-        Dictionary<ProductionBinAllocationRequest, int> preparedBins,
-        string companyDb,
-        string warehouseCode,
-        IEnumerable<ProductionBinAllocationRequest> bins)
+    private static void ClearBinAllocations(IntercompanyTransferLineRequest line)
     {
-        foreach (var bin in bins)
+        line.Batches ??= [];
+        // Leaving BinAllocations empty delegates both issue allocation and the
+        // target Default/System Bin allocation to SAP Business One.
+        line.SourceBins = [];
+        line.TargetBins = [];
+
+        foreach (var batch in line.Batches)
         {
-            if (!preparedBins.ContainsKey(bin))
+            batch.SourceBins = [];
+            batch.TargetBins = [];
+        }
+    }
+
+    internal static void ValidatePreparedBatchSelection(
+        IntercompanyTransferLineRequest line)
+    {
+        if (line.Batches is null || line.Batches.Count == 0)
+        {
+            throw new ArgumentException(
+                $"Automatic batch selection returned no batches. itemCode={line.ItemCode}");
+        }
+
+        if (line.Batches.Sum(x => x.Quantity) != line.Quantity)
+        {
+            throw new ArgumentException(
+                $"Automatic batch quantity does not equal line quantity. itemCode={line.ItemCode}");
+        }
+
+        var duplicateBatch = line.Batches
+            .Where(x => !string.IsNullOrWhiteSpace(x.BatchNumber))
+            .GroupBy(x => x.BatchNumber.Trim(), StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateBatch is not null)
+        {
+            throw new ArgumentException(
+                $"Automatic batch selection returned a duplicate batch. itemCode={line.ItemCode}, batchNumber={duplicateBatch.Key}");
+        }
+
+        foreach (var batch in line.Batches)
+        {
+            batch.BatchNumber = batch.BatchNumber?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(batch.BatchNumber)
+                || batch.BatchNumber.Length > 32
+                || batch.Quantity <= 0)
             {
-                preparedBins[bin] = ResolveBinAbsEntry(
-                    companyDb,
-                    bin,
-                    warehouseCode);
+                throw new ArgumentException(
+                    $"Automatic batch selection returned invalid data. itemCode={line.ItemCode}");
             }
         }
     }
 
-    private static void ValidateBinRequirement(
-        IntercompanyTransferLineRequest line,
-        bool binManaged,
-        bool useSourceBins)
+    private void ReplaceBatchSelectionsFromDocument(
+        string companyDb,
+        int documentObjectType,
+        string documentEntry,
+        IReadOnlyList<IntercompanyTransferLineRequest> requestLines,
+        string documentName)
     {
-        var side = useSourceBins ? "source" : "target";
-        var allBinsSent = line.Batches.Count > 0
-            ? line.Batches.All(x =>
-                (useSourceBins ? x.SourceBins : x.TargetBins).Count > 0)
-            : (useSourceBins ? line.SourceBins : line.TargetBins).Count > 0;
-        var anyBinsSent = line.Batches.Count > 0
-            ? line.Batches.Any(x =>
-                (useSourceBins ? x.SourceBins : x.TargetBins).Count > 0)
-            : allBinsSent;
+        dynamic? company = null;
 
-        if (binManaged && !allBinsSent)
+        try
         {
-            throw new ArgumentException(
-                $"{side} bins are required for bin-managed warehouse. itemCode={line.ItemCode}");
+            company = ConnectCompany(companyDb);
+            ApplyBatchSelectionsFromDocument(
+                company,
+                documentObjectType,
+                documentEntry,
+                requestLines,
+                documentName);
         }
-
-        if (!binManaged && anyBinsSent)
+        finally
         {
-            throw new ArgumentException(
-                $"{side} bins must be empty for warehouse without bin management. itemCode={line.ItemCode}");
+            ReleaseCompany(company);
         }
     }
 
+    private static void ApplyBatchSelectionsFromDocument(
+        dynamic company,
+        int documentObjectType,
+        string documentEntry,
+        IReadOnlyList<IntercompanyTransferLineRequest> requestLines,
+        string documentName)
+    {
+        var selections = ReadBatchSelectionsFromDocument(
+            company,
+            documentObjectType,
+            documentEntry,
+            requestLines,
+            documentName);
+
+        for (var lineIndex = 0; lineIndex < requestLines.Count; lineIndex++)
+        {
+            var line = requestLines[lineIndex];
+            line.Batches = selections[lineIndex];
+            line.SourceBins = [];
+            line.TargetBins = [];
+        }
+    }
+
+    private static void VerifyBatchSelectionsFromDocument(
+        dynamic company,
+        int documentObjectType,
+        string documentEntry,
+        IReadOnlyList<IntercompanyTransferLineRequest> requestLines,
+        string documentName)
+    {
+        var actualSelections = ReadBatchSelectionsFromDocument(
+            company,
+            documentObjectType,
+            documentEntry,
+            requestLines,
+            documentName);
+
+        for (var lineIndex = 0; lineIndex < requestLines.Count; lineIndex++)
+        {
+            if (!BatchSelectionsEqual(
+                    requestLines[lineIndex].Batches,
+                    actualSelections[lineIndex]))
+            {
+                throw new InvalidOperationException(
+                    $"{documentName} batch selection differs from the prepared selection. LineNum={lineIndex}, itemCode={requestLines[lineIndex].ItemCode}");
+            }
+        }
+    }
+
+    private static List<List<IntercompanyTransferBatchRequest>> ReadBatchSelectionsFromDocument(
+        dynamic company,
+        int documentObjectType,
+        string documentEntry,
+        IReadOnlyList<IntercompanyTransferLineRequest> requestLines,
+        string documentName)
+    {
+        if (!int.TryParse(documentEntry, out var docEntry))
+        {
+            throw new InvalidOperationException(
+                $"Invalid {documentName} DocEntry: {documentEntry}");
+        }
+
+        dynamic? document = null;
+
+        try
+        {
+            document = company.GetBusinessObject(documentObjectType);
+
+            if (!document.GetByKey(docEntry))
+            {
+                throw new InvalidOperationException(
+                    $"{documentName} not found while reading batch selection. DocEntry={docEntry}");
+            }
+
+            var documentLineCount = Convert.ToInt32(document.Lines.Count);
+
+            if (documentLineCount != requestLines.Count)
+            {
+                throw new InvalidOperationException(
+                    $"{documentName} line count does not match request. expected={requestLines.Count}, actual={documentLineCount}");
+            }
+
+            var selections = new List<List<IntercompanyTransferBatchRequest>>(
+                requestLines.Count);
+
+            for (var lineIndex = 0; lineIndex < requestLines.Count; lineIndex++)
+            {
+                document.Lines.SetCurrentLine(lineIndex);
+                var requestLine = requestLines[lineIndex];
+                var actualItemCode = Convert.ToString(document.Lines.ItemCode)?.Trim() ?? "";
+                var actualQuantity = Math.Abs(Convert.ToDecimal(
+                    document.Lines.Quantity,
+                    CultureInfo.InvariantCulture));
+
+                if (!string.Equals(
+                        actualItemCode,
+                        requestLine.ItemCode,
+                        StringComparison.OrdinalIgnoreCase)
+                    || actualQuantity != requestLine.Quantity)
+                {
+                    throw new InvalidOperationException(
+                        $"{documentName} line does not match request. LineNum={lineIndex}, expectedItemCode={requestLine.ItemCode}, actualItemCode={actualItemCode}, expectedQuantity={requestLine.Quantity}, actualQuantity={actualQuantity}");
+                }
+
+                selections.Add(SapDiApiProductionService.ReadDocumentLineBatches(
+                        (object)document.Lines,
+                        lineIndex)
+                    .Select(batch => new IntercompanyTransferBatchRequest
+                    {
+                        BatchNumber = batch.BatchNumber,
+                        Quantity = batch.Quantity
+                    })
+                    .ToList());
+            }
+
+            return selections;
+        }
+        finally
+        {
+            ReleaseComObject(document);
+        }
+    }
+
+    internal static bool BatchSelectionsEqual(
+        IReadOnlyCollection<IntercompanyTransferBatchRequest> expected,
+        IReadOnlyCollection<IntercompanyTransferBatchRequest> actual)
+    {
+        static Dictionary<string, decimal> Aggregate(
+            IEnumerable<IntercompanyTransferBatchRequest> batches)
+        {
+            return batches
+                .Where(batch => !string.IsNullOrWhiteSpace(batch.BatchNumber))
+                .GroupBy(batch => batch.BatchNumber.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Sum(batch => batch.Quantity),
+                    StringComparer.OrdinalIgnoreCase);
+        }
+
+        var expectedByBatch = Aggregate(expected);
+        var actualByBatch = Aggregate(actual);
+
+        return expectedByBatch.Count == actualByBatch.Count
+            && expectedByBatch.All(pair =>
+                actualByBatch.TryGetValue(pair.Key, out var quantity)
+                && quantity == pair.Value);
+    }
+
     private ItemWarehouseInfo ReadItemInfo(
+        SqlConnection connection,
         string companyDb,
         string itemCode,
         string warehouseCode)
     {
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
-
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT TOP 1
@@ -1021,13 +1216,17 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         };
     }
 
-    private void ValidateLocalCurrencies(string sourceCompanyDb, string targetCompanyDb)
+    private static void ValidateLocalCurrencies(
+        SqlConnection sourceConnection,
+        string sourceCompanyDb,
+        SqlConnection targetConnection,
+        string targetCompanyDb)
     {
         var sourceCurrency = ReadScalarString(
-            sourceCompanyDb,
+            sourceConnection,
             "SELECT TOP 1 MainCurncy FROM dbo.OADM;");
         var targetCurrency = ReadScalarString(
-            targetCompanyDb,
+            targetConnection,
             "SELECT TOP 1 MainCurncy FROM dbo.OADM;");
 
         if (!string.Equals(sourceCurrency, targetCurrency, StringComparison.OrdinalIgnoreCase))
@@ -1037,15 +1236,16 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
     }
 
-    private void ValidateAccount(string companyDb, string accountCode, string documentName)
+    private static void ValidateAccount(
+        SqlConnection connection,
+        string companyDb,
+        string accountCode,
+        string documentName)
     {
         if (string.IsNullOrWhiteSpace(accountCode))
         {
             return;
         }
-
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -1063,14 +1263,11 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
     }
 
-    private void EnrichBatchMetadata(
-        string sourceCompanyDb,
+    private static void EnrichBatchMetadata(
+        SqlConnection connection,
         string itemCode,
         IntercompanyTransferBatchRequest batch)
     {
-        using var connection = new SqlConnection(BuildSqlConnectionString(sourceCompanyDb));
-        connection.Open();
-
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT TOP 1 MnfDate, ExpDate, InDate
@@ -1095,11 +1292,11 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         batch.AdmissionDate ??= GetNullableDate(reader, "InDate");
     }
 
-    private bool BatchExists(string companyDb, string itemCode, string batchNumber)
+    private static bool BatchExists(
+        SqlConnection connection,
+        string itemCode,
+        string batchNumber)
     {
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
-
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT TOP 1 1
@@ -1117,6 +1314,25 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         string headerTable,
         string transferId)
     {
+        var udfMatches = QueryDocuments(
+            companyDb,
+            headerTable,
+            $"[{TransferIdUserFieldName}] = @SearchValue",
+            transferId);
+
+        if (udfMatches.Count > 1)
+        {
+            throw new InvalidOperationException(
+                $"Multiple SAP documents found for transferId={transferId}, companyName={companyDb}");
+        }
+
+        if (udfMatches.Count == 1)
+        {
+            return udfMatches[0];
+        }
+
+        // Keep legacy fallbacks for documents created before U_ODoo_Doc was
+        // populated by both sides of the transfer.
         var markerMatches = QueryDocuments(
             companyDb,
             headerTable,
@@ -1323,16 +1539,14 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         };
     }
 
-    private int ResolveSeries(
+    private static int ResolveSeries(
+        SqlConnection connection,
         string companyDb,
         string objectCode,
         string beginStr,
         DateTime docDate)
     {
         var indicator = docDate.ToString("yyyy-MM", CultureInfo.InvariantCulture);
-
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -1359,54 +1573,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         return Convert.ToInt32(result);
     }
 
-    private int ResolveBinAbsEntry(
-        string companyDb,
-        ProductionBinAllocationRequest bin,
-        string warehouseCode)
+    private static string ReadScalarString(SqlConnection connection, string sql)
     {
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = bin.BinAbsEntry.HasValue
-            ? """
-                SELECT TOP 1 AbsEntry
-                FROM dbo.OBIN
-                WHERE AbsEntry = @BinAbsEntry
-                  AND WhsCode = @WarehouseCode;
-                """
-            : """
-                SELECT TOP 1 AbsEntry
-                FROM dbo.OBIN
-                WHERE BinCode = @BinCode
-                  AND WhsCode = @WarehouseCode;
-                """;
-        command.Parameters.AddWithValue("@WarehouseCode", warehouseCode);
-
-        if (bin.BinAbsEntry.HasValue)
-        {
-            command.Parameters.AddWithValue("@BinAbsEntry", bin.BinAbsEntry.Value);
-        }
-        else
-        {
-            command.Parameters.AddWithValue("@BinCode", bin.BinCode);
-        }
-
-        var result = command.ExecuteScalar();
-
-        if (result is null || result == DBNull.Value)
-        {
-            throw new ArgumentException(
-                $"Bin location not found in warehouse. companyName={companyDb}, warehouse={warehouseCode}, binAbsEntry={bin.BinAbsEntry}, binCode={bin.BinCode}");
-        }
-
-        return Convert.ToInt32(result);
-    }
-
-    private string ReadScalarString(string companyDb, string sql)
-    {
-        using var connection = new SqlConnection(BuildSqlConnectionString(companyDb));
-        connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = sql;
         return Convert.ToString(command.ExecuteScalar())?.Trim() ?? "";
@@ -1573,8 +1741,6 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
     {
         public int GoodsIssueSeries { get; set; }
         public int GoodsReceiptSeries { get; set; }
-        public Dictionary<ProductionBinAllocationRequest, int> SourceBinAbsEntries { get; } = [];
-        public Dictionary<ProductionBinAllocationRequest, int> TargetBinAbsEntries { get; } = [];
         public Dictionary<IntercompanyTransferBatchRequest, bool> TargetBatchExists { get; } = [];
     }
 }

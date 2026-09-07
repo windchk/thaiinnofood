@@ -250,7 +250,7 @@ public class ProductionOrderService
             throw new ArgumentException("docDate is required.");
         }
 
-        if (request.IssueLines.Count == 0)
+        if (request.IssueLines is null || request.IssueLines.Count == 0)
         {
             throw new ArgumentException("issueLines is required.");
         }
@@ -258,7 +258,7 @@ public class ProductionOrderService
         foreach (var line in request.IssueLines)
         {
             ValidateLine(line.ItemCode, line.Quantity, line.Warehouse);
-            ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+            SapDiApiProductionService.ClearInventoryAllocations(line);
         }
     }
 
@@ -271,7 +271,7 @@ public class ProductionOrderService
             throw new ArgumentException("docDate is required.");
         }
 
-        if (request.ReceiptLines.Count == 0)
+        if (request.ReceiptLines is null || request.ReceiptLines.Count == 0)
         {
             throw new ArgumentException("receiptLines is required.");
         }
@@ -279,7 +279,7 @@ public class ProductionOrderService
         foreach (var line in request.ReceiptLines)
         {
             ValidateQuantityAndWarehouse(line.Quantity, line.Warehouse);
-            ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+            SapDiApiProductionService.ClearInventoryAllocations(line);
         }
     }
 
@@ -324,13 +324,8 @@ public class ProductionOrderService
 
         foreach (var line in request.DeliveryLines)
         {
-            if (line.Batches is null || line.Bins is null)
-            {
-                throw new ArgumentException("deliveryLines[].batches and deliveryLines[].bins cannot be null.");
-            }
-
             ValidateQuantityAndWarehouse(line.Quantity, line.Warehouse);
-            ValidateBatchAndBin(line.Quantity, line.BatchNumber, line.Batches, line.Bins);
+            SapDiApiProductionService.ClearInventoryAllocations(line);
         }
     }
 
@@ -375,78 +370,4 @@ public class ProductionOrderService
         }
     }
 
-    private static void ValidateBatchAndBin(
-        decimal lineQuantity,
-        string? legacyBatchNumber,
-        List<ProductionBatchRequest> batches,
-        List<ProductionBinAllocationRequest> lineBins)
-    {
-        if (batches.Count > 0 && !string.IsNullOrWhiteSpace(legacyBatchNumber))
-        {
-            throw new ArgumentException("Use either batchNumber or batches, not both.");
-        }
-
-        if (batches.Count > 0)
-        {
-            var batchTotal = batches.Sum(x => x.Quantity);
-
-            if (batchTotal != lineQuantity)
-            {
-                throw new ArgumentException("Sum of batches.quantity must equal line quantity.");
-            }
-
-            foreach (var batch in batches)
-            {
-                if (string.IsNullOrWhiteSpace(batch.BatchNumber))
-                {
-                    throw new ArgumentException("batches[].batchNumber is required.");
-                }
-
-                if (batch.Quantity <= 0)
-                {
-                    throw new ArgumentException("batches[].quantity must be greater than 0.");
-                }
-
-                ValidateBins(batch.Bins, batch.Quantity, "batches[].bins");
-            }
-        }
-
-        if (lineBins.Count > 0)
-        {
-            if (batches.Count > 0)
-            {
-                throw new ArgumentException("Use batches[].bins when batches is sent. Do not use line-level bins with batches.");
-            }
-
-            ValidateBins(lineBins, lineQuantity, "bins");
-        }
-    }
-
-    private static void ValidateBins(List<ProductionBinAllocationRequest> bins, decimal expectedQuantity, string fieldName)
-    {
-        if (bins.Count == 0)
-        {
-            return;
-        }
-
-        var binTotal = bins.Sum(x => x.Quantity);
-
-        if (binTotal != expectedQuantity)
-        {
-            throw new ArgumentException($"Sum of {fieldName}[].quantity must equal related quantity.");
-        }
-
-        foreach (var bin in bins)
-        {
-            if (bin.Quantity <= 0)
-            {
-                throw new ArgumentException($"{fieldName}[].quantity must be greater than 0.");
-            }
-
-            if (!bin.BinAbsEntry.HasValue && string.IsNullOrWhiteSpace(bin.BinCode))
-            {
-                throw new ArgumentException($"{fieldName}[].binAbsEntry or {fieldName}[].binCode is required.");
-            }
-        }
-    }
 }

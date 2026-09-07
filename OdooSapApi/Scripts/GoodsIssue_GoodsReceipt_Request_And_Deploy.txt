@@ -10,8 +10,8 @@ Status endpoint
 ---------------
 GET /api/sap/goodsissue-goodsreceipt/{transferId}?siteId=TEST-TIF
 
-TEST payload: batch-managed item without bins
-------------------------------------------------
+TEST payload: batch-managed item (batch/bin can be omitted)
+---------------------------------------------------------
 {
   "transferId": "ODOO-TEST-20260723-0001",
   "siteId": "TEST-TIF",
@@ -25,17 +25,7 @@ TEST payload: batch-managed item without bins
       "itemCode": "FG08006",
       "quantity": 10,
       "sourceWarehouse": "WH-FG",
-      "targetWarehouse": "WH-FG",
-      "batches": [
-        {
-          "batchNumber": "FG-BATCH-001",
-          "quantity": 4
-        },
-        {
-          "batchNumber": "FG-BATCH-002",
-          "quantity": 6
-        }
-      ]
+      "targetWarehouse": "WH-FG"
     }
   ]
 }
@@ -57,9 +47,15 @@ Rules
 - itemCode is required because Goods Issue and Goods Receipt are standalone documents.
 - sourceWarehouse is used by the TIF Goods Issue.
 - targetWarehouse is used by the STL Goods Receipt.
-- For batch-managed items, batches is required and its quantity total must equal line quantity.
-- Batch dates are optional. If omitted, the API copies available dates from the TIF batch master.
-- For bin-managed warehouses, send sourceBins and targetBins under each batch.
+- The batchNumber, batches[], sourceBins[] and targetBins[] fields remain in the
+  payload contract, but caller values are ignored.
+- For batch-managed items, the API auto-selects source Goods Issue batches by Batch
+  Number ascending, then reads the actual Goods Issue document and uses exactly the
+  same batches and quantities for Goods Receipt.
+- Source batch dates are copied to the target batch master when that batch does not
+  already exist in the target company.
+- The API sends no explicit bin allocations. SAP applies the source warehouse's
+  automatic issue rule and the target warehouse's Default/System Bin rule.
 - Serial-managed items are rejected by this version.
 - The API reads the actual Goods Issue StockPrice and uses it as the STL Goods Receipt UnitPrice.
 - Goods Issue and Goods Receipt lines use the fixed AccountCode 91010114.
@@ -86,11 +82,11 @@ Failure and retry behavior
   current attempt (for example, an older deployment or a response/ledger recovery case).
 - A GR_PENDING retry reuses the committed Goods Issue and creates/recovers only Goods Receipt.
 - The two company transactions are deliberately short and contain no await or external API
-  call. Master-data checks, series, batch existence and bin resolution run before they start.
+  call. Master-data checks, series, batch selection and batch existence run before they start.
 - This flow does not use MS DTC. If target commit succeeds but source commit cannot be
   confirmed, keep the same transferId and inspect OIGE/OIGN markers before any manual action.
 - If SAP created a document but the response or ledger update failed, retry searches OIGE/OIGN
-  by the existing Comments/Ref2 idempotency marker before creating another document.
+  by U_ODoo_Doc first, then the legacy Comments/Ref2 idempotency markers.
 - Each failed attempt increments RetryCount and stores ErrorMessage in
   TEMP_API.dbo.INT_IntercompanyTransfer. POST returns HTTP 500 with the current status/data.
 - Use the status endpoint to inspect recovery state. COMPLETED requests return existing documents.
@@ -123,13 +119,7 @@ curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/delivery" \
       {
         "lineNum": 0,
         "quantity": 10,
-        "warehouse": "WH-FG",
-        "batches": [
-          {
-            "batchNumber": "FG-BATCH-001",
-            "quantity": 10
-          }
-        ]
+        "warehouse": "WH-FG"
       }
     ]
   }'
@@ -151,17 +141,7 @@ curl --request POST "http://<SAP_API_HOST>:<PORT>/api/sap/goodsissue-goodsreceip
         "itemCode": "FG08006",
         "quantity": 10,
         "sourceWarehouse": "WH-FG",
-        "targetWarehouse": "WH-FG",
-        "batches": [
-          {
-            "batchNumber": "FG-BATCH-001",
-            "quantity": 4
-          },
-          {
-            "batchNumber": "FG-BATCH-002",
-            "quantity": 6
-          }
-        ]
+        "targetWarehouse": "WH-FG"
       }
     ]
   }'

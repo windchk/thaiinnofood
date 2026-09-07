@@ -148,7 +148,20 @@ public class ReceiptFromProductionTests
     }
 
     [Fact]
-    public void ValidateResourceIssueLine_RejectsInventoryBatchOrBinSelection()
+    public void AutomaticBatchAvailability_SubtractsCommittedQuantityNullSafely()
+    {
+        Assert.Contains(
+            "Q.Quantity - ISNULL(Q.CommitQty, 0)",
+            SapDiApiProductionService.AvailableBatchLookupSql,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "@ReleasedOnly = 0 OR B.Status = '0'",
+            SapDiApiProductionService.AvailableBatchLookupSql,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ValidateResourceIssueLine_IgnoresCallerBatchAndBinSelection()
     {
         var line = new ProductionIssueLineRequest
         {
@@ -156,60 +169,61 @@ public class ReceiptFromProductionTests
             ItemCode = "LB-505",
             Quantity = 0.1m,
             Warehouse = "WH-PD",
-            BatchNumber = "INVALID-RESOURCE-BATCH"
+            BatchNumber = "IGNORED-RESOURCE-BATCH",
+            Batches =
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "IGNORED-BATCH",
+                    Quantity = 0.1m
+                }
+            ],
+            Bins =
+            [
+                new ProductionBinAllocationRequest
+                {
+                    BinAbsEntry = 1,
+                    Quantity = 0.1m
+                }
+            ]
         };
 
-        var exception = Assert.Throws<ArgumentException>(
-            () => SapDiApiProductionService.ValidateResourceIssueLine(line));
+        SapDiApiProductionService.ValidateResourceIssueLine(line);
 
-        Assert.Contains("must be empty for resource line", exception.Message);
-        Assert.Contains("LB-505", exception.Message);
-    }
-
-    [Theory]
-    [InlineData(109, true)]
-    [InlineData(110, true)]
-    [InlineData(108, false)]
-    [InlineData(111, false)]
-    public void UsesJsonBatchSelection_IsLimitedToConfiguredItemGroups(
-        int itemGroupCode,
-        bool expected)
-    {
-        Assert.Equal(
-            expected,
-            SapDiApiProductionService.UsesJsonBatchSelection(itemGroupCode));
+        Assert.Null(line.BatchNumber);
+        Assert.Empty(line.Batches);
+        Assert.Empty(line.Bins);
     }
 
     [Fact]
-    public void ApplyIssueBatchSelectionPolicy_Group109PreservesJsonBatch()
+    public void ApplyIssueBatchSelectionPolicy_Group109IgnoresJsonAndAutoSelects()
     {
-        var jsonBatches = new List<ProductionBatchRequest>
-        {
-            new()
-            {
-                BatchNumber = "JSON-BATCH-001",
-                Quantity = 10
-            }
-        };
         var line = new ProductionIssueLineRequest
         {
             ItemCode = "WP00001",
             Quantity = 10,
             Warehouse = "WH-PD",
-            Batches = jsonBatches
+            Batches =
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "JSON-BATCH-001",
+                    Quantity = 10
+                }
+            ]
         };
 
         SapDiApiProductionService.ApplyIssueBatchSelectionPolicy(
             line,
             new ProductionIssueItemInfo("WP00001", 109, true, false),
-            [new AvailableProductionBatch(1, "AUTO-BATCH-001", 10, [])]);
+            [],
+            [new AvailableProductionBatch(1, "AUTO-BATCH-001", 10)]);
 
-        Assert.Same(jsonBatches, line.Batches);
-        Assert.Equal("JSON-BATCH-001", Assert.Single(line.Batches).BatchNumber);
+        Assert.Equal("AUTO-BATCH-001", Assert.Single(line.Batches).BatchNumber);
     }
 
     [Fact]
-    public void ApplyIssueBatchSelectionPolicy_Group110RequiresJsonBatch()
+    public void ApplyIssueBatchSelectionPolicy_Group110AutoSelectsWithoutJsonBatch()
     {
         var line = new ProductionIssueLineRequest
         {
@@ -218,14 +232,13 @@ public class ReceiptFromProductionTests
             Warehouse = "WH-FG"
         };
 
-        var exception = Assert.Throws<ArgumentException>(() =>
-            SapDiApiProductionService.ApplyIssueBatchSelectionPolicy(
-                line,
-                new ProductionIssueItemInfo("FG00001", 110, true, false),
-                []));
+        SapDiApiProductionService.ApplyIssueBatchSelectionPolicy(
+            line,
+            new ProductionIssueItemInfo("FG00001", 110, true, false),
+            [],
+            [new AvailableProductionBatch(1, "FG-AUTO-001", 10)]);
 
-        Assert.Contains("required in JSON", exception.Message);
-        Assert.Contains("item group 110", exception.Message);
+        Assert.Equal("FG-AUTO-001", Assert.Single(line.Batches).BatchNumber);
     }
 
     [Fact]
@@ -240,13 +253,14 @@ public class ReceiptFromProductionTests
         };
         var availableBatches = new List<AvailableProductionBatch>
         {
-            new(2, "BATCH-002", 10, []),
-            new(1, "BATCH-001", 4, [])
+            new(2, "BATCH-002", 10),
+            new(1, "BATCH-001", 4)
         };
 
         SapDiApiProductionService.ApplyIssueBatchSelectionPolicy(
             line,
             new ProductionIssueItemInfo("RM00001", 100, true, false),
+            [],
             availableBatches);
 
         Assert.Null(line.BatchNumber);
@@ -265,41 +279,58 @@ public class ReceiptFromProductionTests
     }
 
     [Fact]
-    public void AllocateAutomaticBatches_BinManagedWarehouseSelectsBinsByCode()
+    public void ApplyIssueBatchSelectionPolicy_PreservesProductionOrderAllocationFirst()
+    {
+        var line = new ProductionIssueLineRequest
+        {
+            ItemCode = "RM00001",
+            Quantity = 10,
+            Warehouse = "WH-RM"
+        };
+
+        SapDiApiProductionService.ApplyIssueBatchSelectionPolicy(
+            line,
+            new ProductionIssueItemInfo("RM00001", 100, true, false),
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "ALLOCATED-BATCH",
+                    Quantity = 4
+                }
+            ],
+            [new AvailableProductionBatch(1, "AUTO-BATCH", 6)]);
+
+        Assert.Collection(
+            line.Batches,
+            batch =>
+            {
+                Assert.Equal("ALLOCATED-BATCH", batch.BatchNumber);
+                Assert.Equal(4, batch.Quantity);
+            },
+            batch =>
+            {
+                Assert.Equal("AUTO-BATCH", batch.BatchNumber);
+                Assert.Equal(6, batch.Quantity);
+            });
+    }
+
+    [Fact]
+    public void AllocateAutomaticBatches_LeavesBinsEmptyForSapAutomaticAllocation()
     {
         var availableBatches = new List<AvailableProductionBatch>
         {
-            new(
-                1,
-                "BATCH-001",
-                10,
-                [
-                    new AvailableProductionBatchBin(2, "BIN-B", 5),
-                    new AvailableProductionBatchBin(1, "BIN-A", 3)
-                ])
+            new(1, "BATCH-001", 10)
         };
 
         var selectedBatches = SapDiApiProductionService.AllocateAutomaticBatches(
             "RM00001",
             "WH-RM",
             7,
-            true,
             availableBatches);
 
         var selectedBatch = Assert.Single(selectedBatches);
         Assert.Equal(7, selectedBatch.Quantity);
-        Assert.Collection(
-            selectedBatch.Bins,
-            bin =>
-            {
-                Assert.Equal(1, bin.BinAbsEntry);
-                Assert.Equal(3, bin.Quantity);
-            },
-            bin =>
-            {
-                Assert.Equal(2, bin.BinAbsEntry);
-                Assert.Equal(4, bin.Quantity);
-            });
+        Assert.Empty(selectedBatch.Bins);
     }
 
     [Fact]
@@ -310,8 +341,7 @@ public class ReceiptFromProductionTests
                 "RM00001",
                 "WH-RM",
                 3,
-                false,
-                [new AvailableProductionBatch(1, "BATCH-001", 2, [])]));
+                [new AvailableProductionBatch(1, "BATCH-001", 2)]));
 
         Assert.Contains("Insufficient batch stock", exception.Message);
         Assert.Contains("required=3", exception.Message);
@@ -323,20 +353,18 @@ public class ReceiptFromProductionTests
     {
         var availableBatches = new List<AvailableProductionBatch>
         {
-            new(1, "BATCH-001", 10, [])
+            new(1, "BATCH-001", 10)
         };
 
         var firstLine = SapDiApiProductionService.AllocateAutomaticBatches(
             "RM00001",
             "WH-RM",
             6,
-            false,
             availableBatches);
         var secondLine = SapDiApiProductionService.AllocateAutomaticBatches(
             "RM00001",
             "WH-RM",
             4,
-            false,
             availableBatches);
 
         Assert.Equal(6, Assert.Single(firstLine).Quantity);
@@ -347,8 +375,97 @@ public class ReceiptFromProductionTests
                 "RM00001",
                 "WH-RM",
                 1,
-                false,
                 availableBatches));
+    }
+
+    [Fact]
+    public void ReceiptBatchNumber_UsesRequiredLocalTimestampFormat()
+    {
+        Assert.Equal(
+            "20260907-212022",
+            SapDiApiProductionService.FormatReceiptBatchNumber(
+                new DateTime(2026, 9, 7, 21, 20, 22)));
+    }
+
+    [Fact]
+    public void ApplyReceiptBatchSelectionPolicy_ReplacesCallerBatchAndLeavesBinsEmpty()
+    {
+        var line = new ProductionReceiptLineRequest
+        {
+            Quantity = 10,
+            Warehouse = "WH-FG",
+            BatchNumber = "CALLER-BATCH",
+            Batches =
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "CALLER-BATCH-2",
+                    Quantity = 10
+                }
+            ],
+            Bins =
+            [
+                new ProductionBinAllocationRequest
+                {
+                    BinAbsEntry = 100,
+                    Quantity = 10
+                }
+            ]
+        };
+
+        SapDiApiProductionService.ApplyReceiptBatchSelectionPolicy(
+            line,
+            batchManaged: true,
+            "20260907-212022");
+
+        var batch = Assert.Single(line.Batches);
+        Assert.Null(line.BatchNumber);
+        Assert.Equal("20260907-212022", batch.BatchNumber);
+        Assert.Equal(10, batch.Quantity);
+        Assert.Empty(batch.Bins);
+        Assert.Empty(line.Bins);
+    }
+
+    [Fact]
+    public void ReceiptValidation_IgnoresMalformedCallerAllocation()
+    {
+        var request = new ProductionReceiptRequest
+        {
+            SiteId = "TEST-TIF",
+            DocEntry = 48821,
+            DocDate = new DateTime(2026, 9, 7),
+            ReceiptLines =
+            [
+                new ProductionReceiptLineRequest
+                {
+                    Quantity = 10,
+                    Warehouse = "WH-FG",
+                    BatchNumber = "CALLER-BATCH",
+                    Batches =
+                    [
+                        new ProductionBatchRequest
+                        {
+                            BatchNumber = "",
+                            Quantity = -1
+                        }
+                    ],
+                    Bins =
+                    [
+                        new ProductionBinAllocationRequest
+                        {
+                            Quantity = -1
+                        }
+                    ]
+                }
+            ]
+        };
+
+        ProductionOrderService.ValidateReceiptRequest(request);
+
+        var line = Assert.Single(request.ReceiptLines);
+        Assert.Null(line.BatchNumber);
+        Assert.Empty(line.Batches);
+        Assert.Empty(line.Bins);
     }
 
     [Fact]
@@ -410,6 +527,57 @@ public class ReceiptFromProductionTests
         Assert.Equal(10d, documentLine.BinAllocations.Quantity);
         Assert.Equal(0, documentLine.BinAllocations.SerialAndBatchNumbersBaseLine);
         Assert.Equal(1, documentLine.BinAllocations.AddCount);
+    }
+
+    [Fact]
+    public void ProductionPayloadContract_RetainsExistingBatchAndBinFields()
+    {
+        Assert.Equal(
+            new[]
+            {
+                "batchNumber",
+                "batches",
+                "bins",
+                "itemCode",
+                "lineNum",
+                "quantity",
+                "warehouse"
+            },
+            GetJsonPropertyNames<ProductionIssueLineRequest>());
+        Assert.Equal(
+            new[]
+            {
+                "batchNumber",
+                "batches",
+                "bins",
+                "lineNum",
+                "quantity",
+                "warehouse"
+            },
+            GetJsonPropertyNames<ProductionReceiptLineRequest>());
+        Assert.Equal(
+            new[]
+            {
+                "batchNumber",
+                "batches",
+                "bins",
+                "lineNum",
+                "quantity",
+                "warehouse"
+            },
+            GetJsonPropertyNames<DeliveryLineRequest>());
+        Assert.Equal(
+            new[] { "batchNumber", "bins", "quantity" },
+            GetJsonPropertyNames<ProductionBatchRequest>());
+    }
+
+    private static string[] GetJsonPropertyNames<T>()
+    {
+        return typeof(T)
+            .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+            .Select(x => JsonNamingPolicy.CamelCase.ConvertName(x.Name))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static SapDiApiProductionService CreateService()

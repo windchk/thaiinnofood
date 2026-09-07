@@ -75,6 +75,132 @@ public class DeliveryTests
     }
 
     [Fact]
+    public void ValidateDeliveryRequest_IgnoresCallerBatchAndBinAllocations()
+    {
+        var request = new DeliveryRequest
+        {
+            SiteId = "TEST-TIF",
+            CompanyName = "TEST_INTERFACE",
+            DocEntry = 47805,
+            DocDate = new DateTime(2026, 7, 23),
+            DeliveryLines =
+            [
+                new DeliveryLineRequest
+                {
+                    LineNum = 0,
+                    Quantity = 10,
+                    Warehouse = "WH-FG",
+                    BatchNumber = "CALLER-BATCH",
+                    Batches =
+                    [
+                        new ProductionBatchRequest
+                        {
+                            BatchNumber = "CALLER-BATCH-2",
+                            Quantity = 1
+                        }
+                    ],
+                    Bins =
+                    [
+                        new ProductionBinAllocationRequest
+                        {
+                            BinCode = "CALLER-BIN",
+                            Quantity = 1
+                        }
+                    ]
+                }
+            ]
+        };
+
+        ProductionOrderService.ValidateDeliveryRequest(request);
+
+        var line = Assert.Single(request.DeliveryLines);
+        Assert.Null(line.BatchNumber);
+        Assert.Empty(line.Batches);
+        Assert.Empty(line.Bins);
+    }
+
+    [Fact]
+    public void DeliveryBatchPolicy_UsesReserveAllocationThenSapOrderedAutomaticBatch()
+    {
+        var line = new DeliveryLineRequest
+        {
+            LineNum = 0,
+            Quantity = 10,
+            Warehouse = "WH-FG",
+            Batches =
+            [
+                new ProductionBatchRequest
+                {
+                    BatchNumber = "CALLER-BATCH",
+                    Quantity = 10
+                }
+            ]
+        };
+        var reserveBatches = new List<ProductionBatchRequest>
+        {
+            new()
+            {
+                BatchNumber = "BATCH-002",
+                Quantity = 4
+            }
+        };
+        var availableBatches = new List<AvailableProductionBatch>
+        {
+            new(2, "BATCH-002", 10),
+            new(1, "BATCH-001", 6)
+        };
+
+        SapDiApiProductionService.ApplyDeliveryBatchSelectionPolicy(
+            line,
+            new DeliveryItemInfo("FG00001", true),
+            reserveBatches,
+            availableBatches);
+
+        Assert.Collection(
+            line.Batches,
+            batch =>
+            {
+                Assert.Equal("BATCH-002", batch.BatchNumber);
+                Assert.Equal(4, batch.Quantity);
+                Assert.Empty(batch.Bins);
+            },
+            batch =>
+            {
+                Assert.Equal("BATCH-001", batch.BatchNumber);
+                Assert.Equal(6, batch.Quantity);
+                Assert.Empty(batch.Bins);
+            });
+        Assert.Empty(line.Bins);
+    }
+
+    [Fact]
+    public void ReadDocumentLineBatches_AggregatesTheActualSapBatchSelection()
+    {
+        var documentLines = new FakeReadableDocumentLines(
+            new("BATCH-001", 2),
+            new("batch-001", 3),
+            new("BATCH-002", 5));
+
+        var batches = SapDiApiProductionService.ReadDocumentLineBatches(
+            (object)documentLines,
+            0);
+
+        Assert.Equal(0, documentLines.CurrentLine);
+        Assert.Collection(
+            batches,
+            batch =>
+            {
+                Assert.Equal("BATCH-001", batch.BatchNumber);
+                Assert.Equal(5, batch.Quantity);
+            },
+            batch =>
+            {
+                Assert.Equal("BATCH-002", batch.BatchNumber);
+                Assert.Equal(5, batch.Quantity);
+            });
+    }
+
+    [Fact]
     public void ConfigureDeliveryLine_UsesReserveInvoiceBaseAndBatchBin()
     {
         var service = CreateService();
@@ -205,4 +331,42 @@ public class DeliveryTests
 
         return new SapCompanyResolver(options);
     }
+
+    public sealed class FakeReadableDocumentLines
+    {
+        public FakeReadableDocumentLines(params FakeReadableBatch[] batches)
+        {
+            BatchNumbers = new FakeReadableBatchNumbers(batches);
+        }
+
+        public int CurrentLine { get; private set; }
+        public FakeReadableBatchNumbers BatchNumbers { get; }
+
+        public void SetCurrentLine(int lineIndex)
+        {
+            CurrentLine = lineIndex;
+        }
+    }
+
+    public sealed class FakeReadableBatchNumbers
+    {
+        private readonly IReadOnlyList<FakeReadableBatch> _batches;
+        private int _currentLine;
+
+        public FakeReadableBatchNumbers(IReadOnlyList<FakeReadableBatch> batches)
+        {
+            _batches = batches;
+        }
+
+        public int Count => _batches.Count;
+        public string BatchNumber => _batches[_currentLine].BatchNumber;
+        public decimal Quantity => _batches[_currentLine].Quantity;
+
+        public void SetCurrentLine(int lineIndex)
+        {
+            _currentLine = lineIndex;
+        }
+    }
+
+    public sealed record FakeReadableBatch(string BatchNumber, decimal Quantity);
 }
