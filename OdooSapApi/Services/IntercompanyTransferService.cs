@@ -28,7 +28,8 @@ public class IntercompanyTransferService
     }
 
     public async Task<IntercompanyTransferResult> ProcessAsync(
-        IntercompanyTransferRequest request)
+        IntercompanyTransferRequest request,
+        CancellationToken cancellationToken = default)
     {
         IntercompanyTransferValidator.Validate(request);
         NormalizeDates(request);
@@ -102,7 +103,8 @@ public class IntercompanyTransferService
                 {
                     var transfer = await _sapService.GetOrCreateTransferAsync(
                         request,
-                        siteOptions);
+                        siteOptions,
+                        cancellationToken);
                     goodsIssueDocument = transfer.GoodsIssue.Document;
                     lineCosts = transfer.GoodsIssue.LineCosts;
                     goodsReceiptDocument = transfer.GoodsReceipt;
@@ -126,7 +128,8 @@ public class IntercompanyTransferService
                 goodsReceiptDocument = await _sapService.GetOrCreateGoodsReceiptAsync(
                     request,
                     siteOptions,
-                    lineCosts);
+                    lineCosts,
+                    cancellationToken);
             }
 
             goodsIssueDocument.SiteId = siteOptions.SourceSiteId;
@@ -159,6 +162,10 @@ public class IntercompanyTransferService
             return BuildResult(record, siteOptions);
         }
         catch (IntercompanyTransferConflictException)
+        {
+            throw;
+        }
+        catch (SapDiApiBusyException)
         {
             throw;
         }

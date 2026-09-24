@@ -541,18 +541,21 @@ public class IntercompanyTransferTests
     {
         public Task<IntercompanySapTransferResult> GetOrCreateTransferAsync(
             IntercompanyTransferRequest request,
-            IntercompanyTransferSiteOptions siteOptions)
+            IntercompanyTransferSiteOptions siteOptions,
+            CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
 
         public Task<IntercompanyGoodsIssueResult> GetOrCreateGoodsIssueAsync(
             IntercompanyTransferRequest request,
-            IntercompanyTransferSiteOptions siteOptions)
+            IntercompanyTransferSiteOptions siteOptions,
+            CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
 
         public Task<SapDocumentResult> GetOrCreateGoodsReceiptAsync(
             IntercompanyTransferRequest request,
             IntercompanyTransferSiteOptions siteOptions,
-            IReadOnlyList<IntercompanyLineCost> lineCosts)
+            IReadOnlyList<IntercompanyLineCost> lineCosts,
+            CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
     }
 

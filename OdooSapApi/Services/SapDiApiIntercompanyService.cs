@@ -10,7 +10,6 @@ namespace OdooSapApi.Services;
 
 public class SapDiApiIntercompanyService : IIntercompanySapService
 {
-    private static readonly SemaphoreSlim DiApiGate = new(1, 1);
     internal const int CommitTransactionOption = 0;
     internal const int RollbackTransactionOption = 1;
     internal const int RecordsetObjectType = 300;
@@ -19,24 +18,26 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
     private readonly SapCompanyOptions _sapOptions;
     private readonly IntercompanyTransferOptions _transferOptions;
     private readonly ILogger<SapDiApiIntercompanyService> _logger;
+    private readonly SapDiApiExecutionGate _diApiGate;
 
     public SapDiApiIntercompanyService(
         IOptions<SapCompanyOptions> sapOptions,
         IOptions<IntercompanyTransferOptions> transferOptions,
-        ILogger<SapDiApiIntercompanyService> logger)
+        ILogger<SapDiApiIntercompanyService> logger,
+        SapDiApiExecutionGate diApiGate)
     {
         _sapOptions = sapOptions.Value;
         _transferOptions = transferOptions.Value;
         _logger = logger;
+        _diApiGate = diApiGate;
     }
 
     public async Task<IntercompanySapTransferResult> GetOrCreateTransferAsync(
         IntercompanyTransferRequest request,
-        IntercompanyTransferSiteOptions siteOptions)
+        IntercompanyTransferSiteOptions siteOptions,
+        CancellationToken cancellationToken = default)
     {
-        await DiApiGate.WaitAsync();
-
-        try
+        using (await _diApiGate.EnterAsync(cancellationToken))
         {
             var existingGoodsIssue = FindDocument(
                 request.SourceCompanyName,
@@ -127,19 +128,14 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 newTransferPreparation,
                 existingOrphanGoodsReceipt);
         }
-        finally
-        {
-            DiApiGate.Release();
-        }
     }
 
     public async Task<IntercompanyGoodsIssueResult> GetOrCreateGoodsIssueAsync(
         IntercompanyTransferRequest request,
-        IntercompanyTransferSiteOptions siteOptions)
+        IntercompanyTransferSiteOptions siteOptions,
+        CancellationToken cancellationToken = default)
     {
-        await DiApiGate.WaitAsync();
-
-        try
+        using (await _diApiGate.EnterAsync(cancellationToken))
         {
             var existing = FindDocument(
                 request.SourceCompanyName,
@@ -165,20 +161,15 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 autoSelectSourceBatches: true);
             return CreateGoodsIssue(request, siteOptions, preparation);
         }
-        finally
-        {
-            DiApiGate.Release();
-        }
     }
 
     public async Task<SapDocumentResult> GetOrCreateGoodsReceiptAsync(
         IntercompanyTransferRequest request,
         IntercompanyTransferSiteOptions siteOptions,
-        IReadOnlyList<IntercompanyLineCost> lineCosts)
+        IReadOnlyList<IntercompanyLineCost> lineCosts,
+        CancellationToken cancellationToken = default)
     {
-        await DiApiGate.WaitAsync();
-
-        try
+        using (await _diApiGate.EnterAsync(cancellationToken))
         {
             var existing = FindDocument(
                 request.TargetCompanyName,
@@ -212,10 +203,6 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 autoSelectSourceBatches: false);
             ValidateLineCosts(request, lineCosts);
             return CreateGoodsReceipt(request, siteOptions, lineCosts, preparation);
-        }
-        finally
-        {
-            DiApiGate.Release();
         }
     }
 
@@ -255,7 +242,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         finally
         {
             ReleaseComObject(document);
-            ReleaseCompany(company);
+            ReleaseCompanySafely(company, request.SourceCompanyName);
         }
     }
 
@@ -289,7 +276,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         finally
         {
             ReleaseComObject(document);
-            ReleaseCompany(company);
+            ReleaseCompanySafely(company, request.TargetCompanyName);
         }
     }
 
@@ -417,8 +404,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
         finally
         {
-            ReleaseComObjectSafely(goodsReceiptDocument, "Goods Receipt document");
-            ReleaseComObjectSafely(goodsIssueDocument, "Goods Issue document");
+            ReleaseComObject(goodsReceiptDocument);
+            ReleaseComObject(goodsIssueDocument);
             ReleaseCompanySafely(targetCompany, request.TargetCompanyName);
             ReleaseCompanySafely(sourceCompany, request.SourceCompanyName);
         }
@@ -626,6 +613,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         IntercompanyPostingPreparation preparation)
     {
         dynamic document = company.GetBusinessObject(_transferOptions.GoodsIssueObjectType);
+        dynamic? documentLines = null;
+        var completed = false;
 
         try
         {
@@ -635,36 +624,43 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 preparation.GoodsIssueSeries,
                 "Goods Issue");
 
+            documentLines = document.Lines;
+
             for (var lineIndex = 0; lineIndex < request.Lines.Count; lineIndex++)
             {
                 if (lineIndex > 0)
                 {
-                    document.Lines.Add();
+                    documentLines.Add();
                 }
 
                 var line = request.Lines[lineIndex];
-                document.Lines.ItemCode = line.ItemCode;
-                document.Lines.Quantity = Convert.ToDouble(line.Quantity);
-                document.Lines.WarehouseCode = line.SourceWarehouse;
+                documentLines.ItemCode = line.ItemCode;
+                documentLines.Quantity = Convert.ToDouble(line.Quantity);
+                documentLines.WarehouseCode = line.SourceWarehouse;
 
                 if (!string.IsNullOrWhiteSpace(siteOptions.GoodsIssueAccountCode))
                 {
-                    document.Lines.AccountCode = siteOptions.GoodsIssueAccountCode;
+                    documentLines.AccountCode = siteOptions.GoodsIssueAccountCode;
                 }
 
                 ApplyBatches(
-                    (object)document.Lines,
+                    documentLines,
                     line,
                     false,
                     preparation);
             }
 
+            completed = true;
             return document;
         }
-        catch
+        finally
         {
-            ReleaseComObject(document);
-            throw;
+            ReleaseComObject(documentLines);
+
+            if (!completed)
+            {
+                ReleaseComObject(document);
+            }
         }
     }
 
@@ -676,6 +672,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         IntercompanyPostingPreparation preparation)
     {
         dynamic document = company.GetBusinessObject(_transferOptions.GoodsReceiptObjectType);
+        dynamic? documentLines = null;
+        var completed = false;
 
         try
         {
@@ -685,39 +683,46 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 preparation.GoodsReceiptSeries,
                 "Goods Receipt");
 
+            documentLines = document.Lines;
+
             for (var lineIndex = 0; lineIndex < request.Lines.Count; lineIndex++)
             {
                 if (lineIndex > 0)
                 {
-                    document.Lines.Add();
+                    documentLines.Add();
                 }
 
                 var line = request.Lines[lineIndex];
                 var cost = lineCosts.Single(x => x.LineIndex == lineIndex);
 
-                document.Lines.ItemCode = line.ItemCode;
-                document.Lines.Quantity = Convert.ToDouble(line.Quantity);
-                document.Lines.WarehouseCode = line.TargetWarehouse;
-                document.Lines.UnitPrice = Convert.ToDouble(cost.UnitCost);
+                documentLines.ItemCode = line.ItemCode;
+                documentLines.Quantity = Convert.ToDouble(line.Quantity);
+                documentLines.WarehouseCode = line.TargetWarehouse;
+                documentLines.UnitPrice = Convert.ToDouble(cost.UnitCost);
 
                 if (!string.IsNullOrWhiteSpace(siteOptions.GoodsReceiptAccountCode))
                 {
-                    document.Lines.AccountCode = siteOptions.GoodsReceiptAccountCode;
+                    documentLines.AccountCode = siteOptions.GoodsReceiptAccountCode;
                 }
 
                 ApplyBatches(
-                    (object)document.Lines,
+                    documentLines,
                     line,
                     true,
                     preparation);
             }
 
+            completed = true;
             return document;
         }
-        catch
+        finally
         {
-            ReleaseComObject(document);
-            throw;
+            ReleaseComObject(documentLines);
+
+            if (!completed)
+            {
+                ReleaseComObject(document);
+            }
         }
     }
 
@@ -738,7 +743,25 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
     }
 
     internal static void SetTransferIdUserField(dynamic document, string transferId)
-        => document.UserFields.Fields.Item(TransferIdUserFieldName).Value = transferId;
+    {
+        dynamic? userFields = null;
+        dynamic? fields = null;
+        dynamic? field = null;
+
+        try
+        {
+            userFields = document.UserFields;
+            fields = userFields.Fields;
+            field = fields.Item(TransferIdUserFieldName);
+            field.Value = transferId;
+        }
+        finally
+        {
+            ReleaseComObject(field);
+            ReleaseComObject(fields);
+            ReleaseComObject(userFields);
+        }
+    }
 
     private void ApplyBatches(
         dynamic documentLine,
@@ -746,21 +769,30 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         bool setInboundBatchMetadata,
         IntercompanyPostingPreparation preparation)
     {
-        for (var batchIndex = 0; batchIndex < line.Batches.Count; batchIndex++)
+        dynamic? batchNumbers = null;
+
+        try
         {
-            var batch = line.Batches[batchIndex];
-            documentLine.BatchNumbers.BatchNumber = batch.BatchNumber;
-            documentLine.BatchNumbers.Quantity = Convert.ToDouble(batch.Quantity);
+            batchNumbers = documentLine.BatchNumbers;
 
-            if (setInboundBatchMetadata
-                && !preparation.TargetBatchExists[batch])
+            for (var batchIndex = 0; batchIndex < line.Batches.Count; batchIndex++)
             {
-                ConfigureInboundBatchMetadata(
-                    documentLine.BatchNumbers,
-                    batch);
-            }
+                var batch = line.Batches[batchIndex];
+                batchNumbers.BatchNumber = batch.BatchNumber;
+                batchNumbers.Quantity = Convert.ToDouble(batch.Quantity);
 
-            documentLine.BatchNumbers.Add();
+                if (setInboundBatchMetadata
+                    && !preparation.TargetBatchExists[batch])
+                {
+                    ConfigureInboundBatchMetadata(batchNumbers, batch);
+                }
+
+                batchNumbers.Add();
+            }
+        }
+        finally
+        {
+            ReleaseComObject(batchNumbers);
         }
     }
 
@@ -1010,7 +1042,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
         finally
         {
-            ReleaseCompany(company);
+            ReleaseCompanySafely(company, companyDb);
         }
     }
 
@@ -1077,6 +1109,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
 
         dynamic? document = null;
+        dynamic? documentLines = null;
 
         try
         {
@@ -1088,7 +1121,8 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                     $"{documentName} not found while reading batch selection. DocEntry={docEntry}");
             }
 
-            var documentLineCount = Convert.ToInt32(document.Lines.Count);
+            documentLines = document.Lines;
+            var documentLineCount = Convert.ToInt32(documentLines.Count);
 
             if (documentLineCount != requestLines.Count)
             {
@@ -1101,11 +1135,11 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
 
             for (var lineIndex = 0; lineIndex < requestLines.Count; lineIndex++)
             {
-                document.Lines.SetCurrentLine(lineIndex);
+                documentLines.SetCurrentLine(lineIndex);
                 var requestLine = requestLines[lineIndex];
-                var actualItemCode = Convert.ToString(document.Lines.ItemCode)?.Trim() ?? "";
+                var actualItemCode = Convert.ToString(documentLines.ItemCode)?.Trim() ?? "";
                 var actualQuantity = Math.Abs(Convert.ToDecimal(
-                    document.Lines.Quantity,
+                    documentLines.Quantity,
                     CultureInfo.InvariantCulture));
 
                 if (!string.Equals(
@@ -1119,7 +1153,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
                 }
 
                 selections.Add(SapDiApiProductionService.ReadDocumentLineBatches(
-                        (object)document.Lines,
+                        (object)documentLines,
                         lineIndex)
                     .Select(batch => new IntercompanyTransferBatchRequest
                     {
@@ -1133,6 +1167,7 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
         finally
         {
+            ReleaseComObject(documentLines);
             ReleaseComObject(document);
         }
     }
@@ -1603,30 +1638,37 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         dynamic company = Activator.CreateInstance(companyType)
             ?? throw new InvalidOperationException("Cannot create SAPbobsCOM.Company.");
 
-        company.Server = _sapOptions.Server;
-        if (!string.IsNullOrWhiteSpace(_sapOptions.SldServer))
+        try
         {
-            company.SLDServer = _sapOptions.SldServer;
+            company.Server = _sapOptions.Server;
+            if (!string.IsNullOrWhiteSpace(_sapOptions.SldServer))
+            {
+                company.SLDServer = _sapOptions.SldServer;
+            }
+
+            company.LicenseServer = _sapOptions.LicenseServer;
+            company.CompanyDB = companyDb;
+            company.UserName = _sapOptions.UserName;
+            company.Password = _sapOptions.Password;
+            company.DbUserName = _sapOptions.DbUserName;
+            company.DbPassword = _sapOptions.DbPassword;
+            company.DbServerType = _sapOptions.DbServerType;
+            company.language = _sapOptions.Language;
+            company.UseTrusted = false;
+
+            var connectResult = company.Connect();
+
+            if (connectResult != 0)
+            {
+                var errorMessage = company.GetLastErrorDescription();
+                throw new InvalidOperationException(
+                    $"SAP DI API connect failed. CompanyDb={companyDb}, Code={connectResult}, Message={errorMessage}");
+            }
         }
-
-        company.LicenseServer = _sapOptions.LicenseServer;
-        company.CompanyDB = companyDb;
-        company.UserName = _sapOptions.UserName;
-        company.Password = _sapOptions.Password;
-        company.DbUserName = _sapOptions.DbUserName;
-        company.DbPassword = _sapOptions.DbPassword;
-        company.DbServerType = _sapOptions.DbServerType;
-        company.language = _sapOptions.Language;
-        company.UseTrusted = false;
-
-        var connectResult = company.Connect();
-
-        if (connectResult != 0)
+        catch
         {
-            var errorMessage = company.GetLastErrorDescription();
-            ReleaseComObject(company);
-            throw new InvalidOperationException(
-                $"SAP DI API connect failed. CompanyDb={companyDb}, Code={connectResult}, Message={errorMessage}");
+            ReleaseCompanySafely(company, companyDb);
+            throw;
         }
 
         _logger.LogInformation("Connected to SAP CompanyDB={CompanyDb}", companyDb);
@@ -1709,23 +1751,20 @@ public class SapDiApiIntercompanyService : IIntercompanySapService
         }
     }
 
-    private void ReleaseComObjectSafely(dynamic? value, string objectName)
+    private static void ReleaseComObject(object? value)
     {
+        if (value is null || !Marshal.IsComObject(value))
+        {
+            return;
+        }
+
         try
         {
-            ReleaseComObject(value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to release SAP COM object. Object={ObjectName}", objectName);
-        }
-    }
-
-    private static void ReleaseComObject(dynamic? value)
-    {
-        if (value is not null && Marshal.IsComObject(value))
-        {
             Marshal.FinalReleaseComObject(value);
+        }
+        catch
+        {
+            // Cleanup must never change the outcome of an SAP posting operation.
         }
     }
 

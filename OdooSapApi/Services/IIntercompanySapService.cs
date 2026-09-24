@@ -6,14 +6,17 @@ public interface IIntercompanySapService
 {
     Task<IntercompanySapTransferResult> GetOrCreateTransferAsync(
         IntercompanyTransferRequest request,
-        IntercompanyTransferSiteOptions siteOptions);
+        IntercompanyTransferSiteOptions siteOptions,
+        CancellationToken cancellationToken = default);
 
     Task<IntercompanyGoodsIssueResult> GetOrCreateGoodsIssueAsync(
         IntercompanyTransferRequest request,
-        IntercompanyTransferSiteOptions siteOptions);
+        IntercompanyTransferSiteOptions siteOptions,
+        CancellationToken cancellationToken = default);
 
     Task<SapDocumentResult> GetOrCreateGoodsReceiptAsync(
         IntercompanyTransferRequest request,
         IntercompanyTransferSiteOptions siteOptions,
-        IReadOnlyList<IntercompanyLineCost> lineCosts);
+        IReadOnlyList<IntercompanyLineCost> lineCosts,
+        CancellationToken cancellationToken = default);
 }

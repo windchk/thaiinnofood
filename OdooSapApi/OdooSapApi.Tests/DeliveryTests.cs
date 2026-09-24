@@ -312,7 +312,8 @@ public class DeliveryTests
         return new SapDiApiProductionService(
             wrappedOptions,
             NullLogger<SapDiApiProductionService>.Instance,
-            new SapCompanyResolver(wrappedOptions));
+            new SapCompanyResolver(wrappedOptions),
+            new SapDiApiExecutionGate(Options.Create(new SapDiApiExecutionOptions())));
     }
 
     private static SapCompanyResolver CreateCompanyResolver()

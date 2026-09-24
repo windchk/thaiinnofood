@@ -7,9 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.Configure<SapCompanyOptions>(builder.Configuration.GetSection("SapCompany"));
+builder.Services.Configure<SapDiApiExecutionOptions>(
+    builder.Configuration.GetSection("SapDiApi"));
 builder.Services.Configure<IntercompanyTransferOptions>(
     builder.Configuration.GetSection("IntercompanyTransfers"));
 builder.Services.AddSingleton<SapCompanyResolver>();
+builder.Services.AddSingleton<SapDiApiExecutionGate>();
 builder.Services.AddSingleton<SapApiLogService>();
 builder.Services.AddSingleton<ProductionOrderService>();
 builder.Services.AddSingleton<ISapProductionService, SapDiApiProductionService>();

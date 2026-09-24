@@ -18,13 +18,15 @@ public class ProductionOrdersController : ControllerBase
     [HttpPost("issue")]
     public async Task<ActionResult<ApiResponse>> Issue([FromBody] ProductionIssueRequest request)
     {
-        return await ExecuteAsync(() => _productionOrderService.IssueAsync(request));
+        return await ExecuteAsync(
+            () => _productionOrderService.IssueAsync(request, HttpContext.RequestAborted));
     }
 
     [HttpPost("receipt")]
     public async Task<ActionResult<ApiResponse>> Receipt([FromBody] ProductionReceiptRequest request)
     {
-        return await ExecuteAsync(() => _productionOrderService.ReceiptAsync(request));
+        return await ExecuteAsync(
+            () => _productionOrderService.ReceiptAsync(request, HttpContext.RequestAborted));
     }
 
 #if false
@@ -46,6 +48,15 @@ public class ProductionOrdersController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (SapDiApiBusyException ex)
+        {
+            Response.Headers.RetryAfter = Convert.ToString(ex.RetryAfterSeconds);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new ApiResponse
             {
                 Success = false,
                 Message = ex.Message

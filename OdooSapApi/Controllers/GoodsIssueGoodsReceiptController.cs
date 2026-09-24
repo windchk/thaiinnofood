@@ -22,7 +22,9 @@ public class GoodsIssueGoodsReceiptController : ControllerBase
     {
         try
         {
-            var result = await _transferService.ProcessAsync(request);
+            var result = await _transferService.ProcessAsync(
+                request,
+                HttpContext.RequestAborted);
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -41,6 +43,13 @@ public class GoodsIssueGoodsReceiptController : ControllerBase
         catch (IntercompanyTransferBusyException ex)
         {
             return Conflict(Failure(ex.Message));
+        }
+        catch (SapDiApiBusyException ex)
+        {
+            Response.Headers.RetryAfter = Convert.ToString(ex.RetryAfterSeconds);
+            return StatusCode(
+                StatusCodes.Status503ServiceUnavailable,
+                Failure(ex.Message));
         }
         catch (IntercompanyTransferProcessingException ex)
         {

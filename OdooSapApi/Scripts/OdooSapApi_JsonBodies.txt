@@ -25,6 +25,15 @@
 - ข้อมูล connection SAP: อ่านจาก appsettings.json
 
 
+การควบคุม SAP DI API
+----------------------
+- ไม่ต้องเพิ่มหรือเปลี่ยน field ใน payload
+- API ใช้ config SapDiApi:MaxConcurrency = 2 เพื่อให้ DI API ทำงานพร้อมกันได้สูงสุด 2 request
+- request ถัดไปจะรอคิวได้ SapDiApi:AcquireTimeoutSeconds = 20 วินาที ก่อนตอบ HTTP 503 และ header Retry-After = 15
+- API ไม่ retry request อัตโนมัติ; Retry-After เป็นเพียงคำแนะนำให้ caller เท่านั้น
+- HTTP 503 ข้างต้นเกิดก่อนเริ่มเชื่อมต่อ/สร้างเอกสาร SAP จึง retry request เดิมได้หลังเวลาที่กำหนด
+
+
 รูปแบบ batch/bin ใน payload
 ==========================
 

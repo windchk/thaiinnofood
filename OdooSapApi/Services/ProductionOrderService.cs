@@ -23,7 +23,9 @@ public class ProductionOrderService
         _companyResolver = companyResolver;
     }
 
-    public async Task<ApiResponse> IssueAsync(ProductionIssueRequest request)
+    public async Task<ApiResponse> IssueAsync(
+        ProductionIssueRequest request,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteWithLogAsync(
             "IssueFromProduction",
@@ -40,7 +42,9 @@ public class ProductionOrderService
                     request.DocEntry,
                     request.IssueLines.Count);
 
-                var sapResult = await _sapProductionService.IssueAsync(request);
+                var sapResult = await _sapProductionService.IssueAsync(
+                    request,
+                    cancellationToken);
                 sapResult.SiteId = request.SiteId;
                 sapResult.SapDatabaseName = _companyResolver.ResolveCompanyDb(request.SiteId);
 
@@ -53,7 +57,9 @@ public class ProductionOrderService
             });
     }
 
-    public async Task<ApiResponse> ReceiptAsync(ProductionReceiptRequest request)
+    public async Task<ApiResponse> ReceiptAsync(
+        ProductionReceiptRequest request,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteWithLogAsync(
             "ReceiptFromProduction",
@@ -70,7 +76,9 @@ public class ProductionOrderService
                     request.DocEntry,
                     request.ReceiptLines.Count);
 
-                var sapResult = await _sapProductionService.ReceiptAsync(request);
+                var sapResult = await _sapProductionService.ReceiptAsync(
+                    request,
+                    cancellationToken);
                 sapResult.SiteId = request.SiteId;
                 sapResult.SapDatabaseName = _companyResolver.ResolveCompanyDb(request.SiteId);
 
@@ -83,7 +91,9 @@ public class ProductionOrderService
             });
     }
 
-    public async Task<ApiResponse> DeliveryAsync(DeliveryRequest request)
+    public async Task<ApiResponse> DeliveryAsync(
+        DeliveryRequest request,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteWithLogAsync(
             "Delivery",
@@ -104,7 +114,9 @@ public class ProductionOrderService
                     request.DocEntry,
                     request.DeliveryLines.Count);
 
-                var sapResult = await _sapProductionService.DeliveryAsync(request);
+                var sapResult = await _sapProductionService.DeliveryAsync(
+                    request,
+                    cancellationToken);
                 sapResult.SiteId = request.SiteId;
                 sapResult.SapDatabaseName = sapDatabaseName;
 
@@ -117,7 +129,9 @@ public class ProductionOrderService
             });
     }
 
-    public async Task<ApiResponse> CloseAsync(ProductionCloseRequest request)
+    public async Task<ApiResponse> CloseAsync(
+        ProductionCloseRequest request,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteWithLogAsync(
             "CloseProductionOrder",
@@ -133,7 +147,9 @@ public class ProductionOrderService
                     request.SiteId,
                     request.DocEntry);
 
-                var sapResult = await _sapProductionService.CloseAsync(request);
+                var sapResult = await _sapProductionService.CloseAsync(
+                    request,
+                    cancellationToken);
                 sapResult.SiteId = request.SiteId;
                 sapResult.SapDatabaseName = _companyResolver.ResolveCompanyDb(request.SiteId);
 

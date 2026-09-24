@@ -20,8 +20,19 @@ public class SapConnectionController : ControllerBase
     {
         try
         {
-            var response = await _sapProductionService.CheckConnectionAsync(siteId);
+            var response = await _sapProductionService.CheckConnectionAsync(
+                siteId,
+                HttpContext.RequestAborted);
             return Ok(response);
+        }
+        catch (SapDiApiBusyException ex)
+        {
+            Response.Headers.RetryAfter = Convert.ToString(ex.RetryAfterSeconds);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new ApiResponse
+            {
+                Success = false,
+                Message = ex.Message
+            });
         }
         catch (Exception ex)
         {

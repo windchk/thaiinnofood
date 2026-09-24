@@ -20,11 +20,22 @@ public class DeliveryController : ControllerBase
     {
         try
         {
-            return Ok(await _sapDocumentService.DeliveryAsync(request));
+            return Ok(await _sapDocumentService.DeliveryAsync(
+                request,
+                HttpContext.RequestAborted));
         }
         catch (ArgumentException ex)
         {
             return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (SapDiApiBusyException ex)
+        {
+            Response.Headers.RetryAfter = Convert.ToString(ex.RetryAfterSeconds);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new ApiResponse
             {
                 Success = false,
                 Message = ex.Message
