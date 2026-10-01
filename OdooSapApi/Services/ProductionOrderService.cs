@@ -7,14 +7,14 @@ public class ProductionOrderService
 {
     private readonly ILogger<ProductionOrderService> _logger;
     private readonly ISapProductionService _sapProductionService;
-    private readonly SapApiLogService _sapApiLogService;
+    private readonly ISapApiLogService _sapApiLogService;
     private readonly SapCompanyResolver _companyResolver;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public ProductionOrderService(
         ILogger<ProductionOrderService> logger,
         ISapProductionService sapProductionService,
-        SapApiLogService sapApiLogService,
+        ISapApiLogService sapApiLogService,
         SapCompanyResolver companyResolver)
     {
         _logger = logger;
@@ -172,17 +172,28 @@ public class ProductionOrderService
         var requestJson = Serialize(request);
         var sapDatabaseName = ResolveCompanyDbForLog(siteId);
 
+        // The start row is intentionally written before validation, queueing, or SAP.
+        // StartAsync throws when the INSERT fails, so action is never invoked without an audit row.
+        var logId = await _sapApiLogService.StartAsync(new SapApiLogEntry
+        {
+            SiteId = siteId,
+            SapDatabaseName = sapDatabaseName,
+            ProcessType = processType,
+            ProductionOrderDocEntry = docEntry,
+            RequestJson = requestJson,
+            Status = "P"
+        });
+
         try
         {
             var response = await action();
 
-            await _sapApiLogService.WriteAsync(new SapApiLogEntry
+            await _sapApiLogService.TryCompleteAsync(logId, new SapApiLogEntry
             {
                 SiteId = siteId,
                 SapDatabaseName = sapDatabaseName,
                 ProcessType = processType,
                 ProductionOrderDocEntry = docEntry,
-                RequestJson = requestJson,
                 ResponseJson = Serialize(response),
                 Status = "S",
                 SapDocumentEntry = GetSapDocumentEntry(processType, docEntry, response),
@@ -199,20 +210,26 @@ public class ProductionOrderService
                 Message = ex.Message
             };
 
-            await _sapApiLogService.WriteAsync(new SapApiLogEntry
+            await _sapApiLogService.TryCompleteAsync(logId, new SapApiLogEntry
             {
                 SiteId = siteId,
                 SapDatabaseName = sapDatabaseName,
                 ProcessType = processType,
                 ProductionOrderDocEntry = docEntry,
-                RequestJson = requestJson,
                 ResponseJson = Serialize(errorResponse),
-                Status = "E",
+                Status = ResolveFailureStatus(ex),
                 ErrorMessage = ex.Message
             });
 
             throw;
         }
+    }
+
+    private static string ResolveFailureStatus(Exception exception)
+    {
+        return exception is ArgumentException or SapDiApiBusyException
+            ? "E"
+            : "X";
     }
 
     private string ResolveCompanyDbForLog(string siteId)

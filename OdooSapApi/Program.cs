@@ -13,7 +13,7 @@ builder.Services.Configure<IntercompanyTransferOptions>(
     builder.Configuration.GetSection("IntercompanyTransfers"));
 builder.Services.AddSingleton<SapCompanyResolver>();
 builder.Services.AddSingleton<SapDiApiExecutionGate>();
-builder.Services.AddSingleton<SapApiLogService>();
+builder.Services.AddSingleton<ISapApiLogService, SapApiLogService>();
 builder.Services.AddSingleton<ProductionOrderService>();
 builder.Services.AddSingleton<ISapProductionService, SapDiApiProductionService>();
 builder.Services.AddSingleton<IntercompanyTransferResolver>();

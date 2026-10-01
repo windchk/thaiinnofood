@@ -34,6 +34,25 @@
 - HTTP 503 ข้างต้นเกิดก่อนเริ่มเชื่อมต่อ/สร้างเอกสาร SAP จึง retry request เดิมได้หลังเวลาที่กำหนด
 
 
+การเก็บ log ของ API
+--------------------
+- เมื่อ API รับ JSON ที่ ASP.NET แปลงเป็น request model ได้แล้ว API จะ INSERT log ทันทีด้วย Status = P ก่อน validation, ก่อนรอคิว DI API และก่อนเรียก SAP
+- RequestDate คือเวลาที่ INSERT log เริ่มต้น หรือเวลาที่ API รับ request เข้าสู่ฟังก์ชันทำงาน
+- เมื่อรู้ผลแล้ว API จะ UPDATE log แถวเดิมด้วย LogId: S = success, E = validation/business error หรือคิวเต็ม, X = exception/system error
+- CompletedDate คือเวลาที่ UPDATE ผลลัพธ์สุดท้าย S/E/X สำเร็จ จึงใช้คำนวณเวลาประมวลผลจาก CompletedDate - RequestDate ได้
+- ไม่มี Status = C; client ยกเลิก request จะถูกบันทึกเป็น X หากโค้ดได้รับ exception และยังสามารถ UPDATE log ได้
+- ถ้า INSERT log เริ่มต้นไม่สำเร็จ API จะหยุดและตอบ error โดยไม่ validation ต่อ ไม่เข้าคิว และไม่เรียก SAP
+- ถ้า SAP ทำงานเสร็จแล้วแต่ UPDATE log รอบสุดท้ายไม่สำเร็จ API จะไม่เปลี่ยนผล SAP เป็น failure; log จะค้าง P และ application log จะบันทึกเหตุขัดข้องไว้ เพื่อลดความเสี่ยง caller ยิงซ้ำแล้วเกิดเอกสารซ้ำ
+- การ INSERT และ UPDATE เป็น SQL command สั้น ๆ แยกกัน ไม่มีการเปิด SQL transaction ค้างไว้ระหว่างเรียก SAP
+
+ข้อจำกัดกรณี JSON ผิดรูปแบบ
+---------------------------
+- Controller ใช้ [ApiController] ดังนั้น ASP.NET จะอ่านและแปลง JSON เป็น request model ก่อนเรียกฟังก์ชัน Issue/Receipt
+- ถ้า JSON ผิดไวยากรณ์ เช่น ปิดวงเล็บไม่ครบ ASP.NET จะตอบ HTTP 400 ก่อนเข้าฟังก์ชัน จึงยังไม่มีแถวใน INT_SapApiLog
+- JSON ที่ถูกไวยากรณ์แต่ข้อมูลไม่ครบ เช่นไม่มี docDate จะเข้าฟังก์ชันได้: API จะ INSERT P ก่อน แล้ว UPDATE แถวเดิมเป็น E หลัง validation ไม่ผ่าน
+- ถ้าต้องการเก็บ raw body ที่ JSON ผิดรูปแบบด้วย ต้องเพิ่ม middleware หรือ action filter ก่อน model binding แยกต่างหาก และควรกำหนดขนาดสูงสุด/การปิดบังข้อมูลสำคัญก่อนบันทึก
+
+
 รูปแบบ batch/bin ใน payload
 ==========================
 
