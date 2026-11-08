@@ -1,0 +1,60 @@
+{
+  "Applied": false,
+  "SqlFile": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\OdooSyncWorker\\Scripts\\Apply_PRD_AR_DocDate_Cutoff_Backfill.sql",
+  "Results": [
+    {
+      "ResultSet": 0,
+      "Rows": [
+        {
+          "Mode": "PREVIEW_ONLY",
+          "ArDocDateCutoff": "2026-11-09",
+          "StartedAt": "2026-11-08 08:09:36.547",
+          "CheckedAt": "2026-11-08 08:09:36.560",
+          "InsertedRows": 0
+        }
+      ]
+    },
+    {
+      "ResultSet": 1,
+      "Rows": [
+        {
+          "SapDatabaseName": "SBO_STL_GOLIVE",
+          "Decision": "SKIP_SUCCESS",
+          "Documents": 5,
+          "FirstDocDate": "2026-11-09 00:00:00.000",
+          "LastDocDate": "2026-11-09 00:00:00.000"
+        },
+        {
+          "SapDatabaseName": "TIF_GOLIVE",
+          "Decision": "SKIP_SUCCESS",
+          "Documents": 5,
+          "FirstDocDate": "2026-11-09 00:00:00.000",
+          "LastDocDate": "2026-11-09 00:00:00.000"
+        }
+      ]
+    },
+    {
+      "ResultSet": 2,
+      "Rows": []
+    },
+    {
+      "ResultSet": 3,
+      "Rows": []
+    },
+    {
+      "ResultSet": 4,
+      "Rows": [
+        {
+          "DatabaseName": "SBO_STL_GOLIVE",
+          "IsDisabled": false,
+          "TriggerChangedWhenApplying": true
+        },
+        {
+          "DatabaseName": "TIF_GOLIVE",
+          "IsDisabled": false,
+          "TriggerChangedWhenApplying": true
+        }
+      ]
+    }
+  ]
+}

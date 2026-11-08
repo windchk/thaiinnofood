@@ -1,0 +1,65 @@
+{
+  "rule": "PRD DueDate >= 2026-11-09",
+  "checkedAt": "2026-11-07 15:24:40 +07:00",
+  "batchStatus": {
+    "TotalBatchRows": 1815,
+    "OdooConfirmed": 1815,
+    "Pending": 0,
+    "TransportErrors": 0,
+    "TotalRetries": 0,
+    "FirstCompleted": "2026-11-07 14:50:13.610",
+    "LastCompleted": "2026-11-07 15:24:30.370"
+  },
+  "byProcess": [
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "Status": "S",
+      "Documents": 9,
+      "OdooConfirmed": 9
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "Status": "S",
+      "Documents": 1785,
+      "OdooConfirmed": 1785
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ObjectType": "ProductionOrder",
+      "Status": "S",
+      "Documents": 21,
+      "OdooConfirmed": 21
+    }
+  ],
+  "duplicates": [],
+  "triggers": [
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "DueDateFilterApplied": 1
+    },
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "DueDateFilterApplied": 1
+    },
+    {
+      "DatabaseName": "SBO_STL_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "DueDateFilterApplied": 1
+    }
+  ],
+  "otherPending": {
+    "OtherPrdPendingRows": 0
+  },
+  "excluded": "Planned/Closed/Cancelled documents; 34 previously confirmed successes",
+  "readOnlyTests": {
+    "predicateCases": 39,
+    "backfillSelectionCases": 29
+  }
+}

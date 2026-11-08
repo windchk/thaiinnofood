@@ -28,6 +28,41 @@ SBO_STL_GOLIVE OINV   TRG_OINV_Reserve_ToOdooQueue
 TRG_ORDR_ToOdooQueue และ TRG_OITM_ToOdooQueue เป็น flow เก่าที่ปิดไว้
 ถ้ามี trigger สองตัวนี้อยู่ ให้คงสถานะ DISABLED ไว้
 
+เงื่อนไขวันที่สำหรับ PRD เริ่ม 2026-11-09
+------------------------------------------
+
+- Production Order: ใช้ OWOR.DueDate >= 2026-11-09
+- A/R Reserve Invoice ของ TIF/STL: ใช้ OINV.DocDate >= 2026-11-09
+- ครอบคลุมทั้ง Release/Add และ Cancel โดยใช้ฟิลด์วันที่ตาม process ข้างต้น
+- ไม่กรองด้วย CreateDate หรือวันที่ปัจจุบันของ Server
+- TEST คงพฤติกรรมเดิม ส่วนคิวที่มีอยู่แล้วจะไม่ถูกลบหรือเปลี่ยนสถานะ
+- การปรับกฎรอบนี้แก้เฉพาะ A/R สองฐาน และส่งย้อนหลังเฉพาะ Reserve Invoice
+  ที่ยังเปิด (DocStatus=O, CANCELED=N) โดย Production Order คงเดิมทั้งหมด
+- ไม่ส่งย้อนหลังเอกสาร Planned/Closed/Cancelled ตามที่ผู้ใช้เลือก
+- ข้ามคิว N/P และรายการ S ที่ Odoo ตอบ result.status=2xx, results=true แล้ว
+- หากพบประวัติเดิมที่ยืนยันผลไม่ได้ สคริปต์จะหยุดให้ตรวจ ไม่ส่งซ้ำอัตโนมัติ
+
+ลำดับเตรียม PRD ก่อนเปิดส่งงาน:
+
+1. ตรวจ config ของ OdooSyncWorker ที่ deploy และยืนยัน Odoo ปลายทาง
+2. เปิด Scripts\Apply_PRD_AR_DocDate_Cutoff_Backfill.sql ใน SSMS บน TIFSVR01-SAP
+   ค่าเริ่มต้น @Apply=0 เป็นการ preview จำนวนและเหตุผลที่ข้ามเท่านั้น
+3. หลังตรวจ preview ให้เปลี่ยน @Apply=1 แล้วรันทั้งไฟล์
+   สคริปต์แก้เฉพาะ predicate วันที่ของ A/R คงสถานะ trigger ตามเดิม และเพิ่มคิวย้อนหลัง
+   ภายใน transaction เดียว ไม่มีการแก้ข้อมูลเอกสาร SAP
+   ถ้ามี PRD ค้าง N/P จะหยุดก่อน commit เพื่อไม่ตัดกลางงานที่กำลังส่ง
+4. ถ้า trigger เดิมเปิดอยู่ จะทำงานต่อทันทีโดยไม่ต้องเปิดซ้ำ
+   ถ้าเดิมปิด ให้ใช้ Scripts\Enable_PRD_Queue_Triggers.sql เมื่อพร้อมส่ง
+   สคริปต์จะไม่เปิดหาก Production Order ยังไม่มี DueDate >= 2026-11-09
+   หรือ A/R ยังไม่มี DocDate >= 2026-11-09
+5. ติดตาม QueueId ที่สคริปต์คืนมา ตรวจทั้ง Status และ ResponseJson ของ Odoo
+   เพราะ Worker รุ่นปัจจุบันยังอาจบันทึก S เมื่อ HTTP 200 แต่ result.status=400
+
+ไม่ต้อง publish หรือ restart Worker เพื่อให้เงื่อนไขใน SQL trigger มีผล
+สคริปต์ใหม่เพิ่มคิวย้อนหลังผ่าน TEMP_API.dbo.INT_OdooQueue ให้ Worker ตัวเดิมส่ง
+ไฟล์ Apply_PRD_DueDate_Cutoff_Backfill.sql และ Update_PRD_Queue_DocDate_Cutoff.sql
+เป็นประวัติกฎเก่า ห้ามใช้แทนกฎปัจจุบัน
+
 
 เลือกวิธีหยุดให้ถูกต้อง
 ----------------------

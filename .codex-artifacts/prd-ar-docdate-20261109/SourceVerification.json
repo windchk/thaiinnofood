@@ -1,0 +1,38 @@
+[
+  {
+    "Index": 0,
+    "Name": "TRG_OWOR_ToOdooQueue",
+    "ExpectedChange": "Unchanged",
+    "Passed": true
+  },
+  {
+    "Index": 1,
+    "Name": "TRG_OINV_Reserve_ToOdooQueue",
+    "ExpectedChange": "Unchanged",
+    "Passed": true
+  },
+  {
+    "Index": 2,
+    "Name": "TRG_OINV_Reserve_ToOdooQueue",
+    "ExpectedChange": "Unchanged",
+    "Passed": true
+  },
+  {
+    "Index": 3,
+    "Name": "TRG_OWOR_ToOdooQueue",
+    "ExpectedChange": "Unchanged",
+    "Passed": true
+  },
+  {
+    "Index": 4,
+    "Name": "TRG_OINV_Reserve_ToOdooQueue",
+    "ExpectedChange": "AR date predicate only",
+    "Passed": true
+  },
+  {
+    "Index": 5,
+    "Name": "TRG_OINV_Reserve_ToOdooQueue",
+    "ExpectedChange": "AR date predicate only",
+    "Passed": true
+  }
+]

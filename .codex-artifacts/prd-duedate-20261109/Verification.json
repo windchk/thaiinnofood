@@ -1,0 +1,26 @@
+{
+  "completedAt": "2026-11-07 15:24:40 +07:00",
+  "batch": {
+    "TotalBatchRows": 1815,
+    "OdooConfirmed": 1815,
+    "Pending": 0,
+    "TransportErrors": 0,
+    "TotalRetries": 0,
+    "FirstCompleted": "2026-11-07 14:50:13.610",
+    "LastCompleted": "2026-11-07 15:24:30.370"
+  },
+  "idempotency": {
+    "Mode": "PREVIEW_ONLY",
+    "InsertedRows": 0,
+    "NewCandidates": 0,
+    "SkippedPending": 0,
+    "SkippedConfirmed": 1854,
+    "ReviewNeeded": 0,
+    "AppliedDueDateRules": [
+      1,
+      1,
+      1
+    ]
+  },
+  "sourceChecks": "git diff --check passed; TEST trigger bodies unchanged"
+}

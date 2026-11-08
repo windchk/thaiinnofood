@@ -1,0 +1,78 @@
+{
+  "CheckedAt": "2026-11-08 08:13:23.377",
+  "AppliedAt": "2026-11-08 08:12:07.717",
+  "ArRule": "TIF_GOLIVE/SBO_STL_GOLIVE: OINV.DocDate >= 2026-11-09",
+  "ProductionRule": "Unchanged: OWOR.DueDate >= 2026-11-09",
+  "InsertedBackfillRows": 0,
+  "BackfillGroups": [
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "Decision": "SKIP_SUCCESS",
+      "Documents": 5,
+      "FirstDocDate": "2026-11-09 00:00:00.000",
+      "LastDocDate": "2026-11-09 00:00:00.000"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "Decision": "SKIP_SUCCESS",
+      "Documents": 5,
+      "FirstDocDate": "2026-11-09 00:00:00.000",
+      "LastDocDate": "2026-11-09 00:00:00.000"
+    }
+  ],
+  "ReviewRows": 0,
+  "PrdPendingRows": 0,
+  "FixtureCases": 84.0,
+  "FixturePassed": 84.0,
+  "TriggerVerification": [
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "DocDueDate -> DocDate only",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    },
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "Unchanged",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    },
+    {
+      "DatabaseName": "SBO_STL_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "DocDueDate -> DocDate only",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    },
+    {
+      "DatabaseName": "TEST_INTERFACE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "Unchanged",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    },
+    {
+      "DatabaseName": "TEST_INTERFACE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "Unchanged",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    },
+    {
+      "DatabaseName": "TEST_STL_ODOO",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "Change": "Unchanged",
+      "DefinitionVerified": true,
+      "StateVerified": true
+    }
+  ],
+  "ServiceDeploymentRequired": false
+}

@@ -1,0 +1,36 @@
+{
+  "Applied": false,
+  "SqlFile": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\.codex-artifacts\\prd-ar-docdate-20261109\\FixtureTests.sql",
+  "Results": [
+    {
+      "ResultSet": 0,
+      "Rows": [
+        {
+          "TestGroup": "Actual backfill selection SQL",
+          "Cases": 56,
+          "Passed": 56
+        }
+      ]
+    },
+    {
+      "ResultSet": 1,
+      "Rows": [
+        {
+          "TestGroup": "TIF_GOLIVE actual trigger body",
+          "Cases": 14,
+          "Passed": 14
+        }
+      ]
+    },
+    {
+      "ResultSet": 2,
+      "Rows": [
+        {
+          "TestGroup": "SBO_STL_GOLIVE actual trigger body",
+          "Cases": 14,
+          "Passed": 14
+        }
+      ]
+    }
+  ]
+}

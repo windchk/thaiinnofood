@@ -1,0 +1,233 @@
+{
+  "CheckedAt": "2026-11-07 16:05:14.480",
+  "CriterionUnderReview": "ARReserveInvoice SAP DocDate < 2026-11-09, compared with date visible in Odoo screenshot",
+  "CurrentRule": "AR DocDueDate >= 2026-11-09; Production DueDate >= 2026-11-09",
+  "TodayQueueRows": 1854,
+  "TodayConfirmedRows": 1854,
+  "TodayPendingRows": 0,
+  "TodayNonConfirmedRows": 0,
+  "SourceMissingRows": 0,
+  "PayloadDatabaseMismatchRows": 0,
+  "PayloadDocEntryMismatchRows": 0,
+  "ConfirmedArPostingBeforeCutoffRows": 1823,
+  "ConfirmedArPostingBeforeCutoffDistinctDocuments": 1823,
+  "ConfirmedArDueDateBeforeCutoffRows": 0,
+  "ConfirmedProductionRows": 21,
+  "ConfirmedProductionDueDateBeforeCutoffRows": 0,
+  "TodayGroups": [
+    {
+      "Scope": "AfterCutoverLive",
+      "Database": "TIF_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "QueueRows": 5,
+      "ConfirmedRows": 5,
+      "PostingBeforeCutoff": 0,
+      "FirstResult": "2026-11-07 15:24:30.510",
+      "LastResult": "2026-11-07 15:24:31.057"
+    },
+    {
+      "Scope": "Backfill1757-3571",
+      "Database": "SBO_STL_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "QueueRows": 9,
+      "ConfirmedRows": 9,
+      "PostingBeforeCutoff": 4,
+      "FirstResult": "2026-11-07 14:50:36.240",
+      "LastResult": "2026-11-07 15:24:30.230"
+    },
+    {
+      "Scope": "Backfill1757-3571",
+      "Database": "TIF_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "QueueRows": 1785,
+      "ConfirmedRows": 1785,
+      "PostingBeforeCutoff": 1785,
+      "FirstResult": "2026-11-07 14:50:36.693",
+      "LastResult": "2026-11-07 15:24:30.370"
+    },
+    {
+      "Scope": "Backfill1757-3571",
+      "Database": "TIF_GOLIVE",
+      "ObjectType": "ProductionOrder",
+      "QueueRows": 21,
+      "ConfirmedRows": 21,
+      "PostingBeforeCutoff": 0,
+      "FirstResult": "2026-11-07 14:50:13.610",
+      "LastResult": "2026-11-07 14:50:36.083"
+    },
+    {
+      "Scope": "BeforeCutoverToday",
+      "Database": "TIF_GOLIVE",
+      "ObjectType": "ARReserveInvoice",
+      "QueueRows": 34,
+      "ConfirmedRows": 34,
+      "PostingBeforeCutoff": 34,
+      "FirstResult": "2026-11-07 14:05:16.143",
+      "LastResult": "2026-11-07 14:18:42.027"
+    }
+  ],
+  "PostingBeforeCutoffGroups": [
+    {
+      "Scope": "Backfill1757-3571",
+      "Database": "SBO_STL_GOLIVE",
+      "Rows": 4,
+      "PostingNov08": 0,
+      "PostingEarlierThanNov08": 4,
+      "FirstPosting": "2026-10-02 00:00:00.000",
+      "LastPosting": "2026-11-02 00:00:00.000",
+      "FirstResult": "2026-11-07 14:56:05.910",
+      "LastResult": "2026-11-07 15:16:46.557",
+      "FirstQueue": 2069.0,
+      "LastQueue": 3159.0
+    },
+    {
+      "Scope": "Backfill1757-3571",
+      "Database": "TIF_GOLIVE",
+      "Rows": 1785,
+      "PostingNov08": 0,
+      "PostingEarlierThanNov08": 1785,
+      "FirstPosting": "2026-10-10 00:00:00.000",
+      "LastPosting": "2026-11-07 00:00:00.000",
+      "FirstResult": "2026-11-07 14:50:36.693",
+      "LastResult": "2026-11-07 15:24:30.370",
+      "FirstQueue": 1781.0,
+      "LastQueue": 3571.0
+    },
+    {
+      "Scope": "BeforeCutoverToday",
+      "Database": "TIF_GOLIVE",
+      "Rows": 34,
+      "PostingNov08": 34,
+      "PostingEarlierThanNov08": 0,
+      "FirstPosting": "2026-11-08 00:00:00.000",
+      "LastPosting": "2026-11-08 00:00:00.000",
+      "FirstResult": "2026-11-07 14:05:16.143",
+      "LastResult": "2026-11-07 14:18:42.027",
+      "FirstQueue": 1723.0,
+      "LastQueue": 1756.0
+    }
+  ],
+  "CurrentTriggers": [
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "ActualDateFilter": "DocDueDate >= 2026-11-09"
+    },
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "ActualDateFilter": "DueDate >= 2026-11-09"
+    },
+    {
+      "DatabaseName": "SBO_STL_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "ActualDateFilter": "DocDueDate >= 2026-11-09"
+    }
+  ],
+  "HistoricalStatusSWithoutConfirmedResponse": [
+    {
+      "Group": "SBO_STL_GOLIVE, ARReserveInvoice",
+      "Rows": 125
+    },
+    {
+      "Group": "SBO_STL_GOLIVE, ARReserveInvoice, 500",
+      "Rows": 3
+    },
+    {
+      "Group": "TIF_GOLIVE, ARReserveInvoice",
+      "Rows": 139
+    },
+    {
+      "Group": "TIF_GOLIVE, ARReserveInvoice, 500",
+      "Rows": 2
+    },
+    {
+      "Group": "TIF_GOLIVE, ProductionOrder",
+      "Rows": 101
+    }
+  ],
+  "PostingBeforeCutoffExamples": [
+    {
+      "QueueId": 1723,
+      "ResolvedDatabase": "TIF_GOLIVE",
+      "DocEntry": 85500,
+      "DocNum": 26110484,
+      "PostingDate": "2026-11-08 00:00:00.000",
+      "DueDate": "2026-12-08 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:05:16.143"
+    },
+    {
+      "QueueId": 1724,
+      "ResolvedDatabase": "TIF_GOLIVE",
+      "DocEntry": 85501,
+      "DocNum": 26110485,
+      "PostingDate": "2026-11-08 00:00:00.000",
+      "DueDate": "2026-12-08 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:06:16.370"
+    },
+    {
+      "QueueId": 1725,
+      "ResolvedDatabase": "TIF_GOLIVE",
+      "DocEntry": 85502,
+      "DocNum": 26110486,
+      "PostingDate": "2026-11-08 00:00:00.000",
+      "DueDate": "2026-12-08 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:06:36.547"
+    },
+    {
+      "QueueId": 1726,
+      "ResolvedDatabase": "TIF_GOLIVE",
+      "DocEntry": 85503,
+      "DocNum": 26110487,
+      "PostingDate": "2026-11-08 00:00:00.000",
+      "DueDate": "2026-12-08 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:07:06.773"
+    },
+    {
+      "QueueId": 1727,
+      "ResolvedDatabase": "TIF_GOLIVE",
+      "DocEntry": 85504,
+      "DocNum": 26110488,
+      "PostingDate": "2026-11-08 00:00:00.000",
+      "DueDate": "2026-12-08 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:08:27.017"
+    }
+  ],
+  "StlPostingBeforeCutoff": [
+    {
+      "QueueId": 2069,
+      "DocEntry": 36899,
+      "DocNum": 26100391,
+      "PostingDate": "2026-10-15 00:00:00.000",
+      "DueDate": "2026-11-14 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:56:05.910"
+    },
+    {
+      "QueueId": 2210,
+      "DocEntry": 36955,
+      "DocNum": 26100446,
+      "PostingDate": "2026-10-17 00:00:00.000",
+      "DueDate": "2026-11-16 00:00:00.000",
+      "ProcessDate": "2026-11-07 14:58:44.883"
+    },
+    {
+      "QueueId": 2858,
+      "DocEntry": 37363,
+      "DocNum": 26100851,
+      "PostingDate": "2026-10-02 00:00:00.000",
+      "DueDate": "2026-11-27 00:00:00.000",
+      "ProcessDate": "2026-11-07 15:11:03.287"
+    },
+    {
+      "QueueId": 3159,
+      "DocEntry": 37542,
+      "DocNum": 26110073,
+      "PostingDate": "2026-11-02 00:00:00.000",
+      "DueDate": "2026-12-02 00:00:00.000",
+      "ProcessDate": "2026-11-07 15:16:46.557"
+    }
+  ]
+}

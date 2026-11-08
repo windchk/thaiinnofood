@@ -1,0 +1,184 @@
+{
+  "CheckedAt": "2026-11-08 08:04:49.903",
+  "Triggers": [
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "CREATE TRIGGER dbo.TRG_OINV_Reserve_ToOdooQueue\nON dbo.OINV\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ARReserveInvoice',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        A.ActionType,\n        'PRD',\n        'TIF',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    CROSS APPLY\n    (\n        SELECT CASE\n            WHEN D.DocEntry IS NULL AND ISNULL(I.CANCELED, 'N') <> 'C' THEN 'ADD'\n            WHEN I.CANCELED = 'Y' AND ISNULL(D.CANCELED, 'N') <> 'Y' THEN 'CANCEL'\n        END AS ActionType\n    ) A\n    WHERE I.isIns = 'Y'\n      AND I.DocDueDate >= CONVERT(DATE, '20261109', 112)\n      AND A.ActionType IS NOT NULL\n      AND NOT EXISTS\n      (\n          SELECT 1\n          FROM TEMP_API.dbo.INT_OdooQueue Q\n          WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'\n            AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n            AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT\n            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'\n            AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'\n            AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n      );\nEND;\n"
+    },
+    {
+      "DatabaseName": "TIF_GOLIVE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "CREATE TRIGGER dbo.TRG_OWOR_ToOdooQueue\nON dbo.OWOR\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ProductionOrder',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END,\n        'PRD',\n        'TIF',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    WHERE I.DueDate >= CONVERT(DATE, '20261109', 112)\n        AND\n        (\n            (\n                I.Status = 'R'\n                AND ISNULL(D.Status, '') <> 'R'\n            )\n            OR\n            (\n                I.Status = 'C'\n                AND ISNULL(D.Status, '') <> 'C'\n            )\n        )\n        AND NOT EXISTS\n        (\n            SELECT 1\n            FROM TEMP_API.dbo.INT_OdooQueue Q\n            WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ProductionOrder'\n              AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n              AND Q.ActionType COLLATE DATABASE_DEFAULT = CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END\n              AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'\n              AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'\n              AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n        );\nEND;\n"
+    },
+    {
+      "DatabaseName": "SBO_STL_GOLIVE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "CREATE TRIGGER dbo.TRG_OINV_Reserve_ToOdooQueue\nON dbo.OINV\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ARReserveInvoice',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        A.ActionType,\n        'PRD',\n        'STL',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    CROSS APPLY\n    (\n        SELECT CASE\n            WHEN D.DocEntry IS NULL AND ISNULL(I.CANCELED, 'N') <> 'C' THEN 'ADD'\n            WHEN I.CANCELED = 'Y' AND ISNULL(D.CANCELED, 'N') <> 'Y' THEN 'CANCEL'\n        END AS ActionType\n    ) A\n    WHERE I.isIns = 'Y'\n      AND I.DocDueDate >= CONVERT(DATE, '20261109', 112)\n      AND A.ActionType IS NOT NULL\n      AND NOT EXISTS\n      (\n          SELECT 1\n          FROM TEMP_API.dbo.INT_OdooQueue Q\n          WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'\n            AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n            AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT\n            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'PRD'\n            AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'STL'\n            AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n      );\nEND;\n"
+    },
+    {
+      "DatabaseName": "TEST_INTERFACE",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "\nCREATE   TRIGGER dbo.TRG_OINV_Reserve_ToOdooQueue\nON dbo.OINV\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ARReserveInvoice',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        A.ActionType,\n        'TEST',\n        'TIF',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    CROSS APPLY\n    (\n        SELECT CASE\n            WHEN D.DocEntry IS NULL AND ISNULL(I.CANCELED, 'N') <> 'C' THEN 'ADD'\n            WHEN I.CANCELED = 'Y' AND ISNULL(D.CANCELED, 'N') <> 'Y' THEN 'CANCEL'\n        END AS ActionType\n    ) A\n    WHERE I.isIns = 'Y'\n      AND A.ActionType IS NOT NULL\n      AND NOT EXISTS\n      (\n          SELECT 1\n          FROM TEMP_API.dbo.INT_OdooQueue Q\n          WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'\n            AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n            AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT\n            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'\n            AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'\n            AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n      );\nEND;\n"
+    },
+    {
+      "DatabaseName": "TEST_INTERFACE",
+      "TriggerName": "TRG_OWOR_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "\nCREATE   TRIGGER dbo.TRG_OWOR_ToOdooQueue\nON dbo.OWOR\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ProductionOrder',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END,\n        'TEST',\n        'TIF',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    WHERE\n        (\n            (\n                I.Status = 'R'\n                AND ISNULL(D.Status, '') <> 'R'\n            )\n            OR\n            (\n                I.Status = 'C'\n                AND ISNULL(D.Status, '') <> 'C'\n            )\n        )\n        AND NOT EXISTS\n        (\n            SELECT 1\n            FROM TEMP_API.dbo.INT_OdooQueue Q\n            WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ProductionOrder'\n              AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n              AND Q.ActionType COLLATE DATABASE_DEFAULT = CASE I.Status WHEN 'R' THEN 'RELEASED' ELSE 'CANCEL' END\n              AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'\n              AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'TIF'\n              AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n        );\nEND;\n"
+    },
+    {
+      "DatabaseName": "TEST_STL_ODOO",
+      "TriggerName": "TRG_OINV_Reserve_ToOdooQueue",
+      "IsDisabled": 0,
+      "TriggerDefinition": "\nCREATE   TRIGGER dbo.TRG_OINV_Reserve_ToOdooQueue\nON dbo.OINV\nAFTER INSERT, UPDATE\nAS\nBEGIN\n    SET NOCOUNT ON;\n\n    INSERT INTO TEMP_API.dbo.INT_OdooQueue\n    (\n        ObjectType,\n        ObjectKey,\n        ActionType,\n        SiteId,\n        CompanyName,\n        Status,\n        RetryCount,\n        CreateDate\n    )\n    SELECT\n        'ARReserveInvoice',\n        CAST(I.DocEntry AS NVARCHAR(50)),\n        A.ActionType,\n        'TEST',\n        'STL',\n        'N',\n        0,\n        GETDATE()\n    FROM inserted I\n    LEFT JOIN deleted D\n        ON I.DocEntry = D.DocEntry\n    CROSS APPLY\n    (\n        SELECT CASE\n            WHEN D.DocEntry IS NULL AND ISNULL(I.CANCELED, 'N') <> 'C' THEN 'ADD'\n            WHEN I.CANCELED = 'Y' AND ISNULL(D.CANCELED, 'N') <> 'Y' THEN 'CANCEL'\n        END AS ActionType\n    ) A\n    WHERE I.isIns = 'Y'\n      AND A.ActionType IS NOT NULL\n      AND NOT EXISTS\n      (\n          SELECT 1\n          FROM TEMP_API.dbo.INT_OdooQueue Q\n          WHERE Q.ObjectType COLLATE DATABASE_DEFAULT = 'ARReserveInvoice'\n            AND Q.ObjectKey COLLATE DATABASE_DEFAULT = CAST(I.DocEntry AS NVARCHAR(50))\n            AND Q.ActionType COLLATE DATABASE_DEFAULT = A.ActionType COLLATE DATABASE_DEFAULT\n            AND Q.SiteId COLLATE DATABASE_DEFAULT = 'TEST'\n            AND Q.CompanyName COLLATE DATABASE_DEFAULT = 'STL'\n            AND Q.Status COLLATE DATABASE_DEFAULT IN ('N', 'P')\n      );\nEND;\n"
+    }
+  ],
+  "Candidates": [
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "DocEntry": 37683,
+      "DocNum": 26110214,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-11-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "DocEntry": 37684,
+      "DocNum": 26110215,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-11-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "DocEntry": 37685,
+      "DocNum": 26110216,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-11-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "DocEntry": 37686,
+      "DocNum": 26110217,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "SBO_STL_GOLIVE",
+      "DocEntry": 37687,
+      "DocNum": 26110218,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "DocEntry": 85534,
+      "DocNum": 26110518,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "DocEntry": 85535,
+      "DocNum": 26110519,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "DocEntry": 85536,
+      "DocNum": 26110520,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "DocEntry": 85537,
+      "DocNum": 26110521,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-11-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    },
+    {
+      "SapDatabaseName": "TIF_GOLIVE",
+      "DocEntry": 85538,
+      "DocNum": 26110522,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "DocDueDate": "2026-12-09 00:00:00.000",
+      "DocStatus": "O",
+      "CANCELED": "N",
+      "isIns": "Y",
+      "HistoryRows": 1,
+      "PendingRows": 0,
+      "ConfirmedRows": 1,
+      "Decision": "SKIP_SUCCESS"
+    }
+  ],
+  "Pending": []
+}

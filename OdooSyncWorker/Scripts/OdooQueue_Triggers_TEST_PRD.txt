@@ -36,6 +36,23 @@ ARReserveInvoice:
 - Updates unrelated to Add/Cancel are not queued.
 - Cancellation documents where CANCELED = C are not queued as ADD.
 
+PRD date cutoffs
+-------------------
+- Production Order keeps OWOR.DueDate >= 2026-11-09.
+- A/R Reserve Invoice uses OINV.DocDate >= 2026-11-09 in TIF and STL.
+- The same cutoff applies to Release/Add and Cancel events.
+- CreateDate and the current clock are not used for these cutoffs.
+- TEST triggers keep their existing behavior without this cutoff.
+- Apply_PRD_AR_DocDate_Cutoff_Backfill.sql updates only the two PRD A/R triggers,
+  preserving their enabled/disabled states and legacy SiteId values.
+- Its default mode is preview only. @Apply=1 changes the triggers and queues
+  only eligible open, non-cancelled Reserve Invoices with no previous queue history.
+- Backfill skips pending work and confirmed Odoo successes, and refuses
+  ambiguous previous attempts. Planned/Closed/Cancelled documents are excluded
+  from backfill; future Cancel events retain the normal trigger behavior.
+- Existing queue rows and SAP document data are not reset, deleted or changed.
+- Enable_PRD_Queue_Triggers.sql checks Production DueDate and A/R DocDate rules.
+
 
 TEST / TIF
 ----------
@@ -266,6 +283,8 @@ BEGIN
     LEFT JOIN deleted D
         ON I.DocEntry = D.DocEntry
     WHERE
+        I.DueDate >= CONVERT(DATE, '20261109', 112)
+        AND
         (
             (
                 I.Status = 'R'
@@ -329,6 +348,7 @@ BEGIN
         END AS ActionType
     ) A
     WHERE I.isIns = 'Y'
+      AND I.DocDate >= CONVERT(DATE, '20261109', 112)
       AND A.ActionType IS NOT NULL
       AND NOT EXISTS
       (
@@ -389,6 +409,7 @@ BEGIN
         END AS ActionType
     ) A
     WHERE I.isIns = 'Y'
+      AND I.DocDate >= CONVERT(DATE, '20261109', 112)
       AND A.ActionType IS NOT NULL
       AND NOT EXISTS
       (
