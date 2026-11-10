@@ -1,0 +1,41 @@
+{
+  "StartedAtBangkok": "2026-11-10 22:03:46 +07:00",
+  "Applied": false,
+  "TargetKey": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+  "IntendedValues": [
+    {
+      "Name": "DumpFolder",
+      "Type": "REG_EXPAND_SZ",
+      "Value": "%LOCALAPPDATA%\\CrashDumps"
+    },
+    {
+      "Name": "DumpCount",
+      "Type": "REG_DWORD",
+      "Value": 3
+    },
+    {
+      "Name": "DumpType",
+      "Type": "REG_DWORD",
+      "Value": 2
+    }
+  ],
+  "Before": [
+    {
+      "Name": "DumpFolder",
+      "Present": false,
+      "Value": null
+    },
+    {
+      "Name": "DumpCount",
+      "Present": false,
+      "Value": null
+    },
+    {
+      "Name": "DumpType",
+      "Present": false,
+      "Value": null
+    }
+  ],
+  "WritesVerified": [],
+  "Failure": "Exception calling \"ExecuteNonQuery\" with \"0\" argument(s): \"Error executing xp_regwrite extended stored procedure: Registry Type Invalid\""
+}

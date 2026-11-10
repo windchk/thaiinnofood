@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using OdooSapApi.Controllers;
 using OdooSapApi.Models;
 using OdooSapApi.Services;
+using System.Text.Json;
 using Xunit;
 
 namespace OdooSapApi.Tests;
@@ -104,20 +108,66 @@ public class ProductionOrderLoggingTests
         Assert.Equal("SAP connection failed", completion.Entry.ErrorMessage);
     }
 
-    [Fact]
-    public async Task IssueAsync_WhenDiApiQueueIsBusy_UpdatesLogAsExpectedError()
+    [Theory]
+    [InlineData("IssueFromProduction")]
+    [InlineData("ReceiptFromProduction")]
+    [InlineData("Delivery")]
+    public async Task Create_WhenDiApiQueueIsBusy_UpdatesSameLogBefore503WithoutRetry(string processType)
     {
+        var busy = new SapDiApiBusyException("SAP DI API is busy.", 15);
         var sap = new FakeSapProductionService
         {
-            IssueException = new SapDiApiBusyException("SAP DI API is busy.", 15)
+            IssueException = busy,
+            ReceiptException = busy,
+            DeliveryException = busy
         };
-        var log = new FakeSapApiLogService();
+        var completionGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var log = new FakeSapApiLogService { CompletionGate = completionGate };
         var service = CreateService(sap, log);
+        var productionController = new ProductionOrdersController(service)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+        var deliveryController = new DeliveryController(service)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
 
-        await Assert.ThrowsAsync<SapDiApiBusyException>(
-            () => service.IssueAsync(CreateIssueRequest()));
+        var pendingResponse = processType switch
+        {
+            "IssueFromProduction" => productionController.Issue(CreateIssueRequest()),
+            "ReceiptFromProduction" => productionController.Receipt(CreateReceiptRequest()),
+            "Delivery" => deliveryController.Create(new DeliveryRequest
+            {
+                SiteId = "TEST-TIF",
+                CompanyName = "TEST_INTERFACE",
+                DocEntry = 34518,
+                DocDate = new DateTime(2026, 11, 10),
+                DeliveryLines = [new() { LineNum = 0, Quantity = 1, Warehouse = "WH-FG" }]
+            }),
+            _ => throw new ArgumentOutOfRangeException(nameof(processType))
+        };
 
-        Assert.Equal("E", Assert.Single(log.Completions).Entry.Status);
+        Assert.False(pendingResponse.IsCompleted);
+        var start = Assert.Single(log.StartEntries);
+        Assert.Equal("P", start.Status);
+        Assert.Equal(processType, start.ProcessType);
+        var completion = Assert.Single(log.Completions);
+        Assert.Equal(log.LogId, completion.LogId);
+        Assert.Equal(processType, completion.Entry.ProcessType);
+        Assert.Equal("E", completion.Entry.Status);
+        Assert.Equal(busy.Message, completion.Entry.ErrorMessage);
+        using var responseJson = JsonDocument.Parse(completion.Entry.ResponseJson!);
+        Assert.False(responseJson.RootElement.GetProperty("success").GetBoolean());
+
+        completionGate.SetResult(true);
+        var response = await pendingResponse;
+        var result = Assert.IsType<ObjectResult>(response.Result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        var body = Assert.IsType<ApiResponse>(result.Value);
+        Assert.False(body.Success);
+        Assert.Equal(busy.Message, body.Message);
+        Assert.Equal(1, sap.IssueCallCount + sap.ReceiptCallCount + sap.DeliveryCallCount);
     }
 
     [Fact]
@@ -213,6 +263,7 @@ public class ProductionOrderLoggingTests
         public int LogId { get; init; } = 1234;
         public Exception? StartException { get; init; }
         public bool CompleteResult { get; init; } = true;
+        public TaskCompletionSource<bool>? CompletionGate { get; init; }
         public List<SapApiLogEntry> StartEntries { get; } = [];
         public List<(int LogId, SapApiLogEntry Entry)> Completions { get; } = [];
 
@@ -227,7 +278,7 @@ public class ProductionOrderLoggingTests
         public Task<bool> TryCompleteAsync(int logId, SapApiLogEntry entry)
         {
             Completions.Add((logId, entry));
-            return Task.FromResult(CompleteResult);
+            return CompletionGate?.Task ?? Task.FromResult(CompleteResult);
         }
     }
 
@@ -235,7 +286,10 @@ public class ProductionOrderLoggingTests
     {
         public int IssueCallCount { get; private set; }
         public int ReceiptCallCount { get; private set; }
+        public int DeliveryCallCount { get; private set; }
         public Exception? IssueException { get; init; }
+        public Exception? ReceiptException { get; init; }
+        public Exception? DeliveryException { get; init; }
 
         public Task<ApiResponse> CheckConnectionAsync(
             string? siteId = null,
@@ -266,6 +320,11 @@ public class ProductionOrderLoggingTests
             CancellationToken cancellationToken = default)
         {
             ReceiptCallCount++;
+            if (ReceiptException is not null)
+            {
+                return Task.FromException<SapDocumentResult>(ReceiptException);
+            }
+
             return Task.FromResult(new SapDocumentResult
             {
                 DocumentEntry = "64359",
@@ -277,6 +336,12 @@ public class ProductionOrderLoggingTests
             DeliveryRequest request,
             CancellationToken cancellationToken = default)
         {
+            DeliveryCallCount++;
+            if (DeliveryException is not null)
+            {
+                return Task.FromException<SapDocumentResult>(DeliveryException);
+            }
+
             throw new NotSupportedException();
         }
 

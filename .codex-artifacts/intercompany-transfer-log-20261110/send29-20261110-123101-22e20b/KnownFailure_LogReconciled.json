@@ -1,0 +1,10 @@
+{
+  "SiteId": "PRD-TIF",
+  "TransferId": "DO26-02040-1",
+  "Status": "ERROR",
+  "RetryCount": 1,
+  "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG05046, warehouse=WH-FG, required=600.0, available=164.000000",
+  "CreateDate": "2026-11-10 15:43:03.047",
+  "UpdateDate": "2026-11-10 19:37:22.630",
+  "ProcessBy": "Codex: verified HTTP500 reconciliation"
+}

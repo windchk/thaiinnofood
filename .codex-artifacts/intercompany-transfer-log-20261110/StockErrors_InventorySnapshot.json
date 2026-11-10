@@ -1,0 +1,306 @@
+[
+  {
+    "Rows": [
+      {
+        "ServerLocalTime": "2026-11-10 20:51:58.397",
+        "ServerUtcTime": "2026-11-10 13:51:58.397"
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "CompanyDb": "TIF_GOLIVE",
+        "ItemCode": "FG04079",
+        "ItemName": "หมูยอ 160 กรัม ตราหมูอนามัย",
+        "InvntryUom": "PACK",
+        "ManBtchNum": "Y",
+        "WhsCode": "WH-FG",
+        "WhsName": "คลังสินค้าสำเร็จรูป",
+        "BinActivat": "N",
+        "OnHand": 0.000000,
+        "IsCommited": 18040.000000,
+        "OnOrder": 140.000000
+      },
+      {
+        "CompanyDb": "TIF_GOLIVE",
+        "ItemCode": "FG05046",
+        "ItemName": "ตุ้มจิ๋ว 12 เม็ด พิษณุโลก 60 กรัม ตราแหนมดอนเมืองกม.26",
+        "InvntryUom": "PACK",
+        "ManBtchNum": "Y",
+        "WhsCode": "WH-FG",
+        "WhsName": "คลังสินค้าสำเร็จรูป",
+        "BinActivat": "N",
+        "OnHand": 164.000000,
+        "IsCommited": 0.000000,
+        "OnOrder": 1472.000000
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "ItemCode": "FG04079",
+        "WhsCode": "WH-FG",
+        "BatchOnHand": 0.000000,
+        "BatchCommitted": 0.000000,
+        "NetBatchAvailable": 0.000000,
+        "ApiSelectableQuantity": 0.000000,
+        "BatchBalanceRows": 312
+      },
+      {
+        "ItemCode": "FG05046",
+        "WhsCode": "WH-FG",
+        "BatchOnHand": 164.000000,
+        "BatchCommitted": 0.000000,
+        "NetBatchAvailable": 164.000000,
+        "ApiSelectableQuantity": 164.000000,
+        "BatchBalanceRows": 872
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "ItemCode": "FG05046",
+        "WhsCode": "WH-FG",
+        "AbsEntry": 98290,
+        "SysNumber": 872,
+        "BatchNumber": "20261109-180227",
+        "BatchStatus": "0",
+        "OnHand": 164.000000,
+        "Committed": 0.000000,
+        "ApiAvailable": 164.000000,
+        "MnfDate": null,
+        "ExpDate": null,
+        "InDate": "2026-11-09 00:00:00.000"
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "CompanyDb": "SBO_STL_GOLIVE",
+        "ItemCode": "FG04079",
+        "WhsCode": "WH-FG",
+        "OnHand": 0.000000,
+        "IsCommited": 424.000000,
+        "OnOrder": 0.000000
+      },
+      {
+        "CompanyDb": "SBO_STL_GOLIVE",
+        "ItemCode": "FG05046",
+        "WhsCode": "WH-FG",
+        "OnHand": 1500.000000,
+        "IsCommited": 55500.000000,
+        "OnOrder": 0.000000
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02020-1",
+        "Status": "ERROR",
+        "GoodsIssueDocEntry": null,
+        "GoodsReceiptDocEntry": null,
+        "RetryCount": 1,
+        "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0",
+        "UpdateDate": "2026-11-10 19:38:13.430"
+      },
+      {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02021-1",
+        "Status": "ERROR",
+        "GoodsIssueDocEntry": null,
+        "GoodsReceiptDocEntry": null,
+        "RetryCount": 1,
+        "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0",
+        "UpdateDate": "2026-11-10 19:38:07.713"
+      },
+      {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02040-1",
+        "Status": "ERROR",
+        "GoodsIssueDocEntry": null,
+        "GoodsReceiptDocEntry": null,
+        "RetryCount": 1,
+        "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG05046, warehouse=WH-FG, required=600.0, available=164.000000",
+        "UpdateDate": "2026-11-10 19:37:22.630"
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "TableName": "ITL1",
+        "column_id": 1,
+        "ColumnName": "LogEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "ITL1",
+        "column_id": 2,
+        "ColumnName": "ItemCode",
+        "DataType": "nvarchar"
+      },
+      {
+        "TableName": "ITL1",
+        "column_id": 3,
+        "ColumnName": "SysNumber",
+        "DataType": "int"
+      },
+      {
+        "TableName": "ITL1",
+        "column_id": 4,
+        "ColumnName": "Quantity",
+        "DataType": "numeric"
+      },
+      {
+        "TableName": "ITL1",
+        "column_id": 5,
+        "ColumnName": "AllocQty",
+        "DataType": "numeric"
+      },
+      {
+        "TableName": "ITL1",
+        "column_id": 6,
+        "ColumnName": "MdAbsEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OBTQ",
+        "column_id": 1,
+        "ColumnName": "ItemCode",
+        "DataType": "nvarchar"
+      },
+      {
+        "TableName": "OBTQ",
+        "column_id": 2,
+        "ColumnName": "SysNumber",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OBTQ",
+        "column_id": 4,
+        "ColumnName": "Quantity",
+        "DataType": "numeric"
+      },
+      {
+        "TableName": "OBTQ",
+        "column_id": 5,
+        "ColumnName": "CommitQty",
+        "DataType": "numeric"
+      },
+      {
+        "TableName": "OBTQ",
+        "column_id": 8,
+        "ColumnName": "MdAbsEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 1,
+        "ColumnName": "LogEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 3,
+        "ColumnName": "ItemCode",
+        "DataType": "nvarchar"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 5,
+        "ColumnName": "ManagedBy",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 6,
+        "ColumnName": "DocEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 7,
+        "ColumnName": "DocLine",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 8,
+        "ColumnName": "DocType",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 10,
+        "ColumnName": "BaseEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 11,
+        "ColumnName": "BaseLine",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 12,
+        "ColumnName": "BaseType",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 13,
+        "ColumnName": "ApplyEntry",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 14,
+        "ColumnName": "ApplyLine",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 15,
+        "ColumnName": "ApplyType",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 16,
+        "ColumnName": "DocDate",
+        "DataType": "datetime"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 22,
+        "ColumnName": "StockEff",
+        "DataType": "int"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 23,
+        "ColumnName": "CreateDate",
+        "DataType": "datetime"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 25,
+        "ColumnName": "LocCode",
+        "DataType": "nvarchar"
+      },
+      {
+        "TableName": "OITL",
+        "column_id": 40,
+        "ColumnName": "CreateTime",
+        "DataType": "smallint"
+      }
+    ]
+  }
+]

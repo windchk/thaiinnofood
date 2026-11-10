@@ -1,0 +1,73 @@
+{
+  "GoodsIssueGoodsReceiptLifecycle": [
+    {
+      "TimeBangkok": "2026-11-10 19:17:59.242",
+      "Id": 1032,
+      "Properties": [
+        "Application 'D:\\API_Publish\\GoodsIssue_GoodsReceipt\\' started successfully.",
+        "Process Id: 8576.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 16:38:19.525",
+      "Id": 1005,
+      "Properties": [
+        "Failed to gracefully shutdown application 'MACHINE/WEBROOT/APPHOST/GOODSISSUE_GOODSRECEIPT'.",
+        "Process Id: 3156.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 15:07:11.918",
+      "Id": 1032,
+      "Properties": [
+        "Application 'D:\\API_Publish\\GoodsIssue_GoodsReceipt\\' started successfully.",
+        "Process Id: 3156.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 14:45:45.157",
+      "Id": 1033,
+      "Properties": [
+        "Application 'MACHINE/WEBROOT/APPHOST/GOODSISSUE_GOODSRECEIPT' has shutdown.",
+        "Process Id: 12292.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 14:24:45.499",
+      "Id": 1032,
+      "Properties": [
+        "Application 'D:\\API_Publish\\GoodsIssue_GoodsReceipt\\' started successfully.",
+        "Process Id: 12292.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 13:13:22.882",
+      "Id": 1033,
+      "Properties": [
+        "Application 'MACHINE/WEBROOT/APPHOST/GOODSISSUE_GOODSRECEIPT' has shutdown.",
+        "Process Id: 10404.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    },
+    {
+      "TimeBangkok": "2026-11-10 12:52:23.930",
+      "Id": 1032,
+      "Properties": [
+        "Application 'D:\\API_Publish\\GoodsIssue_GoodsReceipt\\' started successfully.",
+        "Process Id: 10404.",
+        "File Version: 18.0.26139.28. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: "
+      ]
+    }
+  ],
+  "ConfirmedConstraintFailure": {
+    "TimeBangkok": "2026-11-10 19:32:13.255",
+    "Id": 1000,
+    "Provider": ".NET Runtime",
+    "Message": "Category: OdooSapApi.Services.IntercompanyTransferService\r\nEventId: 0\r\nSpanId: 911a1d033abf0b69\r\nTraceId: 50b112c4bf6aad2106c96de51d404a39\r\nParentId: 0000000000000000\r\nRequestId: 800000d1-0006-fd00-b63f-84710c7967bb\r\nRequestPath: /api/sap/goodsissue-goodsreceipt\r\nActionId: 44868484-1eac-4fa7-9f3e-85a60a46acbe\r\nActionName: OdooSapApi.Controllers.GoodsIssueGoodsReceiptController.Create (OdooSapApi)\r\n\r\nCannot update intercompany transfer failure status. SiteId=PRD-TIF, TransferId=DO26-02040-1\r\n\r\nException: \r\nMicrosoft.Data.SqlClient.SqlException (0x80131904): The UPDATE statement conflicted with the CHECK constraint \"CK_INT_IntercompanyTransfer_Status\". The conflict occurred in database \"TEMP_API\", table \"dbo.INT_IntercompanyTransfer\", column 'Status'.\r\nThe statement has been terminated.\r\n   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)\r\n   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)\r\n   at Microsoft.Data.SqlClient.SqlCommand.FinishExecuteReader(SqlDataReader ds, RunBehavior runBehavior, String resetOptionsString, Boolean isInternal, Boolean forDescribeParameterEncryption, Boolean shouldCacheForAlwaysEncrypted)\r\n   at Microsoft.Data.SqlClient.SqlCommand.CompleteAsyncExecuteReader(Boolean isInternal, Boolean forDescribeParameterEncryption)\r\n   at Microsoft.Data.SqlClient.SqlCommand.InternalEndExecuteNonQuery(IAsyncResult asyncResult, Boolean isInternal, String endMethod)\r\n   at Microsoft.Data.SqlClient.SqlCommand.EndExecuteNonQueryInternal(IAsyncResult asyncResult)\r\n   at Microsoft.Data.SqlClient.SqlCommand.EndExecuteNonQueryAsync(IAsyncResult asyncResult)\r\n   at Microsoft.Data.SqlClient.SqlCommand.<>c.<InternalExecuteNonQueryAsync>b__193_1(IAsyncResult asyncResult)\r\n   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endFunction, Action`1 endAction, Task`1 promise, Boolean requiresSynchronization)\r\n--- End of stack trace from previous location ---\r\n   at OdooSapApi.Services.IntercompanyTransferLedger.MarkFailureAsync(SqlConnection connection, String siteId, String transferId, String status, String errorMessage) in C:\\Users\\Administrator\\Documents\\GitHub\\thaiinnofood-\\OdooSapApi\\Services\\IntercompanyTransferLedger.cs:line 276\r\n   at OdooSapApi.Services.IntercompanyTransferLedger.MarkFailureAsync(SqlConnection connection, String siteId, String transferId, String status, String errorMessage) in C:\\Users\\Administrator\\Documents\\GitHub\\thaiinnofood-\\OdooSapApi\\Services\\IntercompanyTransferLedger.cs:line 276\r\n   at OdooSapApi.Services.IntercompanyTransferService.ProcessAsync(IntercompanyTransferRequest request, CancellationToken cancellationToken) in C:\\Users\\Administrator\\Documents\\GitHub\\thaiinnofood-\\OdooSapApi\\Services\\IntercompanyTransferService.cs:line 213\r\nClientConnectionId:94e057b5-20ba-4841-a03a-de011388e93b\r\nError Number:547,State:0,Class:16\r\n"
+  }
+}

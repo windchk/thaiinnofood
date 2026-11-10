@@ -14,7 +14,9 @@ public sealed class SapDiApiExecutionGate
         var value = options.Value;
         var maxConcurrency = Math.Max(1, value.MaxConcurrency);
         _semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
-        _acquireTimeout = TimeSpan.FromSeconds(Math.Max(0, value.AcquireTimeoutSeconds));
+        _acquireTimeout = value.AcquireTimeoutSeconds == Timeout.Infinite
+            ? Timeout.InfiniteTimeSpan
+            : TimeSpan.FromSeconds(Math.Max(0, value.AcquireTimeoutSeconds));
         _retryAfterSeconds = Math.Max(1, value.RetryAfterSeconds);
     }
 
@@ -27,7 +29,16 @@ public sealed class SapDiApiExecutionGate
                 _retryAfterSeconds);
         }
 
-        return new Lease(_semaphore);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return new Lease(_semaphore);
+        }
+        catch
+        {
+            _semaphore.Release();
+            throw;
+        }
     }
 
     private sealed class Lease(SemaphoreSlim semaphore) : IDisposable

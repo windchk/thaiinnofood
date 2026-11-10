@@ -1,0 +1,21 @@
+{
+  "Applied": true,
+  "VerifiedAtBangkok": "2026-11-10 22:11:49 +07:00",
+  "Server": "192.168.10.1",
+  "MachineName": "TIFSVR01-SAP",
+  "Method": "Imported the reviewed per-application REG file through the existing Administrator RDP session; verified by independent read-only SQL registry queries.",
+  "RegistryKey": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+  "Settings": {
+    "DumpFolder": "%LOCALAPPDATA%\\CrashDumps",
+    "DumpType": 2,
+    "DumpCount": 3
+  },
+  "DumpFolderExpansion": "Resolved by Windows in the crashing IIS worker process account environment, not the administrator or SQL Server service profile.",
+  "GlobalWerAndInspectedJitSettingsUnchanged": true,
+  "NoRestartOrRecyclePerformed": true,
+  "NoSapOperationOrIntentionalCrashPerformed": true,
+  "DumpFilesObservedAfterSetup": 0,
+  "VerificationLimit": "Registry values are verified. Actual dump creation will be confirmed after the next natural unhandled w3wp.exe crash.",
+  "BeforeSnapshot": "ServerCrashFileInventory-BeforeSetup.json",
+  "AfterSnapshot": "ServerCrashFileInventory.json"
+}

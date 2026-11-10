@@ -1,0 +1,1062 @@
+{
+  "Authorization": "User explicitly requested sending the remaining 29 with original TransferIds/payloads",
+  "Plan": {
+    "Execute": true,
+    "Endpoint": "http://192.168.10.1:8585/api/sap/goodsissue-goodsreceipt",
+    "ServerTime": "2026-11-10 19:37:40.690",
+    "ExcludedCompletedTransferId": "DO26-02023-2",
+    "AllowedTransferIds": [
+      "DO26-01927-2",
+      "DO26-01972-2",
+      "DO26-01974-2",
+      "DO26-01975-2",
+      "DO26-00135-1",
+      "DO26-00136-2",
+      "DO26-00137-2",
+      "DO26-02049-1",
+      "DO26-01926-2",
+      "DO26-02041-1",
+      "DO26-02038-1",
+      "DO26-02040-1",
+      "DO26-02033-1",
+      "DO26-02032-1",
+      "DO26-02030-1",
+      "DO26-02027-1",
+      "DO26-02028-1",
+      "DO26-02029-1",
+      "DO26-02021-1",
+      "DO26-02019-1",
+      "DO26-02020-1",
+      "DO26-02014-1",
+      "DO26-02015-1",
+      "DO26-02017-1",
+      "DO26-02013-1",
+      "DO26-02007-1",
+      "DO26-02008-1",
+      "DO26-02010-1",
+      "DO26-02012-1"
+    ],
+    "ExcludedPreviouslyAttemptedIds": [
+      "DO26-01927-2",
+      "DO26-01972-2",
+      "DO26-01974-2",
+      "DO26-01975-2",
+      "DO26-00135-1",
+      "DO26-00136-2",
+      "DO26-00137-2",
+      "DO26-02049-1",
+      "DO26-01926-2",
+      "DO26-02041-1",
+      "DO26-02038-1",
+      "DO26-02033-1",
+      "DO26-02040-1"
+    ],
+    "PreviousJournal": ".codex-artifacts\\intercompany-transfer-log-20261110\\send29-20261110-123101-22e20b\\Journal.json",
+    "AlreadyCompleted": [],
+    "Pending": [
+      {
+        "TransferId": "DO26-02032-1",
+        "Status": "NEW",
+        "RequestHash": "387FE7F57CF28EF399E00D63C2F497A31FD30094CDAACF3DE538D0A481DE86D9"
+      },
+      {
+        "TransferId": "DO26-02030-1",
+        "Status": "NEW",
+        "RequestHash": "07F86B89B344ED65EEAF258FE813EE69FE9CAF23E64D74B5B826E9A221F5B6FB"
+      },
+      {
+        "TransferId": "DO26-02027-1",
+        "Status": "NEW",
+        "RequestHash": "12D01EE495BF37D2803D5B72CAFF0FDF8758D320FBC95A1C4515CCE5F21F3E51"
+      },
+      {
+        "TransferId": "DO26-02028-1",
+        "Status": "NEW",
+        "RequestHash": "4002BAE41C128A49BEF0F8C34974E500DC5E7B98969F44F2F81E72E2D1A1F68A"
+      },
+      {
+        "TransferId": "DO26-02029-1",
+        "Status": "NEW",
+        "RequestHash": "AB4B3F9A77D60A434B40F4857BD9C8CB1D85E6DBEED6C38B0A08EC207415343E"
+      },
+      {
+        "TransferId": "DO26-02021-1",
+        "Status": "NEW",
+        "RequestHash": "DCC3574241F4402442430AA26B7CE515BD1CA4C858F43C4E392FD9D6DC1E1562"
+      },
+      {
+        "TransferId": "DO26-02019-1",
+        "Status": "NEW",
+        "RequestHash": "894A7630D50A981D692917AC5750C374DC85FC41EF6A42983F0C515B093BA0DC"
+      },
+      {
+        "TransferId": "DO26-02020-1",
+        "Status": "NEW",
+        "RequestHash": "958498460447B83FB8AC90307C7772DD9CF119E8A616DD5942DC7AE1C0789D89"
+      },
+      {
+        "TransferId": "DO26-02014-1",
+        "Status": "NEW",
+        "RequestHash": "DE69116EC4C79C171BE948007708592E82AA7AFC1CAA3662CFA6B4097E8B2EC2"
+      },
+      {
+        "TransferId": "DO26-02015-1",
+        "Status": "NEW",
+        "RequestHash": "75EEDBF77BBD187F9717744780403910BEDC25F5F7A9B84CF14B31602CD9A621"
+      },
+      {
+        "TransferId": "DO26-02017-1",
+        "Status": "NEW",
+        "RequestHash": "705DF9E838B8D857C77B9EB5C281E78B8B785D04140F208F85EBACE413071199"
+      },
+      {
+        "TransferId": "DO26-02013-1",
+        "Status": "NEW",
+        "RequestHash": "57464C857EF379C815049E281CE09B874B9E44E68EF4AA09357BBC61B35DF012"
+      },
+      {
+        "TransferId": "DO26-02007-1",
+        "Status": "NEW",
+        "RequestHash": "B444E891F2643EE1F80B50175BFB1D8FAF34BC2913754FC448013BCC8827AEE7"
+      },
+      {
+        "TransferId": "DO26-02008-1",
+        "Status": "NEW",
+        "RequestHash": "87D5CD6097D40458635868817FB554F861933497AFB6EEE3AEF6CDF0CC9F72D7"
+      },
+      {
+        "TransferId": "DO26-02010-1",
+        "Status": "NEW",
+        "RequestHash": "19757D527EE42C2FC31CB2543B3A53ADCF16B4C730137FD9C5C788CC2D35B7CF"
+      },
+      {
+        "TransferId": "DO26-02012-1",
+        "Status": "NEW",
+        "RequestHash": "563061C0E1A437F5DAC5B0D89071D34EDE03B23143AF565DDE3D32568E0B81F7"
+      }
+    ],
+    "Policy": "Sequential; original payload string; one POST per TransferId across these journals; no automatic retry; stop on unknown errors/timeouts. A verified stock-only failure with no SAP document may be recorded and skipped."
+  },
+  "Attempts": [
+    {
+      "TransferId": "DO26-02032-1",
+      "RequestHash": "387FE7F57CF28EF399E00D63C2F497A31FD30094CDAACF3DE538D0A481DE86D9",
+      "StartedUtc": "2026-11-10T12:37:41.1750634Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02032-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64606",
+          "documentNumber": "26110360"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2082",
+          "documentNumber": "26110026"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02032-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64606,
+        "GoodsIssueDocNum": 26110360,
+        "GoodsReceiptDocEntry": 2082,
+        "GoodsReceiptDocNum": 26110026,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:03.050",
+        "UpdateDate": "2026-11-10 19:37:46.460"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02032-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64606,
+          "DocNum": 26110360,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02032-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2082,
+          "DocNum": 26110026,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02030-1",
+      "RequestHash": "07F86B89B344ED65EEAF258FE813EE69FE9CAF23E64D74B5B826E9A221F5B6FB",
+      "StartedUtc": "2026-11-10T12:37:46.7481850Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02030-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64607",
+          "documentNumber": "26110361"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2083",
+          "documentNumber": "26110027"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02030-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64607,
+        "GoodsIssueDocNum": 26110361,
+        "GoodsReceiptDocEntry": 2083,
+        "GoodsReceiptDocNum": 26110027,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:23.160",
+        "UpdateDate": "2026-11-10 19:37:51.957"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02030-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64607,
+          "DocNum": 26110361,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02030-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2083,
+          "DocNum": 26110027,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02027-1",
+      "RequestHash": "12D01EE495BF37D2803D5B72CAFF0FDF8758D320FBC95A1C4515CCE5F21F3E51",
+      "StartedUtc": "2026-11-10T12:37:52.2953685Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02027-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64608",
+          "documentNumber": "26110362"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2084",
+          "documentNumber": "26110028"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02027-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64608,
+        "GoodsIssueDocNum": 26110362,
+        "GoodsReceiptDocEntry": 2084,
+        "GoodsReceiptDocNum": 26110028,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:23.177",
+        "UpdateDate": "2026-11-10 19:37:55.450"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02027-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64608,
+          "DocNum": 26110362,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02027-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2084,
+          "DocNum": 26110028,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02028-1",
+      "RequestHash": "4002BAE41C128A49BEF0F8C34974E500DC5E7B98969F44F2F81E72E2D1A1F68A",
+      "StartedUtc": "2026-11-10T12:37:55.7168464Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02028-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64609",
+          "documentNumber": "26110363"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2085",
+          "documentNumber": "26110029"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02028-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64609,
+        "GoodsIssueDocNum": 26110363,
+        "GoodsReceiptDocEntry": 2085,
+        "GoodsReceiptDocNum": 26110029,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:23.177",
+        "UpdateDate": "2026-11-10 19:38:01.913"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02028-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64609,
+          "DocNum": 26110363,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02028-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2085,
+          "DocNum": 26110029,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02029-1",
+      "RequestHash": "AB4B3F9A77D60A434B40F4857BD9C8CB1D85E6DBEED6C38B0A08EC207415343E",
+      "StartedUtc": "2026-11-10T12:38:02.1803329Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02029-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64610",
+          "documentNumber": "26110364"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2086",
+          "documentNumber": "26110030"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02029-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64610,
+        "GoodsIssueDocNum": 26110364,
+        "GoodsReceiptDocEntry": 2086,
+        "GoodsReceiptDocNum": 26110030,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:23.177",
+        "UpdateDate": "2026-11-10 19:38:07.363"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02029-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64610,
+          "DocNum": 26110364,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02029-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2086,
+          "DocNum": 26110030,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02021-1",
+      "RequestHash": "DCC3574241F4402442430AA26B7CE515BD1CA4C858F43C4E392FD9D6DC1E1562",
+      "StartedUtc": "2026-11-10T12:38:07.6281086Z",
+      "Outcome": "BusinessErrorVerified",
+      "HttpStatus": 500,
+      "Message": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0",
+      "ApiData": {
+        "transferId": "DO26-02021-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "ERROR",
+        "goodsIssue": null,
+        "goodsReceipt": null,
+        "errorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0"
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02021-1",
+        "Status": "ERROR",
+        "GoodsIssueDocEntry": null,
+        "GoodsIssueDocNum": null,
+        "GoodsReceiptDocEntry": null,
+        "GoodsReceiptDocNum": null,
+        "RetryCount": 1,
+        "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0",
+        "CreateDate": "2026-11-10 15:43:23.190",
+        "UpdateDate": "2026-11-10 19:38:07.713"
+      },
+      "VerifiedDocuments": []
+    },
+    {
+      "TransferId": "DO26-02019-1",
+      "RequestHash": "894A7630D50A981D692917AC5750C374DC85FC41EF6A42983F0C515B093BA0DC",
+      "StartedUtc": "2026-11-10T12:38:07.9744550Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02019-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64611",
+          "documentNumber": "26110365"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2087",
+          "documentNumber": "26110031"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02019-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64611,
+        "GoodsIssueDocNum": 26110365,
+        "GoodsReceiptDocEntry": 2087,
+        "GoodsReceiptDocNum": 26110031,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:43.303",
+        "UpdateDate": "2026-11-10 19:38:13.103"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02019-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64611,
+          "DocNum": 26110365,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02019-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2087,
+          "DocNum": 26110031,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02020-1",
+      "RequestHash": "958498460447B83FB8AC90307C7772DD9CF119E8A616DD5942DC7AE1C0789D89",
+      "StartedUtc": "2026-11-10T12:38:13.3668194Z",
+      "Outcome": "BusinessErrorVerified",
+      "HttpStatus": 500,
+      "Message": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0",
+      "ApiData": {
+        "transferId": "DO26-02020-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "ERROR",
+        "goodsIssue": null,
+        "goodsReceipt": null,
+        "errorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0"
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02020-1",
+        "Status": "ERROR",
+        "GoodsIssueDocEntry": null,
+        "GoodsIssueDocNum": null,
+        "GoodsReceiptDocEntry": null,
+        "GoodsReceiptDocNum": null,
+        "RetryCount": 1,
+        "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0",
+        "CreateDate": "2026-11-10 15:43:43.307",
+        "UpdateDate": "2026-11-10 19:38:13.430"
+      },
+      "VerifiedDocuments": []
+    },
+    {
+      "TransferId": "DO26-02014-1",
+      "RequestHash": "DE69116EC4C79C171BE948007708592E82AA7AFC1CAA3662CFA6B4097E8B2EC2",
+      "StartedUtc": "2026-11-10T12:38:13.6942496Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02014-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64612",
+          "documentNumber": "26110366"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2088",
+          "documentNumber": "26110032"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02014-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64612,
+        "GoodsIssueDocNum": 26110366,
+        "GoodsReceiptDocEntry": 2088,
+        "GoodsReceiptDocNum": 26110032,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:43.310",
+        "UpdateDate": "2026-11-10 19:38:18.860"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02014-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64612,
+          "DocNum": 26110366,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02014-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2088,
+          "DocNum": 26110032,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02015-1",
+      "RequestHash": "75EEDBF77BBD187F9717744780403910BEDC25F5F7A9B84CF14B31602CD9A621",
+      "StartedUtc": "2026-11-10T12:38:19.1208176Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02015-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64613",
+          "documentNumber": "26110367"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2089",
+          "documentNumber": "26110033"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02015-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64613,
+        "GoodsIssueDocNum": 26110367,
+        "GoodsReceiptDocEntry": 2089,
+        "GoodsReceiptDocNum": 26110033,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:43.310",
+        "UpdateDate": "2026-11-10 19:38:24.297"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02015-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64613,
+          "DocNum": 26110367,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02015-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2089,
+          "DocNum": 26110033,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02017-1",
+      "RequestHash": "705DF9E838B8D857C77B9EB5C281E78B8B785D04140F208F85EBACE413071199",
+      "StartedUtc": "2026-11-10T12:38:24.5589540Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02017-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64614",
+          "documentNumber": "26110368"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2090",
+          "documentNumber": "26110034"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02017-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64614,
+        "GoodsIssueDocNum": 26110368,
+        "GoodsReceiptDocEntry": 2090,
+        "GoodsReceiptDocNum": 26110034,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:43:43.310",
+        "UpdateDate": "2026-11-10 19:38:29.740"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02017-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64614,
+          "DocNum": 26110368,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02017-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2090,
+          "DocNum": 26110034,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02013-1",
+      "RequestHash": "57464C857EF379C815049E281CE09B874B9E44E68EF4AA09357BBC61B35DF012",
+      "StartedUtc": "2026-11-10T12:38:30.0009361Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02013-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64615",
+          "documentNumber": "26110369"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2091",
+          "documentNumber": "26110035"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02013-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64615,
+        "GoodsIssueDocNum": 26110369,
+        "GoodsReceiptDocEntry": 2091,
+        "GoodsReceiptDocNum": 26110035,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:44:03.427",
+        "UpdateDate": "2026-11-10 19:38:35.177"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02013-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64615,
+          "DocNum": 26110369,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02013-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2091,
+          "DocNum": 26110035,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02007-1",
+      "RequestHash": "B444E891F2643EE1F80B50175BFB1D8FAF34BC2913754FC448013BCC8827AEE7",
+      "StartedUtc": "2026-11-10T12:38:35.4409761Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02007-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64616",
+          "documentNumber": "26110370"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2092",
+          "documentNumber": "26110036"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02007-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64616,
+        "GoodsIssueDocNum": 26110370,
+        "GoodsReceiptDocEntry": 2092,
+        "GoodsReceiptDocNum": 26110036,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:44:03.443",
+        "UpdateDate": "2026-11-10 19:38:39.633"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02007-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64616,
+          "DocNum": 26110370,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02007-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2092,
+          "DocNum": 26110036,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02008-1",
+      "RequestHash": "87D5CD6097D40458635868817FB554F861933497AFB6EEE3AEF6CDF0CC9F72D7",
+      "StartedUtc": "2026-11-10T12:38:39.8881453Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02008-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64617",
+          "documentNumber": "26110371"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2093",
+          "documentNumber": "26110037"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02008-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64617,
+        "GoodsIssueDocNum": 26110371,
+        "GoodsReceiptDocEntry": 2093,
+        "GoodsReceiptDocNum": 26110037,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:44:03.450",
+        "UpdateDate": "2026-11-10 19:38:47.077"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02008-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64617,
+          "DocNum": 26110371,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02008-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2093,
+          "DocNum": 26110037,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02010-1",
+      "RequestHash": "19757D527EE42C2FC31CB2543B3A53ADCF16B4C730137FD9C5C788CC2D35B7CF",
+      "StartedUtc": "2026-11-10T12:38:47.3352736Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02010-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64618",
+          "documentNumber": "26110372"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2094",
+          "documentNumber": "26110038"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02010-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64618,
+        "GoodsIssueDocNum": 26110372,
+        "GoodsReceiptDocEntry": 2094,
+        "GoodsReceiptDocNum": 26110038,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:44:03.450",
+        "UpdateDate": "2026-11-10 19:38:52.507"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02010-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64618,
+          "DocNum": 26110372,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02010-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2094,
+          "DocNum": 26110038,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    },
+    {
+      "TransferId": "DO26-02012-1",
+      "RequestHash": "563061C0E1A437F5DAC5B0D89071D34EDE03B23143AF565DDE3D32568E0B81F7",
+      "StartedUtc": "2026-11-10T12:38:52.7646305Z",
+      "Outcome": "CompletedVerified",
+      "HttpStatus": 200,
+      "Message": "Goods Issue and Goods Receipt completed.",
+      "ApiData": {
+        "transferId": "DO26-02012-1",
+        "siteId": "PRD-TIF",
+        "sourceCompanyName": "TIF_GOLIVE",
+        "targetCompanyName": "SBO_STL_GOLIVE",
+        "status": "COMPLETED",
+        "goodsIssue": {
+          "siteId": "PRD-TIF",
+          "sapDatabaseName": "TIF_GOLIVE",
+          "documentEntry": "64619",
+          "documentNumber": "26110373"
+        },
+        "goodsReceipt": {
+          "siteId": "PRD-STL",
+          "sapDatabaseName": "SBO_STL_GOLIVE",
+          "documentEntry": "2095",
+          "documentNumber": "26110039"
+        },
+        "errorMessage": null
+      },
+      "VerifiedLedger": {
+        "SiteId": "PRD-TIF",
+        "TransferId": "DO26-02012-1",
+        "Status": "COMPLETED",
+        "GoodsIssueDocEntry": 64619,
+        "GoodsIssueDocNum": 26110373,
+        "GoodsReceiptDocEntry": 2095,
+        "GoodsReceiptDocNum": 26110039,
+        "RetryCount": 0,
+        "ErrorMessage": null,
+        "CreateDate": "2026-11-10 15:44:03.453",
+        "UpdateDate": "2026-11-10 19:38:58.950"
+      },
+      "VerifiedDocuments": [
+        {
+          "TransferId": "DO26-02012-1",
+          "DocumentSide": "GI",
+          "CompanyDatabase": "TIF_GOLIVE",
+          "DocEntry": 64619,
+          "DocNum": 26110373,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        },
+        {
+          "TransferId": "DO26-02012-1",
+          "DocumentSide": "GR",
+          "CompanyDatabase": "SBO_STL_GOLIVE",
+          "DocEntry": 2095,
+          "DocNum": 26110039,
+          "DocDate": "2026-11-10 00:00:00.000",
+          "Canceled": "N"
+        }
+      ]
+    }
+  ],
+  "Stopped": false,
+  "Error": null
+}

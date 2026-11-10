@@ -1,0 +1,137 @@
+{
+  "Execute": false,
+  "Endpoint": "http://192.168.10.1:8585/api/sap/goodsissue-goodsreceipt",
+  "ServerTime": "2026-11-10 19:37:32.337",
+  "ExcludedCompletedTransferId": "DO26-02023-2",
+  "AllowedTransferIds": [
+    "DO26-01927-2",
+    "DO26-01972-2",
+    "DO26-01974-2",
+    "DO26-01975-2",
+    "DO26-00135-1",
+    "DO26-00136-2",
+    "DO26-00137-2",
+    "DO26-02049-1",
+    "DO26-01926-2",
+    "DO26-02041-1",
+    "DO26-02038-1",
+    "DO26-02040-1",
+    "DO26-02033-1",
+    "DO26-02032-1",
+    "DO26-02030-1",
+    "DO26-02027-1",
+    "DO26-02028-1",
+    "DO26-02029-1",
+    "DO26-02021-1",
+    "DO26-02019-1",
+    "DO26-02020-1",
+    "DO26-02014-1",
+    "DO26-02015-1",
+    "DO26-02017-1",
+    "DO26-02013-1",
+    "DO26-02007-1",
+    "DO26-02008-1",
+    "DO26-02010-1",
+    "DO26-02012-1"
+  ],
+  "ExcludedPreviouslyAttemptedIds": [
+    "DO26-01927-2",
+    "DO26-01972-2",
+    "DO26-01974-2",
+    "DO26-01975-2",
+    "DO26-00135-1",
+    "DO26-00136-2",
+    "DO26-00137-2",
+    "DO26-02049-1",
+    "DO26-01926-2",
+    "DO26-02041-1",
+    "DO26-02038-1",
+    "DO26-02033-1",
+    "DO26-02040-1"
+  ],
+  "PreviousJournal": ".codex-artifacts\\intercompany-transfer-log-20261110\\send29-20261110-123101-22e20b\\Journal.json",
+  "AlreadyCompleted": [],
+  "Pending": [
+    {
+      "TransferId": "DO26-02032-1",
+      "Status": "NEW",
+      "RequestHash": "387FE7F57CF28EF399E00D63C2F497A31FD30094CDAACF3DE538D0A481DE86D9"
+    },
+    {
+      "TransferId": "DO26-02030-1",
+      "Status": "NEW",
+      "RequestHash": "07F86B89B344ED65EEAF258FE813EE69FE9CAF23E64D74B5B826E9A221F5B6FB"
+    },
+    {
+      "TransferId": "DO26-02027-1",
+      "Status": "NEW",
+      "RequestHash": "12D01EE495BF37D2803D5B72CAFF0FDF8758D320FBC95A1C4515CCE5F21F3E51"
+    },
+    {
+      "TransferId": "DO26-02028-1",
+      "Status": "NEW",
+      "RequestHash": "4002BAE41C128A49BEF0F8C34974E500DC5E7B98969F44F2F81E72E2D1A1F68A"
+    },
+    {
+      "TransferId": "DO26-02029-1",
+      "Status": "NEW",
+      "RequestHash": "AB4B3F9A77D60A434B40F4857BD9C8CB1D85E6DBEED6C38B0A08EC207415343E"
+    },
+    {
+      "TransferId": "DO26-02021-1",
+      "Status": "NEW",
+      "RequestHash": "DCC3574241F4402442430AA26B7CE515BD1CA4C858F43C4E392FD9D6DC1E1562"
+    },
+    {
+      "TransferId": "DO26-02019-1",
+      "Status": "NEW",
+      "RequestHash": "894A7630D50A981D692917AC5750C374DC85FC41EF6A42983F0C515B093BA0DC"
+    },
+    {
+      "TransferId": "DO26-02020-1",
+      "Status": "NEW",
+      "RequestHash": "958498460447B83FB8AC90307C7772DD9CF119E8A616DD5942DC7AE1C0789D89"
+    },
+    {
+      "TransferId": "DO26-02014-1",
+      "Status": "NEW",
+      "RequestHash": "DE69116EC4C79C171BE948007708592E82AA7AFC1CAA3662CFA6B4097E8B2EC2"
+    },
+    {
+      "TransferId": "DO26-02015-1",
+      "Status": "NEW",
+      "RequestHash": "75EEDBF77BBD187F9717744780403910BEDC25F5F7A9B84CF14B31602CD9A621"
+    },
+    {
+      "TransferId": "DO26-02017-1",
+      "Status": "NEW",
+      "RequestHash": "705DF9E838B8D857C77B9EB5C281E78B8B785D04140F208F85EBACE413071199"
+    },
+    {
+      "TransferId": "DO26-02013-1",
+      "Status": "NEW",
+      "RequestHash": "57464C857EF379C815049E281CE09B874B9E44E68EF4AA09357BBC61B35DF012"
+    },
+    {
+      "TransferId": "DO26-02007-1",
+      "Status": "NEW",
+      "RequestHash": "B444E891F2643EE1F80B50175BFB1D8FAF34BC2913754FC448013BCC8827AEE7"
+    },
+    {
+      "TransferId": "DO26-02008-1",
+      "Status": "NEW",
+      "RequestHash": "87D5CD6097D40458635868817FB554F861933497AFB6EEE3AEF6CDF0CC9F72D7"
+    },
+    {
+      "TransferId": "DO26-02010-1",
+      "Status": "NEW",
+      "RequestHash": "19757D527EE42C2FC31CB2543B3A53ADCF16B4C730137FD9C5C788CC2D35B7CF"
+    },
+    {
+      "TransferId": "DO26-02012-1",
+      "Status": "NEW",
+      "RequestHash": "563061C0E1A437F5DAC5B0D89071D34EDE03B23143AF565DDE3D32568E0B81F7"
+    }
+  ],
+  "Policy": "Sequential; original payload string; one POST per TransferId across these journals; no automatic retry; stop on unknown errors/timeouts. A verified stock-only failure with no SAP document may be recorded and skipped."
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "Rows": [
+      {
+        "Applied": true,
+        "BeforeDefinition": "([Status]='COMPLETED' OR [Status]='GR_PENDING' OR [Status]='GI_POSTED' OR [Status]='GI_FAILED' OR [Status]='NEW')",
+        "ProposedAllowedStatuses": "Status IN (NEW, ERROR, GI_FAILED, GI_POSTED, GR_PENDING, COMPLETED)",
+        "ExistingRows": 6004
+      }
+    ]
+  },
+  {
+    "Rows": [
+      {
+        "name": "CK_INT_IntercompanyTransfer_Status",
+        "definition": "([Status]='COMPLETED' OR [Status]='GR_PENDING' OR [Status]='GI_POSTED' OR [Status]='GI_FAILED' OR [Status]='ERROR' OR [Status]='NEW')",
+        "is_disabled": false,
+        "is_not_trusted": false
+      }
+    ]
+  }
+]

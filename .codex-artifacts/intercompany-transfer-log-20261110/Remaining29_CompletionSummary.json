@@ -1,0 +1,60 @@
+{
+  "FinalServerTime": "2026-11-10 19:38:58.990",
+  "AuthorizedTransferCount": 29,
+  "PostAttemptCount": 29,
+  "UniqueAttemptedIds": 29,
+  "AutomaticRetries": 0,
+  "NewlyCompleted": 26,
+  "StockErrors": [
+    {
+      "TransferId": "DO26-02040-1",
+      "Status": "ERROR",
+      "ItemCode": "FG05046",
+      "Warehouse": "WH-FG",
+      "RequiredAtAttempt": 600.0,
+      "AvailableAtAttempt": 164.000000,
+      "RetryCount": 1,
+      "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG05046, warehouse=WH-FG, required=600.0, available=164.000000",
+      "UpdateDate": "2026-11-10 19:37:22.630"
+    },
+    {
+      "TransferId": "DO26-02021-1",
+      "Status": "ERROR",
+      "ItemCode": "FG04079",
+      "Warehouse": "WH-FG",
+      "RequiredAtAttempt": 12.0,
+      "AvailableAtAttempt": 0.0,
+      "RetryCount": 1,
+      "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0",
+      "UpdateDate": "2026-11-10 19:38:07.713"
+    },
+    {
+      "TransferId": "DO26-02020-1",
+      "Status": "ERROR",
+      "ItemCode": "FG04079",
+      "Warehouse": "WH-FG",
+      "RequiredAtAttempt": 6.0,
+      "AvailableAtAttempt": 0.0,
+      "RetryCount": 1,
+      "ErrorMessage": "Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0",
+      "UpdateDate": "2026-11-10 19:38:13.430"
+    }
+  ],
+  "Original30Statuses": [
+    {
+      "Name": "COMPLETED",
+      "Count": 27
+    },
+    {
+      "Name": "ERROR",
+      "Count": 3
+    }
+  ],
+  "SapDocumentCount": 54,
+  "VerifiedDocumentLineCount": 176,
+  "DocumentOrQuantityMismatches": 0,
+  "DuplicateTransferDocuments": 0,
+  "AdditionalDatabaseFix": "Expanded TEMP_API status check constraint to include ERROR while keeping all existing statuses. Reconciled the first observed HTTP500 failure log after checking no SAP documents existed; did not repost that transfer.",
+  "ResultCsv": "Remaining29_Results.csv",
+  "FailedCsv": "Remaining29_StockErrors.csv"
+}

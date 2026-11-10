@@ -1,0 +1,302 @@
+{
+  "CheckedAtBangkok": "2569-11-10 21:58:17 +07:00",
+  "Mode": "Read-only directory and registry queries through existing authorized SQL connection; no SAP calls, no SQL application data updates, no registry writes.",
+  "Registry": [
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps",
+      "ValueName": "DumpFolder",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps",
+      "ValueName": "DumpType",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps",
+      "ValueName": "DumpCount",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+      "ValueName": "DumpFolder",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+      "ValueName": "DumpType",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+      "ValueName": "DumpCount",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug",
+      "ValueName": "Auto",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug",
+      "ValueName": "Debugger",
+      "Value": "\"C:\\Windows\\system32\\vsjitdebugger.exe\" -p %ld -e %ld -j 0x%p",
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug",
+      "ValueName": "Auto",
+      "Value": null,
+      "Error": null
+    },
+    {
+      "Key": "SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug",
+      "ValueName": "Debugger",
+      "Value": "\"C:\\Windows\\system32\\vsjitdebugger.exe\" -p %ld -e %ld -j 0x%p",
+      "Error": null
+    }
+  ],
+  "ProfileRootReadError": null,
+  "Directories": [
+    {
+      "Root": "C:\\ProgramData\\Microsoft\\Windows\\WER",
+      "EntriesObserved": 525,
+      "WerReportCount": 3,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": null
+    },
+    {
+      "Root": "C:\\Windows\\System32\\config\\systemprofile\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Windows\\ServiceProfiles\\LocalService\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Windows\\ServiceProfiles\\NetworkService\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Dumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "D:\\Dumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "D:\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\.NET v2.0\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\.NET v2.0 Classic\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\.NET v4.5\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\.NET v4.5 Classic\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Administrator\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\All Users\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\bexsys\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Buadmin\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Classic .NET AppPool\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Default\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Default User\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\MsDtsServer130\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\MSSQLFDLauncher\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\MSSQLSERVER\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\MSSQLServerOLAPService\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\Public\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\ReportServer\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\SQLSERVERAGENT\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\SQLTELEMETRY\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\SSASTELEMETRY\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    },
+    {
+      "Root": "C:\\Users\\SSISTELEMETRY130\\AppData\\Local\\CrashDumps",
+      "EntriesObserved": 0,
+      "WerReportCount": 0,
+      "DumpOrCabMatches": [],
+      "Error": null,
+      "EmptyResultLimitation": "No entries visible to the SQL Server service identity; missing and inaccessible directories are not distinguished."
+    }
+  ],
+  "DumpOrCabMatchCount": 0
+}

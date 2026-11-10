@@ -1,0 +1,76 @@
+{
+  "Objective": "Determine why the initial 30 PRD intercompany transfers remained NEW.",
+  "ReadOnlyInvestigation": true,
+  "InitialLedgerRows": 30,
+  "InitialInsertBursts": [
+    {
+      "Name": "2026-11-10 15:42:12",
+      "Count": 5
+    },
+    {
+      "Name": "2026-11-10 15:42:42",
+      "Count": 5
+    },
+    {
+      "Name": "2026-11-10 15:43:03",
+      "Count": 5
+    },
+    {
+      "Name": "2026-11-10 15:43:23",
+      "Count": 5
+    },
+    {
+      "Name": "2026-11-10 15:43:43",
+      "Count": 5
+    },
+    {
+      "Name": "2026-11-10 15:44:03",
+      "Count": 5
+    }
+  ],
+  "IisEvidence": {
+    "ServerFile": "C:\\inetpub\\logs\\LogFiles\\W3SVC6\\u_ex261110.log",
+    "CopySha256": "F9E3CF5059A3A514EC18999752C65863B4261C6252644A7F432955E3F516B00A",
+    "AllLoggedRequests": 99,
+    "InitialBatchLoggedCompletions": 28,
+    "Http503Count": 28,
+    "InitialBatchHttp500Count": 0,
+    "MinDurationMs": 20003.0,
+    "MaxDurationMs": 20181.0,
+    "AverageDurationMs": 20021.85714285714,
+    "FirstBangkok": "2026-11-10 15:42:32",
+    "LastBangkok": "2026-11-10 15:44:23",
+    "Limitation": "The IIS log has no request body/TransferId/correlation ID, so individual 503 responses cannot be mapped conclusively to the 30 TransferIds."
+  },
+  "HistoricalCode": {
+    "Commit": "195a25a",
+    "MaxConcurrency": 2,
+    "AcquireTimeoutSeconds": 20,
+    "Flow": "Insert NEW -> await DI API gate -> SapDiApiBusyException -> rethrow -> controller 503; no final ledger update in the old busy catch."
+  },
+  "ConfirmedCauseOfStaleNew": "For the 28 HTTP 503 responses observed in the original time window, the prior busy handler ended the HTTP request without updating the NEW ledger row. NEW therefore did not mean those requests were still running.",
+  "AdditionalConfirmedLoggingDefect": "The actual SQL CHECK constraint did not allow ERROR. At 19:32:13.255, a .NET Runtime event for DO26-02040-1 confirmed SQL error 547 while MarkFailureAsync tried to update the ledger. This independently explains why ordinary business errors could also leave NEW/NULL error fields.",
+  "WorkerLifecycle": {
+    "OriginalProcessId": 3156,
+    "StartedBangkok": "2026-11-10 15:07:11.918",
+    "FailedGracefulShutdownBangkok": "2026-11-10 16:38:19.525",
+    "FailedShutdownEventId": 1005,
+    "ReplacementProcessId": 8576,
+    "ReplacementStartedBangkok": "2026-11-10 19:17:59.242"
+  },
+  "Inference": "30 initial rows were accepted, only 28 completed IIS responses appear, and the first burst of 5 produced only 3 busy responses. With a 2-slot gate, this is consistent with 2 operations retaining the slots while later requests timed out waiting. The failed graceful shutdown of that process supports a stuck-work hypothesis; it does not identify the blocked SAP function.",
+  "Unresolved": [
+    "No completed response was found for the other 2 initial requests; individual TransferIds cannot be proven from the IIS log.",
+    "No matching native crash event was found at 15:42-15:44. The evidence does not establish DLL crash, COM cleanup, or license/connect failure as the cause of the held slots.",
+    "A hang dump or request-stage traces from the affected process would be needed to identify the native call that failed to return. The old process is no longer the active API instance."
+  ],
+  "CompletedFixes": [
+    "Busy response path now attempts to persist ERROR before rethrowing the exception for HTTP 503.",
+    "Live TEMP_API status CHECK constraint now allows ERROR and retains all previous valid statuses.",
+    "No automatic SAP retries were introduced."
+  ],
+  "References": [
+    "https://learn.microsoft.com/en-us/iis/configuration/system.applicationhost/sites/site/logfile/",
+    "https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/iis/health-diagnostic-performance/time-taken-field-http-log"
+  ]
+}

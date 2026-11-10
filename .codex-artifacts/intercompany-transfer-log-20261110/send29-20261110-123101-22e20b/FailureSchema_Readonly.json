@@ -1,0 +1,37 @@
+[
+  {
+    "Rows": [
+      {
+        "name": "CK_INT_IntercompanyTransfer_Status",
+        "definition": "([Status]='COMPLETED' OR [Status]='GR_PENDING' OR [Status]='GI_POSTED' OR [Status]='GI_FAILED' OR [Status]='NEW')",
+        "is_disabled": false,
+        "is_not_trusted": false
+      }
+    ]
+  },
+  {
+    "Rows": []
+  },
+  {
+    "Rows": [
+      {
+        "name": "Status",
+        "max_length": 20,
+        "is_nullable": false,
+        "DataType": "varchar"
+      },
+      {
+        "name": "RetryCount",
+        "max_length": 4,
+        "is_nullable": false,
+        "DataType": "int"
+      },
+      {
+        "name": "ErrorMessage",
+        "max_length": -1,
+        "is_nullable": true,
+        "DataType": "nvarchar"
+      }
+    ]
+  }
+]

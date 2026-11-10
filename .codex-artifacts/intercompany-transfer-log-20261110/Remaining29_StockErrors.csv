@@ -1,0 +1,4 @@
+"TransferId","Status","ItemCode","Warehouse","RequiredAtAttempt","AvailableAtAttempt","RetryCount","ErrorMessage","UpdateDate"
+"DO26-02040-1","ERROR","FG05046","WH-FG","600.0","164.000000","1","Insufficient batch stock for automatic selection. itemCode=FG05046, warehouse=WH-FG, required=600.0, available=164.000000","2026-11-10 19:37:22.630"
+"DO26-02021-1","ERROR","FG04079","WH-FG","12.0","0.0","1","Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=12.0, available=0.0","2026-11-10 19:38:07.713"
+"DO26-02020-1","ERROR","FG04079","WH-FG","6.0","0.0","1","Insufficient batch stock for automatic selection. itemCode=FG04079, warehouse=WH-FG, required=6.0, available=0.0","2026-11-10 19:38:13.430"

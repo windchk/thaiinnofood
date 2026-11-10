@@ -1,0 +1,32 @@
+{
+  "StartedAtBangkok": "2026-11-10 22:04:24 +07:00",
+  "Applied": false,
+  "TargetKey": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe",
+  "DumpFolder": "Windows default: %LOCALAPPDATA%\\CrashDumps in the crashing process account profile; no custom ACL changes.",
+  "IntendedValues": [
+    {
+      "Name": "DumpCount",
+      "Type": "REG_DWORD",
+      "Value": 3
+    },
+    {
+      "Name": "DumpType",
+      "Type": "REG_DWORD",
+      "Value": 2
+    }
+  ],
+  "Before": [
+    {
+      "Name": "DumpCount",
+      "Present": false,
+      "Value": null
+    },
+    {
+      "Name": "DumpType",
+      "Present": false,
+      "Value": null
+    }
+  ],
+  "WritesVerified": [],
+  "Failure": null
+}
