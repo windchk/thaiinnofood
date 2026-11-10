@@ -1,0 +1,108 @@
+{
+  "ConfirmedFailureMode": "Six IIS w3wp.exe native crashes coincide with all six current-day ReceiptFromProduction P rows, before final log completion.",
+  "ConfirmedCrashCount": 6,
+  "FaultModules": [
+    "ACE.dll",
+    "B1_Engine.dll",
+    "MSVCR120.dll"
+  ],
+  "TargetLogId": 38434,
+  "TargetCause": "w3wp.exe native crash in MSVCR120.dll, 0xc0000409, at 2026-11-09 17:39:50; request accepted at 17:39:50.490",
+  "DataConsequence": "Some crashes precede SAP commit; others leave a committed Receipt without final API log. A later request is not automatically deduplicated by current production API source.",
+  "UnderlyingNativeCause": "Not yet established: existing WER dump must be examined to distinguish native SDK defect, COM lifetime/threading, runtime mismatch, or other memory-corruption causes.",
+  "WindowsEventReports": "Provided by user after remote EventLog access was denied",
+  "SqlHealth": "Retained events cover incident interval; no xml_deadlock_report in incident window. Error 17897 entries observed are not linked to these API log records.",
+  "CodeVerification": "8 ProductionOrderLoggingTests passed; mocks only, no live SAP replay.",
+  "Scope": "Read-only diagnosis: no SAP POST, no DB status edits, no service/config changes.",
+  "Correlation": [
+    {
+      "LogId": 38385,
+      "ProductionOrderDocEntry": 55014,
+      "RequestDate": "2026-11-09 12:36:24.873",
+      "CrashTime": "2026-11-09 12:36:28",
+      "FaultingModule": "B1_Engine.dll",
+      "ExceptionCode": "0xc0000005",
+      "ProcessId": 12884,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 2,
+      "ReceiptQuantity": 156.0,
+      "ReceiptsWithoutFinalLog": 1
+    },
+    {
+      "LogId": 38425,
+      "ProductionOrderDocEntry": 55019,
+      "RequestDate": "2026-11-09 16:36:29.060",
+      "CrashTime": "2026-11-09 16:36:29",
+      "FaultingModule": "MSVCR120.dll",
+      "ExceptionCode": "0xc0000409",
+      "ProcessId": 12444,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 2165.3,
+      "ReceiptsWithoutFinalLog": 0
+    },
+    {
+      "LogId": 38434,
+      "ProductionOrderDocEntry": 54956,
+      "RequestDate": "2026-11-09 17:39:50.490",
+      "CrashTime": "2026-11-09 17:39:50",
+      "FaultingModule": "MSVCR120.dll",
+      "ExceptionCode": "0xc0000409",
+      "ProcessId": 17928,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 1230.0,
+      "ReceiptsWithoutFinalLog": 0
+    },
+    {
+      "LogId": 38462,
+      "ProductionOrderDocEntry": 54960,
+      "RequestDate": "2026-11-09 18:49:22.360",
+      "CrashTime": "2026-11-09 18:49:22",
+      "FaultingModule": "ACE.dll",
+      "ExceptionCode": "0xc0000005",
+      "ProcessId": 16008,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 3220.0,
+      "ReceiptsWithoutFinalLog": 0
+    },
+    {
+      "LogId": 38469,
+      "ProductionOrderDocEntry": 55027,
+      "RequestDate": "2026-11-09 19:15:55.637",
+      "CrashTime": "2026-11-09 19:15:59",
+      "FaultingModule": "B1_Engine.dll",
+      "ExceptionCode": "0xc0000005",
+      "ProcessId": 9608,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 1170.0,
+      "ReceiptsWithoutFinalLog": 1
+    },
+    {
+      "LogId": 38475,
+      "ProductionOrderDocEntry": 54988,
+      "RequestDate": "2026-11-09 19:38:49.997",
+      "CrashTime": "2026-11-09 19:38:53",
+      "FaultingModule": "B1_Engine.dll",
+      "ExceptionCode": "0xc0000005",
+      "ProcessId": 10644,
+      "MatchedWithinSeconds": 5,
+      "EvidenceSource": "SQL INT_SapApiLog + user-provided Windows Application Error event",
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 73.0,
+      "ReceiptsWithoutFinalLog": 1
+    }
+  ],
+  "References": [
+    "https://learn.microsoft.com/en-us/cpp/intrinsics/fastfail?view=msvc-170",
+    "https://learn.microsoft.com/en-us/shows/inside/access-violation-c0000005-read-or-write",
+    "https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl"
+  ]
+}

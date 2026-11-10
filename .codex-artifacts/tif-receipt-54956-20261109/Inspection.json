@@ -1,0 +1,245 @@
+{
+  "CheckedAt": [
+    {
+      "CheckedAt": "2026-11-09 21:01:04.940",
+      "ServerName": "TIFSVR01-SAP"
+    }
+  ],
+  "ProductionLogs": [
+    {
+      "LogId": 38433,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "IssueFromProduction",
+      "ProductionOrderDocEntry": 54956,
+      "Status": "S",
+      "ErrorMessage": null,
+      "SapDocumentEntry": "64518",
+      "SapDocumentNumber": "26110272",
+      "RequestDate": "2026-11-09 17:39:46.227",
+      "CompletedDate": "2026-11-09 17:39:50.443",
+      "AgeOrDurationSeconds": 4,
+      "RequestJson": "{\"siteId\":\"PRD-TIF\",\"docEntry\":54956,\"docDate\":\"2026-11-09T00:00:00\",\"issueLines\":[{\"lineNum\":0,\"itemCode\":\"LB-504\",\"quantity\":45.0,\"warehouse\":\"WH-PD\",\"batchNumber\":null,\"batches\":[],\"bins\":[]},{\"lineNum\":1,\"itemCode\":\"D1003\",\"quantity\":18.0,\"warehouse\":\"WH-PD\",\"batchNumber\":null,\"batches\":[],\"bins\":[]},{\"lineNum\":2,\"itemCode\":\"D1114\",\"quantity\":18.0,\"warehouse\":\"WH-PD\",\"batchNumber\":null,\"batches\":[],\"bins\":[]},{\"lineNum\":3,\"itemCode\":\"WP04024\",\"quantity\":1232.0,\"warehouse\":\"WH-PD\",\"batchNumber\":null,\"batches\":[],\"bins\":[]},{\"lineNum\":4,\"itemCode\":\"PKG06038\",\"quantity\":181.2,\"warehouse\":\"WH-PD\",\"batchNumber\":null,\"batches\":[],\"bins\":[]}]}",
+      "ResponseJson": "{\"success\":true,\"message\":\"Issue From Production completed.\",\"data\":{\"siteId\":\"PRD-TIF\",\"sapDatabaseName\":\"TIF_GOLIVE\",\"documentEntry\":\"64518\",\"documentNumber\":\"26110272\"}}"
+    },
+    {
+      "LogId": 38434,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 54956,
+      "Status": "P",
+      "ErrorMessage": null,
+      "SapDocumentEntry": null,
+      "SapDocumentNumber": null,
+      "RequestDate": "2026-11-09 17:39:50.490",
+      "CompletedDate": null,
+      "AgeOrDurationSeconds": 12074,
+      "RequestJson": "{\"siteId\":\"PRD-TIF\",\"docEntry\":54956,\"docDate\":\"2026-11-09T00:00:00\",\"receiptLines\":[{\"lineNum\":null,\"quantity\":1230.0,\"warehouse\":\"WH-FG\",\"batchNumber\":null,\"batches\":[],\"bins\":[]}]}",
+      "ResponseJson": null
+    },
+    {
+      "LogId": 38438,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 54956,
+      "Status": "S",
+      "ErrorMessage": null,
+      "SapDocumentEntry": "63769",
+      "SapDocumentNumber": "26110291",
+      "RequestDate": "2026-11-09 17:44:35.970",
+      "CompletedDate": "2026-11-09 17:44:39.180",
+      "AgeOrDurationSeconds": 4,
+      "RequestJson": "{\"siteId\":\"PRD-TIF\",\"docEntry\":54956,\"docDate\":\"2026-11-09T00:00:00\",\"receiptLines\":[{\"lineNum\":null,\"quantity\":1230.0,\"warehouse\":\"WH-FG\",\"batchNumber\":null,\"batches\":[],\"bins\":[]}]}",
+      "ResponseJson": "{\"success\":true,\"message\":\"Receipt From Production completed.\",\"data\":{\"siteId\":\"PRD-TIF\",\"sapDatabaseName\":\"TIF_GOLIVE\",\"documentEntry\":\"63769\",\"documentNumber\":\"26110291\"}}"
+    }
+  ],
+  "SapReceipts": [
+    {
+      "DocEntry": 63769,
+      "DocNum": 26110291,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1744,
+      "CANCELED": "N",
+      "UserSign": 20,
+      "LineNum": 0,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": null,
+      "ItemCode": "FG04081",
+      "Quantity": 1230.000000,
+      "WhsCode": "WH-FG",
+      "MatchingLogRows": 1,
+      "SuccessLogRows": 1,
+      "MatchingLogIds": "38438"
+    }
+  ],
+  "SapIssues": [
+    {
+      "DocEntry": 64518,
+      "DocNum": 26110272,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1739,
+      "CANCELED": "N",
+      "LineNum": 0,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": 0,
+      "ItemCode": "LB-504",
+      "Quantity": 45.000000,
+      "WhsCode": "WH-PD"
+    },
+    {
+      "DocEntry": 64518,
+      "DocNum": 26110272,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1739,
+      "CANCELED": "N",
+      "LineNum": 1,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": 1,
+      "ItemCode": "D1003",
+      "Quantity": 18.000000,
+      "WhsCode": "WH-PD"
+    },
+    {
+      "DocEntry": 64518,
+      "DocNum": 26110272,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1739,
+      "CANCELED": "N",
+      "LineNum": 2,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": 2,
+      "ItemCode": "D1114",
+      "Quantity": 18.000000,
+      "WhsCode": "WH-PD"
+    },
+    {
+      "DocEntry": 64518,
+      "DocNum": 26110272,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1739,
+      "CANCELED": "N",
+      "LineNum": 3,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": 3,
+      "ItemCode": "WP04024",
+      "Quantity": 1232.000000,
+      "WhsCode": "WH-PD"
+    },
+    {
+      "DocEntry": 64518,
+      "DocNum": 26110272,
+      "DocDate": "2026-11-09 00:00:00.000",
+      "CreateDate": "2026-11-09 00:00:00.000",
+      "DocTime": 1739,
+      "CANCELED": "N",
+      "LineNum": 4,
+      "BaseType": 202,
+      "BaseEntry": 54956,
+      "BaseLine": 4,
+      "ItemCode": "PKG06038",
+      "Quantity": 181.200000,
+      "WhsCode": "WH-PD"
+    }
+  ],
+  "ProductionOrder": [
+    {
+      "DocEntry": 54956,
+      "DocNum": 26110153,
+      "Status": "R",
+      "ItemCode": "FG04081",
+      "PlannedQty": 1230.000000,
+      "CmpltQty": 1230.000000,
+      "RjctQty": 0.000000,
+      "PostDate": "2026-11-05 00:00:00.000",
+      "DueDate": "2026-11-09 00:00:00.000"
+    }
+  ],
+  "IisSessions": [],
+  "ProcessingSummary": [
+    {
+      "AllProcessingRows": 17,
+      "OldestProcessingRequest": "2026-10-05 15:20:30.487",
+      "ProcessingSinceNov09": 6
+    }
+  ],
+  "RecentProcessingRows": [
+    {
+      "LogId": 38475,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 54988,
+      "Status": "P",
+      "RequestDate": "2026-11-09 19:38:49.997",
+      "CompletedDate": null,
+      "AgeSeconds": 4935
+    },
+    {
+      "LogId": 38469,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 55027,
+      "Status": "P",
+      "RequestDate": "2026-11-09 19:15:55.637",
+      "CompletedDate": null,
+      "AgeSeconds": 6309
+    },
+    {
+      "LogId": 38462,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 54960,
+      "Status": "P",
+      "RequestDate": "2026-11-09 18:49:22.360",
+      "CompletedDate": null,
+      "AgeSeconds": 7902
+    },
+    {
+      "LogId": 38434,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 54956,
+      "Status": "P",
+      "RequestDate": "2026-11-09 17:39:50.490",
+      "CompletedDate": null,
+      "AgeSeconds": 12074
+    },
+    {
+      "LogId": 38425,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 55019,
+      "Status": "P",
+      "RequestDate": "2026-11-09 16:36:29.060",
+      "CompletedDate": null,
+      "AgeSeconds": 15875
+    },
+    {
+      "LogId": 38385,
+      "SiteId": "PRD-TIF",
+      "SapDatabaseName": "TIF_GOLIVE",
+      "ProcessType": "ReceiptFromProduction",
+      "ProductionOrderDocEntry": 55014,
+      "Status": "P",
+      "RequestDate": "2026-11-09 12:36:24.873",
+      "CompletedDate": null,
+      "AgeSeconds": 30280
+    }
+  ]
+}

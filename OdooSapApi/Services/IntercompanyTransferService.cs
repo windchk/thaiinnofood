@@ -165,8 +165,29 @@ public class IntercompanyTransferService
         {
             throw;
         }
-        catch (SapDiApiBusyException)
+        catch (SapDiApiBusyException ex)
         {
+            try
+            {
+                // A rejected request has ended; it must not remain NEW.
+                // Updating only the failure fields preserves any posted GI and costs.
+                await _ledger.MarkFailureAsync(
+                    transferLock.Connection,
+                    request.SiteId,
+                    request.TransferId,
+                    "ERROR",
+                    ex.Message);
+            }
+            catch (Exception ledgerException)
+            {
+                _logger.LogError(
+                    ledgerException,
+                    "Cannot update intercompany transfer busy status. SiteId={SiteId}, TransferId={TransferId}",
+                    request.SiteId,
+                    request.TransferId);
+            }
+
+            // Preserve the controller's 503 response without retrying SAP.
             throw;
         }
         catch (Exception ex)

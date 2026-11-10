@@ -1,0 +1,208 @@
+{
+  "Applied": false,
+  "SqlFile": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\.codex-artifacts\\tif-receipt-54956-20261109\\Related_Receipt_Details.sql",
+  "Results": [
+    {
+      "ResultSet": 0,
+      "Rows": [
+        {
+          "CheckedAt": "2026-11-09 21:03:32.563"
+        }
+      ]
+    },
+    {
+      "ResultSet": 1,
+      "Rows": [
+        {
+          "LogId": 38475,
+          "ProductionOrderDocEntry": 54988,
+          "Status": "P",
+          "RequestDate": "2026-11-09 19:38:49.997",
+          "CompletedDate": null,
+          "SapDocumentEntry": null,
+          "SapDocumentNumber": null,
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 1,
+          "RequestQuantity": 73.000000
+        },
+        {
+          "LogId": 38385,
+          "ProductionOrderDocEntry": 55014,
+          "Status": "P",
+          "RequestDate": "2026-11-09 12:36:24.873",
+          "CompletedDate": null,
+          "SapDocumentEntry": null,
+          "SapDocumentNumber": null,
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 1,
+          "RequestQuantity": 78.000000
+        },
+        {
+          "LogId": 38397,
+          "ProductionOrderDocEntry": 55014,
+          "Status": "S",
+          "RequestDate": "2026-11-09 15:07:23.527",
+          "CompletedDate": "2026-11-09 15:07:27.260",
+          "SapDocumentEntry": "63751",
+          "SapDocumentNumber": "26110273",
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 1,
+          "RequestQuantity": 78.000000
+        },
+        {
+          "LogId": 38425,
+          "ProductionOrderDocEntry": 55019,
+          "Status": "P",
+          "RequestDate": "2026-11-09 16:36:29.060",
+          "CompletedDate": null,
+          "SapDocumentEntry": null,
+          "SapDocumentNumber": null,
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 1,
+          "RequestQuantity": 36.000000
+        },
+        {
+          "LogId": 38428,
+          "ProductionOrderDocEntry": 55019,
+          "Status": "S",
+          "RequestDate": "2026-11-09 17:12:47.533",
+          "CompletedDate": "2026-11-09 17:12:51.247",
+          "SapDocumentEntry": "63765",
+          "SapDocumentNumber": "26110287",
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 3,
+          "RequestQuantity": 2165.300000
+        },
+        {
+          "LogId": 38469,
+          "ProductionOrderDocEntry": 55027,
+          "Status": "P",
+          "RequestDate": "2026-11-09 19:15:55.637",
+          "CompletedDate": null,
+          "SapDocumentEntry": null,
+          "SapDocumentNumber": null,
+          "ErrorMessage": null,
+          "RequestDocDate": "2026-11-09T00:00:00",
+          "RequestLines": 1,
+          "RequestQuantity": 1170.000000
+        }
+      ]
+    },
+    {
+      "ResultSet": 2,
+      "Rows": [
+        {
+          "ProductionOrderDocEntry": 54988,
+          "DocEntry": 63785,
+          "DocNum": 26110307,
+          "CreateDate": "2026-11-09 00:00:00.000",
+          "DocTime": 1938,
+          "CANCELED": "N",
+          "ItemCode": "WP05001",
+          "ReceiptQuantity": 73.000000,
+          "UserSign": 20,
+          "LogRows": 0,
+          "SuccessLogId": null
+        },
+        {
+          "ProductionOrderDocEntry": 55014,
+          "DocEntry": 63747,
+          "DocNum": 26110269,
+          "CreateDate": "2026-11-09 00:00:00.000",
+          "DocTime": 1236,
+          "CANCELED": "N",
+          "ItemCode": "RM02045-1",
+          "ReceiptQuantity": 78.000000,
+          "UserSign": 20,
+          "LogRows": 0,
+          "SuccessLogId": null
+        },
+        {
+          "ProductionOrderDocEntry": 55014,
+          "DocEntry": 63751,
+          "DocNum": 26110273,
+          "CreateDate": "2026-11-09 00:00:00.000",
+          "DocTime": 1507,
+          "CANCELED": "N",
+          "ItemCode": "RM02045-1",
+          "ReceiptQuantity": 78.000000,
+          "UserSign": 20,
+          "LogRows": 1,
+          "SuccessLogId": 38397
+        },
+        {
+          "ProductionOrderDocEntry": 55019,
+          "DocEntry": 63765,
+          "DocNum": 26110287,
+          "CreateDate": "2026-11-09 00:00:00.000",
+          "DocTime": 1712,
+          "CANCELED": "N",
+          "ItemCode": "FG05050",
+          "ReceiptQuantity": 2165.300000,
+          "UserSign": 20,
+          "LogRows": 1,
+          "SuccessLogId": 38428
+        },
+        {
+          "ProductionOrderDocEntry": 55027,
+          "DocEntry": 63782,
+          "DocNum": 26110304,
+          "CreateDate": "2026-11-09 00:00:00.000",
+          "DocTime": 1915,
+          "CANCELED": "N",
+          "ItemCode": "FG06014",
+          "ReceiptQuantity": 1170.000000,
+          "UserSign": 20,
+          "LogRows": 0,
+          "SuccessLogId": null
+        }
+      ]
+    },
+    {
+      "ResultSet": 3,
+      "Rows": [
+        {
+          "DocEntry": 54988,
+          "DocNum": 26110185,
+          "ItemCode": "WP05001",
+          "PlannedQty": 78.000000,
+          "CmpltQty": 73.000000,
+          "RjctQty": 0.000000,
+          "Status": "R"
+        },
+        {
+          "DocEntry": 55014,
+          "DocNum": 26110211,
+          "ItemCode": "RM02045-1",
+          "PlannedQty": 78.000000,
+          "CmpltQty": 156.000000,
+          "RjctQty": 0.000000,
+          "Status": "R"
+        },
+        {
+          "DocEntry": 55019,
+          "DocNum": 26110216,
+          "ItemCode": "FG05050",
+          "PlannedQty": 36.000000,
+          "CmpltQty": 2165.300000,
+          "RjctQty": 0.000000,
+          "Status": "R"
+        },
+        {
+          "DocEntry": 55027,
+          "DocNum": 26110224,
+          "ItemCode": "FG06014",
+          "PlannedQty": 1950.000000,
+          "CmpltQty": 1170.000000,
+          "RjctQty": 0.000000,
+          "Status": "R"
+        }
+      ]
+    }
+  ]
+}

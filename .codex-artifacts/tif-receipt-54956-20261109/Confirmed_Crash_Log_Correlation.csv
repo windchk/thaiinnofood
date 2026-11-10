@@ -1,0 +1,7 @@
+"LogId","ProductionOrderDocEntry","RequestDate","CrashTime","FaultingModule","ExceptionCode","ProcessId","MatchedWithinSeconds","EvidenceSource","ReceiptDocuments","ReceiptQuantity","ReceiptsWithoutFinalLog"
+"38385","55014","2026-11-09 12:36:24.873","2026-11-09 12:36:28","B1_Engine.dll","0xc0000005","12884","5","SQL INT_SapApiLog + user-provided Windows Application Error event","2","156","1"
+"38425","55019","2026-11-09 16:36:29.060","2026-11-09 16:36:29","MSVCR120.dll","0xc0000409","12444","5","SQL INT_SapApiLog + user-provided Windows Application Error event","1","2165.3","0"
+"38434","54956","2026-11-09 17:39:50.490","2026-11-09 17:39:50","MSVCR120.dll","0xc0000409","17928","5","SQL INT_SapApiLog + user-provided Windows Application Error event","1","1230","0"
+"38462","54960","2026-11-09 18:49:22.360","2026-11-09 18:49:22","ACE.dll","0xc0000005","16008","5","SQL INT_SapApiLog + user-provided Windows Application Error event","1","3220","0"
+"38469","55027","2026-11-09 19:15:55.637","2026-11-09 19:15:59","B1_Engine.dll","0xc0000005","9608","5","SQL INT_SapApiLog + user-provided Windows Application Error event","1","1170","1"
+"38475","54988","2026-11-09 19:38:49.997","2026-11-09 19:38:53","B1_Engine.dll","0xc0000005","10644","5","SQL INT_SapApiLog + user-provided Windows Application Error event","1","73","1"

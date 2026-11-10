@@ -1,0 +1,93 @@
+{
+  "CheckedAt": "2026-11-09 21:03:32.563",
+  "TargetOrder": 54956,
+  "TargetReceiptDocuments": 1,
+  "TargetReceiptQuantity": 1230.0,
+  "ProcessingReceiptRowsToday": 6,
+  "OrdersWithUnlinkedReceipts": 3,
+  "UnlinkedReceiptDocuments": 3.0,
+  "IisSqlSessionCount": 0,
+  "RootCause": "Six IIS w3wp.exe native crashes coincide with all six current-day ReceiptFromProduction P rows, before final log completion. Exact native call/cause awaits dump analysis.",
+  "Checks": "SELECT-only SQL and GET /; no SAP POST, database updates, cancellations, retries, or service changes",
+  "Rows": [
+    {
+      "ProcessingLogId": 38385,
+      "ProductionOrderDocEntry": 55014,
+      "RequestDate": "2026-11-09 12:36:24.873",
+      "LaterIdenticalRequestSuccessLogId": 38397,
+      "PlannedQty": 78.0,
+      "CompletedQty": 156.0,
+      "ReceiptDocuments": 2,
+      "ReceiptQuantity": 156.0,
+      "ReceiptsWithoutFinalLog": 1,
+      "SapDocEntries": "63747,63751",
+      "SapDocNumbers": "26110269,26110273"
+    },
+    {
+      "ProcessingLogId": 38425,
+      "ProductionOrderDocEntry": 55019,
+      "RequestDate": "2026-11-09 16:36:29.060",
+      "LaterIdenticalRequestSuccessLogId": null,
+      "PlannedQty": 36.0,
+      "CompletedQty": 2165.3,
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 2165.3,
+      "ReceiptsWithoutFinalLog": 0,
+      "SapDocEntries": "63765",
+      "SapDocNumbers": "26110287"
+    },
+    {
+      "ProcessingLogId": 38434,
+      "ProductionOrderDocEntry": 54956,
+      "RequestDate": "2026-11-09 17:39:50.490",
+      "LaterIdenticalRequestSuccessLogId": 38438,
+      "PlannedQty": 1230.0,
+      "CompletedQty": 1230.0,
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 1230.0,
+      "ReceiptsWithoutFinalLog": 0,
+      "SapDocEntries": "63769",
+      "SapDocNumbers": "26110291"
+    },
+    {
+      "ProcessingLogId": 38462,
+      "ProductionOrderDocEntry": 54960,
+      "RequestDate": "2026-11-09 18:49:22.360",
+      "LaterIdenticalRequestSuccessLogId": 38463,
+      "PlannedQty": 3220.0,
+      "CompletedQty": 3220.0,
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 3220.0,
+      "ReceiptsWithoutFinalLog": 0,
+      "SapDocEntries": "63779",
+      "SapDocNumbers": "26110301"
+    },
+    {
+      "ProcessingLogId": 38469,
+      "ProductionOrderDocEntry": 55027,
+      "RequestDate": "2026-11-09 19:15:55.637",
+      "LaterIdenticalRequestSuccessLogId": null,
+      "PlannedQty": 1950.0,
+      "CompletedQty": 1170.0,
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 1170.0,
+      "ReceiptsWithoutFinalLog": 1,
+      "SapDocEntries": "63782",
+      "SapDocNumbers": "26110304"
+    },
+    {
+      "ProcessingLogId": 38475,
+      "ProductionOrderDocEntry": 54988,
+      "RequestDate": "2026-11-09 19:38:49.997",
+      "LaterIdenticalRequestSuccessLogId": null,
+      "PlannedQty": 78.0,
+      "CompletedQty": 73.0,
+      "ReceiptDocuments": 1,
+      "ReceiptQuantity": 73.0,
+      "ReceiptsWithoutFinalLog": 1,
+      "SapDocEntries": "63785",
+      "SapDocNumbers": "26110307"
+    }
+  ],
+  "ConfirmedCauseEvidence": "ConfirmedCause.json; WindowsCrashEvents.json; Confirmed_Crash_Log_Correlation.csv"
+}

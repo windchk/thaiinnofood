@@ -1,0 +1,132 @@
+{
+  "Source": "Report.wer copied through the existing authorized RDP session; no memory dump file was found in WER search",
+  "SourceBytes": 52694,
+  "SourceSha256": "2564DE0C71812A9A1FC7DDEA7B656F8E3436105DDCC8A7975789722B7DF57BD0",
+  "EventTimeBangkok": "2026-11-09 19:38:53.5405863 +07:00",
+  "EventType": "APPCRASH",
+  "ReportIdentifier": "851c26e3-dc3a-11f1-b8a7-000c298f2f0f",
+  "IntegratorReportIdentifier": "159461e9-873c-4442-8577-971938dc7492",
+  "ApplicationPath": "c:\\windows\\system32\\inetsrv\\w3wp.exe",
+  "Signatures": [
+    {
+      "Name": "Application Name",
+      "Value": "w3wp.exe"
+    },
+    {
+      "Name": "Application Version",
+      "Value": "10.0.14393.0"
+    },
+    {
+      "Name": "Application Timestamp",
+      "Value": "57899b8a"
+    },
+    {
+      "Name": "Fault Module Name",
+      "Value": "B1_Engine.dll"
+    },
+    {
+      "Name": "Fault Module Version",
+      "Value": "9.30.200.0"
+    },
+    {
+      "Name": "Fault Module Timestamp",
+      "Value": "5cf8a0c6"
+    },
+    {
+      "Name": "Exception Code",
+      "Value": "c0000005"
+    },
+    {
+      "Name": "Exception Offset",
+      "Value": "000000000027cf1a"
+    }
+  ],
+  "RelevantLoadedModulePaths": [
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll",
+    "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.28\\coreclr.dll",
+    "D:\\API_Publish\\Receipt\\OdooSapApi.dll",
+    "C:\\Windows\\SYSTEM32\\MSVCR120.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_Engine.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_Zipper90.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\ACE.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\xerces-c_B1_3_1.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\Xalan-C_B1_1_11.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\XalanMessages_B1_1_11.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\SAPbobsCOM90.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_DIInternalFields90.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_SchemaGenerator90.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\TAO.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_LicenseWSInterface.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\TAO_PortableServer.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\TAO_AnyTypeCode.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\TAO_CosNaming.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\curlpp.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\libcurl.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\json.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\TAO_Svc_Utils.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\OBServer\\OBServerDLL_930200.dll",
+    "C:\\Program Files\\SAP\\SAP Business One DI API\\OBServer\\Observer.Depends\\B1_Engine.dll"
+  ],
+  "LoadedModuleCount": 283,
+  "ContainsCallStack": false,
+  "ContainsMemoryDump": false,
+  "Assessment": "Confirms native B1_Engine.dll access violation in Receipt w3wp.exe; does not identify the crashing function or prove a COM/concurrency/version defect. Both Framework CLR and CoreCLR are listed; this is a deployment fact, not established cause.",
+  "SearchEvidence": {
+    "DumpMatchesObserved": 0,
+    "LatestArchiveContents": [
+      "Report.wer"
+    ],
+    "PositiveControlMatchesObserved": 513,
+    "Root": "C:\\ProgramData\\Microsoft\\Windows\\WER",
+    "DumpQuery": "*.dmp OR *.hdmp",
+    "LatestArchiveFolder": "AppCrash_w3wp.exe_169825d8b0a57154232680a9664ec66aac1a3aa_ed19be39_5c961dfe",
+    "PositiveControlQuery": "*.wer"
+  },
+  "AdditionalReports": [
+    {
+      "SourceFile": "Report_ACE_184922.wer",
+      "SourceBytes": 52886,
+      "SourceSha256": "BD68DFEB0AE6FE938A900067B197396832456DBD6385AC88006202E63EBC8621",
+      "EventTimeBangkok": "2026-11-09 18:49:22.955",
+      "EventType": "APPCRASH",
+      "IntegratorReportIdentifier": "af89ed8f-9281-4664-a440-9d6b32bd182d",
+      "FaultModule": "ACE.dll",
+      "FaultModuleVersion": "6.2.8.0",
+      "ExceptionCode": "c0000005",
+      "ExceptionOffset": "000000000005b7a4",
+      "ApiAndRuntimeModules": [
+        "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.28\\coreclr.dll",
+        "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\ACE.dll",
+        "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\B1_Engine.dll",
+        "C:\\Program Files\\SAP\\SAP Business One DI API\\OBServer\\Observer.Depends\\B1_Engine.dll",
+        "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll",
+        "C:\\Windows\\SYSTEM32\\MSVCR120.dll",
+        "D:\\API_Publish\\Receipt\\OdooSapApi.dll"
+      ],
+      "ContainsCallStack": false,
+      "ContainsMemoryDump": false
+    }
+  ],
+  "UserSuppliedRegistryCheck": {
+    "Source": "User pasted server PowerShell output",
+    "Paths": [
+      "HKLM:\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps",
+      "HKLM:\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps\\w3wp.exe"
+    ],
+    "Result": "No settings returned",
+    "Limitation": "Errors were suppressed, so missing keys cannot be distinguished conclusively from an access error."
+  },
+  "UserSuppliedFileCheck": {
+    "Result": "Only .wer files appeared in the pasted first 20 results",
+    "ValidDumpInventory": false,
+    "Reason": "Windows PowerShell 5.1 ignores Include when LiteralPath is used, so the original command did not restrict file extensions.",
+    "Reference": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-childitem?view=powershell-5.1#-literalpath",
+    "Correction": "Filter the enumerated files using Where-Object Extension -Match '^\\.(dmp|hdmp|mdmp|cab)$' before sorting or truncating.",
+    "CorrectionValidation": "Windows PowerShell 5.1.26100.9818 returned the 4 expected dummy dump/archive filenames and excluded Report.wer."
+  },
+  "RemainingWork": [
+    "Await corrected server dump inventory; no binary dump has been obtained.",
+    "No debugger or call-stack analysis has been run.",
+    "If no existing crash dump is available, capture a new crash dump to identify the native call path; existing reports cannot establish COM/concurrency/version root cause."
+  ]
+}

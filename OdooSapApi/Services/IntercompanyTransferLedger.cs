@@ -18,7 +18,7 @@ public class IntercompanyTransferLedger
         _transferOptions = transferOptions.Value;
     }
 
-    internal async Task<IntercompanyTransferLock> AcquireAsync(
+    internal virtual async Task<IntercompanyTransferLock> AcquireAsync(
         string siteId,
         string transferId)
     {
@@ -65,7 +65,7 @@ public class IntercompanyTransferLedger
         }
     }
 
-    internal async Task<IntercompanyTransferRecord?> GetAsync(
+    internal virtual async Task<IntercompanyTransferRecord?> GetAsync(
         SqlConnection connection,
         string siteId,
         string transferId)
@@ -120,7 +120,7 @@ public class IntercompanyTransferLedger
         };
     }
 
-    internal async Task InsertAsync(
+    internal virtual async Task InsertAsync(
         SqlConnection connection,
         IntercompanyTransferRequest request,
         string requestHash,
@@ -251,7 +251,7 @@ public class IntercompanyTransferLedger
         await command.ExecuteNonQueryAsync();
     }
 
-    internal async Task MarkFailureAsync(
+    internal virtual async Task MarkFailureAsync(
         SqlConnection connection,
         string siteId,
         string transferId,

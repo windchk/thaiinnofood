@@ -1,0 +1,97 @@
+{
+  "Applied": false,
+  "SqlFile": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\.codex-artifacts\\tif-receipt-54956-20261109\\LogSchemaAndSqlErrors_ReadOnly.sql",
+  "Results": [
+    {
+      "ResultSet": 0,
+      "Rows": [
+        {
+          "CheckedAt": "2026-11-09 21:20:23.540"
+        }
+      ]
+    },
+    {
+      "ResultSet": 1,
+      "Rows": [
+        {
+          "message_id": 17897,
+          "language_id": 1033,
+          "severity": 20,
+          "text": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library.%.*ls"
+        }
+      ]
+    },
+    {
+      "ResultSet": 2,
+      "Rows": []
+    },
+    {
+      "ResultSet": 3,
+      "Rows": [
+        {
+          "IndexName": "PK_INT_SapApiLog",
+          "IsUnique": 1,
+          "IsPrimaryKey": 1
+        }
+      ]
+    },
+    {
+      "ResultSet": 4,
+      "Rows": []
+    },
+    {
+      "ResultSet": 5,
+      "Rows": [
+        {
+          "EventTimeBangkok": "2026-11-09 12:42:29.371",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.115]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.425",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.115]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.867",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.115]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:24:05.625",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.113]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 18:47:28.978",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: fe80::2f97:3e9:4a07:fb9d%14]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:24:50.540",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.115]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:25:00.344",
+          "ErrorMessage": "Session recovery feature data used in login record to open or recover a connection is structurally or semantically invalid; the connection has been closed. Please contact the vendor of the client library. [CLIENT: 192.168.11.115]",
+          "ClientApp": null,
+          "ClientHost": null,
+          "SessionId": "0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "AttachmentPath": "C:\\Users\\User\\.codex\\attachments\\cf98350c-3220-4604-9d6d-b73484097368\\Pasted text.txt",
+  "AttachmentSha256": "A77334DD8F516052A82FCD9D1078C63356CD6BFA4C2B5B33DF39DFE9855F93B5",
+  "AttachmentRowCount": 6004,
+  "AttachmentGroups": [
+    {
+      "Name": "PRD-TIF, NEW",
+      "Count": 30
+    },
+    {
+      "Name": "TEST-TIF, COMPLETED",
+      "Count": 4721
+    },
+    {
+      "Name": "TEST-TIF, NEW",
+      "Count": 1253
+    }
+  ],
+  "PrdPayloadIdentityIssues": [],
+  "LiveLedgerCheckedAt": "2026-11-10 18:57:15.810",
+  "LiveLedgerStatuses": [
+    {
+      "SiteId": "PRD-TIF",
+      "Status": "NEW",
+      "RecordCount": 30
+    }
+  ],
+  "SapDocumentsCheckedAt": "2026-11-10 18:58:51.083",
+  "SapLookupScope": [
+    "TIF_GOLIVE.dbo.OIGE",
+    "SBO_STL_GOLIVE.dbo.OIGN"
+  ],
+  "SapLookupIdentifiers": [
+    "U_ODoo_Doc exact transferId",
+    "Comments prefix ODOO_TRANSFER:<transferId>|",
+    "Ref2 first 11 hexadecimal characters of SHA256(UTF8(transferId))"
+  ],
+  "SapDocumentMatches": 0,
+  "IisSqlSessionsAtSnapshot": 0,
+  "Assessment": "All 30 PRD transfer records remain NEW more than 3 hours after insertion. No linked Goods Issue/Receipt was found using the same lookup markers as current source. Original failure reason is not established.",
+  "SourceFinding": {
+    "File": "OdooSapApi/Services/IntercompanyTransferService.cs",
+    "Line": 168,
+    "Description": "SapDiApiBusyException is rethrown without MarkFailureAsync; controller returns HTTP 503. This path can leave NEW/RetryCount=0/ErrorMessage=NULL after a request has already ended."
+  },
+  "RetryCountMeaning": "MarkFailureAsync increments this value; it is not a complete count of incoming requests or evidence of automatic retries.",
+  "ChangesMade": "Read-only SQL SELECTs and local diagnostic artifacts only. No POST, SAP posting, database update, restart, or product-code change."
+}

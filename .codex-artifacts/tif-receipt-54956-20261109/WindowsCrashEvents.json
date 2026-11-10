@@ -1,0 +1,27 @@
+{
+  "source": "User-provided Get-WinEvent output from TIFSVR01-SAP; Application log; 2026-11-09 12:30-19:45 Asia/Bangkok",
+  "eventId": 1000,
+  "provider": "Application Error",
+  "faultingApplication": "w3wp.exe",
+  "events": [
+    {"time":"2026-11-09 12:36:28","processIdHex":"0x3254","module":"B1_Engine.dll","moduleVersion":"9.30.200.0","exceptionCode":"0xc0000005","faultOffset":"0x0000000000304ea0","reportId":"e0d122e5-3bdb-4673-b04d-043c5b1b21a7","logId":38385,"productionOrderDocEntry":55014},
+    {"time":"2026-11-09 16:36:29","processIdHex":"0x309c","module":"MSVCR120.dll","moduleVersion":"12.0.40649.5","exceptionCode":"0xc0000409","faultOffset":"0x000000000006dd27","reportId":"6bffe485-cc9b-41c6-9437-1b27e25122ec","logId":38425,"productionOrderDocEntry":55019},
+    {"time":"2026-11-09 17:39:50","processIdHex":"0x4608","module":"MSVCR120.dll","moduleVersion":"12.0.40649.5","exceptionCode":"0xc0000409","faultOffset":"0x000000000006dd27","reportId":"5dee819f-2d37-4cc6-a3ed-95863a96936f","logId":38434,"productionOrderDocEntry":54956},
+    {"time":"2026-11-09 18:49:22","processIdHex":"0x3e88","module":"ACE.dll","moduleVersion":"6.2.8.0","exceptionCode":"0xc0000005","faultOffset":"0x000000000005b7a4","reportId":"af89ed8f-9281-4664-a440-9d6b32bd182d","logId":38462,"productionOrderDocEntry":54960},
+    {"time":"2026-11-09 19:15:59","processIdHex":"0x2588","module":"B1_Engine.dll","moduleVersion":"9.30.200.0","exceptionCode":"0xc0000005","faultOffset":"0x000000000027cf1a","reportId":"dfd75ff5-934b-46c3-9b29-aed4286e5c0b","logId":38469,"productionOrderDocEntry":55027},
+    {"time":"2026-11-09 19:38:53","processIdHex":"0x2994","module":"B1_Engine.dll","moduleVersion":"9.30.200.0","exceptionCode":"0xc0000005","faultOffset":"0x000000000027cf1a","reportId":"159461e9-873c-4442-8577-971938dc7492","logId":38475,"productionOrderDocEntry":54988}
+  ],
+  "receiptApplicationPhysicalRoot": "D:\\API_Publish\\Receipt\\",
+  "receiptBinding": "http://192.168.10.1:8282",
+  "nativeModulePaths": {
+    "B1_Engine.dll": "C:\\Program Files\\SAP\\SAP Business One DI API\\OBServer\\Observer.Depends\\B1_Engine.dll",
+    "ACE.dll": "C:\\Program Files\\SAP\\SAP Business One DI API\\DI API 90\\ACE.dll",
+    "MSVCR120.dll": "C:\\Windows\\SYSTEM32\\MSVCR120.dll"
+  },
+  "notes": [
+    "Count only the six Application Error crash events; WER events repeat the same report IDs and are not additional crashes.",
+    "Event time in the pasted output has one-second precision; request times in SQL include milliseconds.",
+    "Earlier no-events report was superseded after using a self-contained single-line query; earlier multi-line commands had run in reverse order.",
+    "HTTPS port warnings are separate middleware warnings recorded near application startup."
+  ]
+}

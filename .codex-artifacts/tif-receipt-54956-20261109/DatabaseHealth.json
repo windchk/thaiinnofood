@@ -1,0 +1,290 @@
+{
+  "Applied": false,
+  "SqlFile": "C:\\Users\\User\\Documents\\GitHub\\thaiinnofood\\.codex-artifacts\\tif-receipt-54956-20261109\\DatabaseHealth_ReadOnly.sql",
+  "Results": [
+    {
+      "ResultSet": 0,
+      "Rows": [
+        {
+          "CheckedAt": "2026-11-09 21:18:03.933",
+          "ServerTimeWithOffset": "2026-11-09T21:18:03.9368059+07:00"
+        }
+      ]
+    },
+    {
+      "ResultSet": 1,
+      "Rows": [
+        {
+          "EarliestRetainedEventBangkok": "2026-11-05 20:55:18.161",
+          "LatestRetainedEventBangkok": "2026-11-09 21:18:03.889",
+          "RetainedEvents": 18397
+        }
+      ]
+    },
+    {
+      "ResultSet": 2,
+      "Rows": [
+        {
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "EventsInIncidentWindow": 20,
+          "EventsMentioningApiLog": 0,
+          "EventsMentioningReceipt": 0
+        },
+        {
+          "ObjectName": "error_reported",
+          "EventsInIncidentWindow": 7,
+          "EventsMentioningApiLog": 0,
+          "EventsMentioningReceipt": 0
+        }
+      ]
+    },
+    {
+      "ResultSet": 3,
+      "Rows": [
+        {
+          "EventTimeBangkok": "2026-11-09 12:37:57.992",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 12:42:29.370",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 12:42:29.371",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 12:42:29.371",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.424",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.425",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.425",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.867",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.867",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:32.867",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 13:25:35.062",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 14:10:05.880",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 16:19:35.769",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:24:05.625",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:24:05.625",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:24:05.625",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:35:03.946",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 17:50:16.283",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 18:47:28.978",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 18:47:28.978",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 18:47:28.978",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:24:50.539",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:24:50.540",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:24:50.540",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:25:00.343",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:25:00.344",
+          "ObjectName": "error_reported",
+          "ErrorNumber": 17897,
+          "Severity": 20,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        },
+        {
+          "EventTimeBangkok": "2026-11-09 19:25:00.344",
+          "ObjectName": "connectivity_ring_buffer_recorded",
+          "ErrorNumber": null,
+          "Severity": null,
+          "MentionsApiLog": false,
+          "MentionsReceipt": false,
+          "ClientApp": null
+        }
+      ]
+    }
+  ]
+}
